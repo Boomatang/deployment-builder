@@ -8,10 +8,34 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "click>=8.0.0",
+    "pyyaml>=6.0",
 ]
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.0.0"
 
 [tool.poetry]
 packages = [{include = "deployment_builder", from = "src"}]
+scripts = {deploy = "deployment_builder.cli:cli"}
+
+[tool.black]
+line-length = 120
+target-version = ['py313']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
 
 
 [build-system]

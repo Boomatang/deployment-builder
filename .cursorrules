@@ -1,0 +1,43 @@
+# Cursor Rules for deployment-builder
+
+## Code Formatting
+- Always run `poetry run black src/ tests/` before completing any task that modifies Python code
+- Ensure all Python code follows Black formatting standards (120 character line length)
+- Use `poetry run black --check src/ tests/` to verify formatting before committing
+
+## Project Structure
+- This is a Python CLI tool using Click and Poetry
+- Main CLI code is in `src/deployment_builder/cli.py`
+- Entry point is `src/deployment_builder/__main__.py`
+- Configuration files support JSON and YAML formats
+
+## Development Workflow
+1. Make code changes
+2. Run `poetry run black src/ tests/` to format code
+3. Verify with `poetry run black --check src/ tests/`
+4. Test the CLI tool with `poetry run deploy --help`
+5. Commit changes
+
+## Code Style
+- Follow Black formatting (120 character line length)
+- Use type hints where appropriate
+- Write clear docstrings for functions and classes
+- Use meaningful variable and function names
+- Keep functions focused and single-purpose
+
+## CLI Tool Usage
+- Main command: `poetry run deploy`
+- Commands: `create`, `remove`
+- Options: `--config`, `--dry-run`, `--force`
+- Always test CLI commands after making changes
+
+## Testing
+- Run `poetry run deploy --help` to verify CLI works
+- Test with sample configuration files
+- Ensure error handling works correctly
+- Verify dry-run mode functions properly
+
+## Dependencies
+- Production: click, pyyaml
+- Development: black
+- Always update poetry.lock when adding dependencies
