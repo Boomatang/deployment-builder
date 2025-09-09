@@ -9,7 +9,15 @@ import click
 import tomli
 import yaml
 
-from .logging_config import setup_logging, get_logger, log_command_start, log_command_end, log_config_loaded, log_error
+from .logging_config import (
+    setup_logging,
+    get_logger,
+    log_command_start,
+    log_command_end,
+    log_config_loaded,
+    log_error,
+    log_timing_report,
+)
 from .kind_integration import (
     create_cluster,
     delete_cluster,
@@ -119,6 +127,11 @@ def cli(log_level: str):
 )
 def create(config: Optional[Path], dry_run: bool):
     """Create kind cluster based on configuration file."""
+    import time
+
+    # Start timing
+    start_time = time.time()
+
     # Get logger instance
     logger = get_logger()
 
@@ -138,6 +151,9 @@ def create(config: Optional[Path], dry_run: bool):
             click.echo(json.dumps(config_data, indent=2))
             click.echo(f"Clusters to create: {', '.join(cluster_names)}")
             log_command_end("create", success=True, message="Dry run completed")
+            # Log timing report for dry run
+            duration_str = log_timing_report(start_time, "create", success=True, cluster_count=len(cluster_names))
+            click.echo(f"⏱️  Total execution time: {duration_str}")
         else:
             # Check if kind is available
             if not check_kind_available():
@@ -167,24 +183,39 @@ def create(config: Optional[Path], dry_run: bool):
 
             if failed:
                 log_command_end("create", success=False, message=f"Failed to create {len(failed)} clusters")
+                # Log timing report
+                duration_str = log_timing_report(start_time, "create", success=False, cluster_count=len(cluster_names))
+                click.echo(f"⏱️  Total execution time: {duration_str}")
                 raise click.Abort()
             else:
                 log_command_end("create", success=True, message=f"All {len(successful)} clusters created successfully")
+                # Log timing report
+                duration_str = log_timing_report(start_time, "create", success=True, cluster_count=len(successful))
+                click.echo(f"⏱️  Total execution time: {duration_str}")
 
     except FileNotFoundError as e:
         log_error(e, "create command - file not found")
         click.echo(f"Error: {e}", err=True)
         log_command_end("create", success=False, message=f"File not found: {e}")
+        # Log timing report for error
+        duration_str = log_timing_report(start_time, "create", success=False)
+        click.echo(f"⏱️  Total execution time: {duration_str}")
         raise click.Abort()
     except ValueError as e:
         log_error(e, "create command - invalid value")
         click.echo(f"Error: {e}", err=True)
         log_command_end("create", success=False, message=f"Invalid value: {e}")
+        # Log timing report for error
+        duration_str = log_timing_report(start_time, "create", success=False)
+        click.echo(f"⏱️  Total execution time: {duration_str}")
         raise click.Abort()
     except Exception as e:
         log_error(e, "create command - unexpected error")
         click.echo(f"Unexpected error: {e}", err=True)
         log_command_end("create", success=False, message=f"Unexpected error: {e}")
+        # Log timing report for error
+        duration_str = log_timing_report(start_time, "create", success=False)
+        click.echo(f"⏱️  Total execution time: {duration_str}")
         raise click.Abort()
 
 
@@ -205,6 +236,11 @@ def create(config: Optional[Path], dry_run: bool):
 @click.option("--force", "-f", is_flag=True, help="Force removal without confirmation.")
 def remove(config: Optional[Path], dry_run: bool, force: bool):
     """Remove kind cluster based on configuration file."""
+    import time
+
+    # Start timing
+    start_time = time.time()
+
     # Get logger instance
     logger = get_logger()
 
@@ -224,6 +260,9 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
             click.echo(json.dumps(config_data, indent=2))
             click.echo(f"Clusters to remove: {', '.join(cluster_names)}")
             log_command_end("remove", success=True, message="Dry run completed")
+            # Log timing report for dry run
+            duration_str = log_timing_report(start_time, "remove", success=True, cluster_count=len(cluster_names))
+            click.echo(f"⏱️  Total execution time: {duration_str}")
         else:
             if not force:
                 logger.info("Prompting user for confirmation")
@@ -263,24 +302,39 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
 
             if failed:
                 log_command_end("remove", success=False, message=f"Failed to remove {len(failed)} clusters")
+                # Log timing report
+                duration_str = log_timing_report(start_time, "remove", success=False, cluster_count=len(cluster_names))
+                click.echo(f"⏱️  Total execution time: {duration_str}")
                 raise click.Abort()
             else:
                 log_command_end("remove", success=True, message=f"All {len(successful)} clusters removed successfully")
+                # Log timing report
+                duration_str = log_timing_report(start_time, "remove", success=True, cluster_count=len(successful))
+                click.echo(f"⏱️  Total execution time: {duration_str}")
 
     except FileNotFoundError as e:
         log_error(e, "remove command - file not found")
         click.echo(f"Error: {e}", err=True)
         log_command_end("remove", success=False, message=f"File not found: {e}")
+        # Log timing report for error
+        duration_str = log_timing_report(start_time, "remove", success=False)
+        click.echo(f"⏱️  Total execution time: {duration_str}")
         raise click.Abort()
     except ValueError as e:
         log_error(e, "remove command - invalid value")
         click.echo(f"Error: {e}", err=True)
         log_command_end("remove", success=False, message=f"Invalid value: {e}")
+        # Log timing report for error
+        duration_str = log_timing_report(start_time, "remove", success=False)
+        click.echo(f"⏱️  Total execution time: {duration_str}")
         raise click.Abort()
     except Exception as e:
         log_error(e, "remove command - unexpected error")
         click.echo(f"Unexpected error: {e}", err=True)
         log_command_end("remove", success=False, message=f"Unexpected error: {e}")
+        # Log timing report for error
+        duration_str = log_timing_report(start_time, "remove", success=False)
+        click.echo(f"⏱️  Total execution time: {duration_str}")
         raise click.Abort()
 
 

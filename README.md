@@ -11,6 +11,7 @@ A command-line tool for managing kind Kubernetes clusters using configuration fi
 - **Flexible config discovery** - Automatic config file detection
 - **Environment variable support** - Set config file via `DEPLOYMENT_CONFIG` envvar
 - **Comprehensive logging** - Detailed logs written to `logs/deployment_builder.log`
+- **Execution timing** - Total execution time and per-cluster timing reports
 - **Error handling** - Comprehensive error messages and validation
 
 ## Installation
@@ -349,6 +350,41 @@ poetry run deploy remove --dry-run
 ```bash
 # Remove without confirmation prompt
 poetry run deploy remove --force
+```
+
+## Execution Timing
+
+The tool provides detailed timing reports for all operations to help you understand performance characteristics.
+
+### Timing Features
+
+- **Total Execution Time**: Shows the complete time for each command
+- **Per-Cluster Timing**: When processing multiple clusters, shows average time per cluster
+- **Human-Readable Format**: Times are displayed in seconds, minutes, or hours as appropriate
+- **Log Integration**: Timing information is also logged to the log file
+
+### Timing Report Examples
+
+```bash
+# Dry run with timing
+$ poetry run deploy create --config examples/config.toml --dry-run
+...
+⏱️  Total execution time: 0.00 seconds
+
+# Actual cluster creation with timing
+$ poetry run deploy create --config examples/config.toml
+Creating 7 kind clusters...
+✓ Successfully created 7 clusters: my-project-metrics, my-project-primary-1, ...
+⏱️  Total execution time: 2m 15.30s
+```
+
+### Log File Timing
+
+Timing information is also logged to the log file with additional details:
+
+```
+2025-09-09 23:23:57 - INFO - Timing Report: create command completed successfully in 2m 15.30s (7 clusters)
+2025-09-09 23:23:57 - INFO - Average time per cluster: 19.33 seconds
 ```
 
 ## Logging
