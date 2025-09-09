@@ -2,6 +2,7 @@
 name = "advanced-deployment"
 version = "2.1.0"
 environment = "staging"
+cluster_name = "advanced-cluster"
 
 [metadata]
 description = "Advanced deployment with multiple services and monitoring"

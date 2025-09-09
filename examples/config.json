@@ -2,6 +2,7 @@
   "name": "my-deployment",
   "version": "1.0.0",
   "environment": "production",
+  "cluster_name": "my-cluster",
   "resources": {
     "cpu": "2",
     "memory": "4Gi",

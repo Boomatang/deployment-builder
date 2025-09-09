@@ -10,6 +10,7 @@ import tomli
 import yaml
 
 from .logging_config import setup_logging, get_logger, log_command_start, log_command_end, log_config_loaded, log_error
+from .kind_integration import create_cluster, delete_cluster, check_kind_available, get_cluster_name_from_config
 
 
 def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
@@ -89,7 +90,7 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
 )
 @click.version_option()
 def cli(log_level: str):
-    """Deployment Builder - A CLI tool for managing deployments."""
+    """Deployment Builder - A CLI tool for managing kind Kubernetes clusters."""
     # Set up logging with the specified level
     setup_logging(log_level=log_level)
 
@@ -109,7 +110,7 @@ def cli(log_level: str):
     help="Show what would be created without actually creating it.",
 )
 def create(config: Optional[Path], dry_run: bool):
-    """Create deployment based on configuration file."""
+    """Create kind cluster based on configuration file."""
     # Get logger instance
     logger = get_logger()
 
@@ -119,17 +120,40 @@ def create(config: Optional[Path], dry_run: bool):
     try:
         config_data = load_config(str(config) if config else None)
 
+        # Extract cluster name from configuration
+        cluster_name = get_cluster_name_from_config(config_data)
+        logger.info(f"Using cluster name: {cluster_name}")
+
         if dry_run:
             logger.info("Executing dry run for create command")
-            click.echo("DRY RUN: Would create deployment with the following configuration:")
+            click.echo("DRY RUN: Would create kind cluster with the following configuration:")
             click.echo(json.dumps(config_data, indent=2))
+            click.echo(f"Cluster name: {cluster_name}")
             log_command_end("create", success=True, message="Dry run completed")
         else:
-            logger.info("Starting deployment creation")
-            click.echo("Creating deployment...")
-            # TODO: Implement actual deployment creation logic
-            click.echo(f"✓ Deployment created successfully using config: {config or 'default'}")
-            log_command_end("create", success=True, message="Deployment created successfully")
+            # Check if kind is available
+            if not check_kind_available():
+                click.echo("Error: kind CLI is not available. Please install kind first.", err=True)
+                click.echo("Visit: https://kind.sigs.k8s.io/", err=True)
+                log_command_end("create", success=False, message="kind CLI not available")
+                raise click.Abort()
+
+            logger.info("Starting kind cluster creation")
+            click.echo(f"Creating kind cluster '{cluster_name}'...")
+
+            # Determine if we should log kind output (debug level)
+            log_kind_output = logger.level <= 10  # DEBUG level
+
+            # Create the cluster
+            success = create_cluster(cluster_name, log_output=log_kind_output)
+
+            if success:
+                click.echo(f"✓ Kind cluster '{cluster_name}' created successfully")
+                log_command_end("create", success=True, message=f"Cluster '{cluster_name}' created successfully")
+            else:
+                click.echo(f"✗ Failed to create kind cluster '{cluster_name}'", err=True)
+                log_command_end("create", success=False, message=f"Failed to create cluster '{cluster_name}'")
+                raise click.Abort()
 
     except FileNotFoundError as e:
         log_error(e, "create command - file not found")
@@ -164,7 +188,7 @@ def create(config: Optional[Path], dry_run: bool):
 )
 @click.option("--force", "-f", is_flag=True, help="Force removal without confirmation.")
 def remove(config: Optional[Path], dry_run: bool, force: bool):
-    """Remove deployment based on configuration file."""
+    """Remove kind cluster based on configuration file."""
     # Get logger instance
     logger = get_logger()
 
@@ -174,27 +198,48 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
     try:
         config_data = load_config(str(config) if config else None)
 
+        # Extract cluster name from configuration
+        cluster_name = get_cluster_name_from_config(config_data)
+        logger.info(f"Using cluster name: {cluster_name}")
+
         if dry_run:
             logger.info("Executing dry run for remove command")
-            click.echo("DRY RUN: Would remove deployment with the following configuration:")
+            click.echo("DRY RUN: Would remove kind cluster with the following configuration:")
             click.echo(json.dumps(config_data, indent=2))
+            click.echo(f"Cluster name: {cluster_name}")
             log_command_end("remove", success=True, message="Dry run completed")
         else:
             if not force:
                 logger.info("Prompting user for confirmation")
-                if not click.confirm(
-                    f"Are you sure you want to remove the deployment using config: {config or 'default'}"
-                ):
+                if not click.confirm(f"Are you sure you want to remove the kind cluster '{cluster_name}'?"):
                     logger.info("User cancelled the operation")
                     click.echo("Operation cancelled.")
                     log_command_end("remove", success=False, message="User cancelled")
                     return
 
-            logger.info("Starting deployment removal")
-            click.echo("Removing deployment...")
-            # TODO: Implement actual deployment removal logic
-            click.echo(f"✓ Deployment removed successfully using config: {config or 'default'}")
-            log_command_end("remove", success=True, message="Deployment removed successfully")
+            # Check if kind is available
+            if not check_kind_available():
+                click.echo("Error: kind CLI is not available. Please install kind first.", err=True)
+                click.echo("Visit: https://kind.sigs.k8s.io/", err=True)
+                log_command_end("remove", success=False, message="kind CLI not available")
+                raise click.Abort()
+
+            logger.info("Starting kind cluster removal")
+            click.echo(f"Removing kind cluster '{cluster_name}'...")
+
+            # Determine if we should log kind output (debug level)
+            log_kind_output = logger.level <= 10  # DEBUG level
+
+            # Delete the cluster
+            success = delete_cluster(cluster_name, log_output=log_kind_output)
+
+            if success:
+                click.echo(f"✓ Kind cluster '{cluster_name}' removed successfully")
+                log_command_end("remove", success=True, message=f"Cluster '{cluster_name}' removed successfully")
+            else:
+                click.echo(f"✗ Failed to remove kind cluster '{cluster_name}'", err=True)
+                log_command_end("remove", success=False, message=f"Failed to remove cluster '{cluster_name}'")
+                raise click.Abort()
 
     except FileNotFoundError as e:
         log_error(e, "remove command - file not found")

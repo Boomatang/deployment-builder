@@ -1,11 +1,11 @@
 # Deployment Builder
 
-A command-line tool for managing deployments using configuration files. Built with Python and Click.
+A command-line tool for managing kind Kubernetes clusters using configuration files. Built with Python and Click.
 
 ## Features
 
-- **Create deployments** from configuration files
-- **Remove deployments** based on configuration
+- **Create kind clusters** from configuration files
+- **Remove kind clusters** based on configuration
 - **Multiple config formats** - TOML (default), JSON and YAML support
 - **Dry run mode** - Preview changes before execution
 - **Flexible config discovery** - Automatic config file detection
@@ -19,6 +19,7 @@ A command-line tool for managing deployments using configuration files. Built wi
 
 - Python 3.13+
 - Poetry (for development)
+- [kind](https://kind.sigs.k8s.io/) - Kubernetes in Docker
 
 ### Install from source
 
@@ -36,6 +37,23 @@ cd deployment-builder
 poetry install
 ```
 
+## Kind Integration
+
+This tool integrates with [kind](https://kind.sigs.k8s.io/) to create and manage local Kubernetes clusters. The tool wraps the `kind` CLI commands:
+
+- `deploy create` → `kind create cluster --name <cluster_name>`
+- `deploy remove` → `kind delete cluster --name <cluster_name>`
+
+### Cluster Name Configuration
+
+The cluster name is extracted from your configuration file using the following priority:
+1. `cluster_name` field
+2. `name` field  
+3. `cluster` field
+4. Default: `"default"`
+
+The cluster name is automatically sanitized to be valid for kind (lowercase, alphanumeric, hyphens only).
+
 ## Usage
 
 ### Basic Commands
@@ -46,10 +64,10 @@ poetry install
 # Show help
 poetry run deploy --help
 
-# Create deployment
+# Create kind cluster
 poetry run deploy create
 
-# Remove deployment
+# Remove kind cluster
 poetry run deploy remove
 
 # Set log level
