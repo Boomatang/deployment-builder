@@ -34,7 +34,8 @@ htmlcov/
 Thumbs.db
 *~
 
-# Logs
+# Log files
+logs/
 *.log
 
 # Temporary files

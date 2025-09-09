@@ -10,6 +10,7 @@ A command-line tool for managing deployments using configuration files. Built wi
 - **Dry run mode** - Preview changes before execution
 - **Flexible config discovery** - Automatic config file detection
 - **Environment variable support** - Set config file via `DEPLOYMENT_CONFIG` envvar
+- **Comprehensive logging** - Detailed logs written to `logs/deployment_builder.log`
 - **Error handling** - Comprehensive error messages and validation
 
 ## Installation
@@ -50,6 +51,9 @@ poetry run deploy create
 
 # Remove deployment
 poetry run deploy remove
+
+# Set log level
+poetry run deploy --log-level=debug create --dry-run
 ```
 
 #### Using Python Module
@@ -67,14 +71,27 @@ python -m deployment_builder remove
 
 ### Command Options
 
+#### Global Options
+
+```bash
+poetry run deploy [GLOBAL_OPTIONS] COMMAND [COMMAND_OPTIONS]
+
+Global Options:
+  --log-level [debug|info|warning|error|critical]
+                                  Set the logging level for the tool.
+  --version                       Show the version and exit.
+  --help                          Show this message and exit.
+```
+
 #### Create Command
 
 ```bash
-python -m deployment_builder create [OPTIONS]
+poetry run deploy create [OPTIONS]
 
 Options:
   -c, --config PATH  Path to configuration file. If not provided, looks for
-                     config files in current directory.
+                     config files in current directory. Can also be set via
+                     DEPLOYMENT_CONFIG environment variable.
   -n, --dry-run      Show what would be created without actually creating it.
   --help             Show this message and exit.
 ```
@@ -82,11 +99,12 @@ Options:
 #### Remove Command
 
 ```bash
-python -m deployment_builder remove [OPTIONS]
+poetry run deploy remove [OPTIONS]
 
 Options:
   -c, --config PATH  Path to configuration file. If not provided, looks for
-                     config files in current directory.
+                     config files in current directory. Can also be set via
+                     DEPLOYMENT_CONFIG environment variable.
   -n, --dry-run      Show what would be removed without actually removing it.
   -f, --force        Force removal without confirmation.
   --help             Show this message and exit.
@@ -241,6 +259,74 @@ poetry run deploy remove --dry-run
 ```bash
 # Remove without confirmation prompt
 poetry run deploy remove --force
+```
+
+## Logging
+
+The deployment-builder tool provides comprehensive logging for debugging and monitoring:
+
+### Log File Location
+
+- **Default location**: `logs/deployment_builder.log` in the current directory
+- **Log rotation**: Files are rotated when they reach 10MB (5 backup files kept)
+- **Log levels**: DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+### Log Level Control
+
+You can control the verbosity of logging using the `--log-level` global flag:
+
+```bash
+# Debug level - most verbose (shows all messages)
+poetry run deploy --log-level=debug create --dry-run
+
+# Info level - default (shows INFO, WARNING, ERROR, CRITICAL)
+poetry run deploy --log-level=info create --dry-run
+
+# Warning level - only warnings and errors
+poetry run deploy --log-level=warning create --dry-run
+
+# Error level - only errors and critical messages
+poetry run deploy --log-level=error create --dry-run
+
+# Critical level - only critical messages
+poetry run deploy --log-level=critical create --dry-run
+```
+
+**Available log levels** (from most to least verbose):
+- `DEBUG` - Detailed information for debugging
+- `INFO` - General information about program execution
+- `WARNING` - Warning messages (default)
+- `ERROR` - Error messages
+- `CRITICAL` - Critical error messages
+
+### What Gets Logged
+
+- Command execution start and end
+- Configuration file discovery and loading
+- Command parameters and options
+- Success and error states
+- Detailed error information with stack traces
+- User interactions (confirmations, cancellations)
+
+### Log Format
+
+```
+2025-09-09 22:32:58 - INFO - log_command_start:85 - Starting create command
+2025-09-09 22:32:58 - INFO - load_config:58 - Loading configuration from: examples/config.toml
+2025-09-09 22:32:58 - INFO - log_command_end:106 - create command completed successfully
+```
+
+### Viewing Logs
+
+```bash
+# View recent logs
+tail -f logs/deployment_builder.log
+
+# View all logs
+cat logs/deployment_builder.log
+
+# Search for errors
+grep ERROR logs/deployment_builder.log
 ```
 
 ## Error Handling
