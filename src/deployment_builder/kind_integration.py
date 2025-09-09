@@ -139,8 +139,131 @@ def check_kind_available() -> bool:
         return False
 
 
+def get_cluster_names_from_config(config_data: dict) -> list[str]:
+    """Extract cluster names from configuration data based on cluster types.
+
+    Args:
+        config_data: The loaded configuration data
+
+    Returns:
+        List of cluster names to create
+    """
+    logger = get_logger()
+
+    # Get prefix from config
+    prefix = config_data.get("prefix", "default")
+
+    # Sanitize prefix
+    import re
+
+    prefix = re.sub(r"[^a-z0-9-]", "-", prefix.lower())
+    prefix = re.sub(r"-+", "-", prefix)
+    prefix = prefix.strip("-")
+
+    if not prefix:
+        prefix = "default"
+
+    cluster_names = []
+    clusters_config = config_data.get("clusters", {})
+
+    # Metrics cluster (single)
+    if clusters_config.get("metrics", False):
+        cluster_names.append(f"{prefix}-metrics")
+        logger.info("Including metrics cluster")
+
+    # Primary clusters
+    primary_count = clusters_config.get("primary", 0)
+    for i in range(1, primary_count + 1):
+        cluster_names.append(f"{prefix}-primary-{i}")
+        logger.info(f"Including primary cluster {i}")
+
+    # Secondary clusters
+    secondary_count = clusters_config.get("secondary", 0)
+    for i in range(1, secondary_count + 1):
+        cluster_names.append(f"{prefix}-secondary-{i}")
+        logger.info(f"Including secondary cluster {i}")
+
+    # Standard clusters
+    standard_count = clusters_config.get("standard", 0)
+    for i in range(1, standard_count + 1):
+        cluster_names.append(f"{prefix}-standard-{i}")
+        logger.info(f"Including standard cluster {i}")
+
+    # If no clusters defined, create a default one
+    if not cluster_names:
+        cluster_names.append(f"{prefix}-default")
+        logger.info("No cluster configuration found, creating default cluster")
+
+    logger.info(f"Generated {len(cluster_names)} cluster names: {cluster_names}")
+    return cluster_names
+
+
+def create_multiple_clusters(config_data: dict, log_output: bool = False) -> dict[str, bool]:
+    """Create multiple clusters based on configuration.
+
+    Args:
+        config_data: The loaded configuration data
+        log_output: Whether to log the command output to the log file
+
+    Returns:
+        Dictionary mapping cluster names to success status
+    """
+    logger = get_logger()
+    cluster_names = get_cluster_names_from_config(config_data)
+    results = {}
+
+    logger.info(f"Creating {len(cluster_names)} clusters")
+
+    for cluster_name in cluster_names:
+        logger.info(f"Creating cluster: {cluster_name}")
+        success = create_cluster(cluster_name, log_output)
+        results[cluster_name] = success
+
+        if success:
+            logger.info(f"✓ Successfully created cluster: {cluster_name}")
+        else:
+            logger.error(f"✗ Failed to create cluster: {cluster_name}")
+
+    successful = sum(1 for success in results.values() if success)
+    logger.info(f"Cluster creation completed: {successful}/{len(cluster_names)} successful")
+
+    return results
+
+
+def delete_multiple_clusters(config_data: dict, log_output: bool = False) -> dict[str, bool]:
+    """Delete multiple clusters based on configuration.
+
+    Args:
+        config_data: The loaded configuration data
+        log_output: Whether to log the command output to the log file
+
+    Returns:
+        Dictionary mapping cluster names to success status
+    """
+    logger = get_logger()
+    cluster_names = get_cluster_names_from_config(config_data)
+    results = {}
+
+    logger.info(f"Deleting {len(cluster_names)} clusters")
+
+    for cluster_name in cluster_names:
+        logger.info(f"Deleting cluster: {cluster_name}")
+        success = delete_cluster(cluster_name, log_output)
+        results[cluster_name] = success
+
+        if success:
+            logger.info(f"✓ Successfully deleted cluster: {cluster_name}")
+        else:
+            logger.error(f"✗ Failed to delete cluster: {cluster_name}")
+
+    successful = sum(1 for success in results.values() if success)
+    logger.info(f"Cluster deletion completed: {successful}/{len(cluster_names)} successful")
+
+    return results
+
+
 def get_cluster_name_from_config(config_data: dict) -> str:
-    """Extract cluster name from configuration data.
+    """Extract single cluster name from configuration data (backward compatibility).
 
     Args:
         config_data: The loaded configuration data
@@ -148,17 +271,5 @@ def get_cluster_name_from_config(config_data: dict) -> str:
     Returns:
         Cluster name to use for kind operations
     """
-    # Try to get cluster name from various possible keys
-    cluster_name = config_data.get("cluster_name") or config_data.get("name") or config_data.get("cluster") or "default"
-
-    # Ensure cluster name is valid for kind (lowercase, alphanumeric, hyphens)
-    import re
-
-    cluster_name = re.sub(r"[^a-z0-9-]", "-", cluster_name.lower())
-    cluster_name = re.sub(r"-+", "-", cluster_name)  # Replace multiple hyphens with single
-    cluster_name = cluster_name.strip("-")  # Remove leading/trailing hyphens
-
-    if not cluster_name:
-        cluster_name = "default"
-
-    return cluster_name
+    cluster_names = get_cluster_names_from_config(config_data)
+    return cluster_names[0] if cluster_names else "default"

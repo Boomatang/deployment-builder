@@ -10,7 +10,15 @@ import tomli
 import yaml
 
 from .logging_config import setup_logging, get_logger, log_command_start, log_command_end, log_config_loaded, log_error
-from .kind_integration import create_cluster, delete_cluster, check_kind_available, get_cluster_name_from_config
+from .kind_integration import (
+    create_cluster,
+    delete_cluster,
+    create_multiple_clusters,
+    delete_multiple_clusters,
+    check_kind_available,
+    get_cluster_name_from_config,
+    get_cluster_names_from_config,
+)
 
 
 def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
@@ -120,15 +128,15 @@ def create(config: Optional[Path], dry_run: bool):
     try:
         config_data = load_config(str(config) if config else None)
 
-        # Extract cluster name from configuration
-        cluster_name = get_cluster_name_from_config(config_data)
-        logger.info(f"Using cluster name: {cluster_name}")
+        # Extract cluster names from configuration
+        cluster_names = get_cluster_names_from_config(config_data)
+        logger.info(f"Will create {len(cluster_names)} clusters: {cluster_names}")
 
         if dry_run:
             logger.info("Executing dry run for create command")
-            click.echo("DRY RUN: Would create kind cluster with the following configuration:")
+            click.echo("DRY RUN: Would create kind clusters with the following configuration:")
             click.echo(json.dumps(config_data, indent=2))
-            click.echo(f"Cluster name: {cluster_name}")
+            click.echo(f"Clusters to create: {', '.join(cluster_names)}")
             log_command_end("create", success=True, message="Dry run completed")
         else:
             # Check if kind is available
@@ -139,21 +147,29 @@ def create(config: Optional[Path], dry_run: bool):
                 raise click.Abort()
 
             logger.info("Starting kind cluster creation")
-            click.echo(f"Creating kind cluster '{cluster_name}'...")
+            click.echo(f"Creating {len(cluster_names)} kind clusters...")
 
             # Determine if we should log kind output (debug level)
             log_kind_output = logger.level <= 10  # DEBUG level
 
-            # Create the cluster
-            success = create_cluster(cluster_name, log_output=log_kind_output)
+            # Create the clusters
+            results = create_multiple_clusters(config_data, log_output=log_kind_output)
 
-            if success:
-                click.echo(f"✓ Kind cluster '{cluster_name}' created successfully")
-                log_command_end("create", success=True, message=f"Cluster '{cluster_name}' created successfully")
-            else:
-                click.echo(f"✗ Failed to create kind cluster '{cluster_name}'", err=True)
-                log_command_end("create", success=False, message=f"Failed to create cluster '{cluster_name}'")
+            # Report results
+            successful = [name for name, success in results.items() if success]
+            failed = [name for name, success in results.items() if not success]
+
+            if successful:
+                click.echo(f"✓ Successfully created {len(successful)} clusters: {', '.join(successful)}")
+
+            if failed:
+                click.echo(f"✗ Failed to create {len(failed)} clusters: {', '.join(failed)}", err=True)
+
+            if failed:
+                log_command_end("create", success=False, message=f"Failed to create {len(failed)} clusters")
                 raise click.Abort()
+            else:
+                log_command_end("create", success=True, message=f"All {len(successful)} clusters created successfully")
 
     except FileNotFoundError as e:
         log_error(e, "create command - file not found")
@@ -198,20 +214,22 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
     try:
         config_data = load_config(str(config) if config else None)
 
-        # Extract cluster name from configuration
-        cluster_name = get_cluster_name_from_config(config_data)
-        logger.info(f"Using cluster name: {cluster_name}")
+        # Extract cluster names from configuration
+        cluster_names = get_cluster_names_from_config(config_data)
+        logger.info(f"Will remove {len(cluster_names)} clusters: {cluster_names}")
 
         if dry_run:
             logger.info("Executing dry run for remove command")
-            click.echo("DRY RUN: Would remove kind cluster with the following configuration:")
+            click.echo("DRY RUN: Would remove kind clusters with the following configuration:")
             click.echo(json.dumps(config_data, indent=2))
-            click.echo(f"Cluster name: {cluster_name}")
+            click.echo(f"Clusters to remove: {', '.join(cluster_names)}")
             log_command_end("remove", success=True, message="Dry run completed")
         else:
             if not force:
                 logger.info("Prompting user for confirmation")
-                if not click.confirm(f"Are you sure you want to remove the kind cluster '{cluster_name}'?"):
+                if not click.confirm(
+                    f"Are you sure you want to remove {len(cluster_names)} kind clusters: {', '.join(cluster_names)}?"
+                ):
                     logger.info("User cancelled the operation")
                     click.echo("Operation cancelled.")
                     log_command_end("remove", success=False, message="User cancelled")
@@ -225,21 +243,29 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
                 raise click.Abort()
 
             logger.info("Starting kind cluster removal")
-            click.echo(f"Removing kind cluster '{cluster_name}'...")
+            click.echo(f"Removing {len(cluster_names)} kind clusters...")
 
             # Determine if we should log kind output (debug level)
             log_kind_output = logger.level <= 10  # DEBUG level
 
-            # Delete the cluster
-            success = delete_cluster(cluster_name, log_output=log_kind_output)
+            # Delete the clusters
+            results = delete_multiple_clusters(config_data, log_output=log_kind_output)
 
-            if success:
-                click.echo(f"✓ Kind cluster '{cluster_name}' removed successfully")
-                log_command_end("remove", success=True, message=f"Cluster '{cluster_name}' removed successfully")
-            else:
-                click.echo(f"✗ Failed to remove kind cluster '{cluster_name}'", err=True)
-                log_command_end("remove", success=False, message=f"Failed to remove cluster '{cluster_name}'")
+            # Report results
+            successful = [name for name, success in results.items() if success]
+            failed = [name for name, success in results.items() if not success]
+
+            if successful:
+                click.echo(f"✓ Successfully removed {len(successful)} clusters: {', '.join(successful)}")
+
+            if failed:
+                click.echo(f"✗ Failed to remove {len(failed)} clusters: {', '.join(failed)}", err=True)
+
+            if failed:
+                log_command_end("remove", success=False, message=f"Failed to remove {len(failed)} clusters")
                 raise click.Abort()
+            else:
+                log_command_end("remove", success=True, message=f"All {len(successful)} clusters removed successfully")
 
     except FileNotFoundError as e:
         log_error(e, "remove command - file not found")

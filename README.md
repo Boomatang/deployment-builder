@@ -4,8 +4,8 @@ A command-line tool for managing kind Kubernetes clusters using configuration fi
 
 ## Features
 
-- **Create kind clusters** from configuration files
-- **Remove kind clusters** based on configuration
+- **Create multiple kind clusters** from configuration files
+- **Remove multiple kind clusters** based on configuration
 - **Multiple config formats** - TOML (default), JSON and YAML support
 - **Dry run mode** - Preview changes before execution
 - **Flexible config discovery** - Automatic config file detection
@@ -39,20 +39,52 @@ poetry install
 
 ## Kind Integration
 
-This tool integrates with [kind](https://kind.sigs.k8s.io/) to create and manage local Kubernetes clusters. The tool wraps the `kind` CLI commands:
+This tool integrates with [kind](https://kind.sigs.k8s.io/) to create and manage multiple local Kubernetes clusters. The tool wraps the `kind` CLI commands:
 
-- `deploy create` → `kind create cluster --name <cluster_name>`
-- `deploy remove` → `kind delete cluster --name <cluster_name>`
+- `deploy create` → `kind create cluster --name <cluster_name>` (for each cluster)
+- `deploy remove` → `kind delete cluster --name <cluster_name>` (for each cluster)
 
-### Cluster Name Configuration
+### Multi-Cluster Configuration
 
-The cluster name is extracted from your configuration file using the following priority:
-1. `cluster_name` field
-2. `name` field  
-3. `cluster` field
-4. Default: `"default"`
+The tool supports creating multiple clusters based on configuration:
 
-The cluster name is automatically sanitized to be valid for kind (lowercase, alphanumeric, hyphens only).
+#### Cluster Types
+
+1. **Metrics Cluster** (`metrics: true/false`)
+   - Single centralized metrics cluster
+   - Name: `{prefix}-metrics`
+
+2. **Primary Clusters** (`primary: <number>`)
+   - Main application clusters
+   - Names: `{prefix}-primary-1`, `{prefix}-primary-2`, etc.
+
+3. **Secondary Clusters** (`secondary: <number>`)
+   - Backup or secondary clusters
+   - Names: `{prefix}-secondary-1`, `{prefix}-secondary-2`, etc.
+
+4. **Standard Clusters** (`standard: <number>`)
+   - General purpose clusters
+   - Names: `{prefix}-standard-1`, `{prefix}-standard-2`, etc.
+
+#### Configuration Structure
+
+```toml
+prefix = "my-project"
+
+[clusters]
+metrics = true
+primary = 2
+secondary = 1
+standard = 3
+```
+
+This creates 7 clusters:
+- `my-project-metrics`
+- `my-project-primary-1`, `my-project-primary-2`
+- `my-project-secondary-1`
+- `my-project-standard-1`, `my-project-standard-2`, `my-project-standard-3`
+
+The prefix is automatically sanitized to be valid for kind (lowercase, alphanumeric, hyphens only).
 
 ## Usage
 
@@ -64,10 +96,10 @@ The cluster name is automatically sanitized to be valid for kind (lowercase, alp
 # Show help
 poetry run deploy --help
 
-# Create kind cluster
+# Create multiple kind clusters
 poetry run deploy create
 
-# Remove kind cluster
+# Remove multiple kind clusters
 poetry run deploy remove
 
 # Set log level
@@ -130,7 +162,47 @@ Options:
 
 ## Configuration Files
 
-The tool supports TOML (default), JSON, and YAML configuration files. Configuration files are automatically discovered in the current directory, or you can specify a custom path using the `--config` flag or the `DEPLOYMENT_CONFIG` environment variable.
+The tool supports TOML (default), JSON, and YAML configuration files with multi-cluster support. Configuration files are automatically discovered in the current directory, or you can specify a custom path using the `--config` flag or the `DEPLOYMENT_CONFIG` environment variable.
+
+### Multi-Cluster Configuration Structure
+
+```toml
+# Basic project information
+name = "my-deployment"
+version = "1.0.0"
+environment = "production"
+prefix = "my-project"
+
+# Multi-cluster configuration
+[clusters]
+metrics = true      # Create metrics cluster
+primary = 2         # Create 2 primary clusters
+secondary = 1       # Create 1 secondary cluster
+standard = 3        # Create 3 standard clusters
+
+# Resource configuration
+[resources]
+cpu = "2"
+memory = "4Gi"
+replicas = 3
+
+# Service definitions
+[[services]]
+name = "web"
+port = 8080
+image = "nginx:latest"
+
+[[services]]
+name = "api"
+port = 3000
+image = "node:18-alpine"
+```
+
+This configuration creates 7 clusters:
+- `my-project-metrics`
+- `my-project-primary-1`, `my-project-primary-2`
+- `my-project-secondary-1`
+- `my-project-standard-1`, `my-project-standard-2`, `my-project-standard-3`
 
 ### Supported File Names
 

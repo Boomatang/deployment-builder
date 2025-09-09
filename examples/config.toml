@@ -1,8 +1,15 @@
-# Basic deployment configuration
+# Basic multi-cluster configuration
 name = "my-deployment"
 version = "1.0.0"
 environment = "production"
-cluster_name = "my-cluster"
+prefix = "my-project"
+
+# Cluster configuration
+[clusters]
+metrics = true
+primary = 2
+secondary = 1
+standard = 3
 
 [resources]
 cpu = "2"
