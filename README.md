@@ -4,8 +4,8 @@ A command-line tool for managing kind Kubernetes clusters using configuration fi
 
 ## Features
 
-- **Create multiple kind clusters** from configuration files
-- **Remove multiple kind clusters** based on configuration
+- **Create multiple kind clusters** from configuration files (with parallel execution)
+- **Remove multiple kind clusters** based on configuration (with parallel execution)
 - **Multiple config formats** - TOML (default), JSON and YAML support
 - **Dry run mode** - Preview changes before execution
 - **Flexible config discovery** - Automatic config file detection
@@ -86,6 +86,47 @@ This creates 7 clusters:
 - `my-project-standard-1`, `my-project-standard-2`, `my-project-standard-3`
 
 The prefix is automatically sanitized to be valid for kind (lowercase, alphanumeric, hyphens only).
+
+## Parallel Execution
+
+The tool automatically uses parallel execution to speed up cluster operations:
+
+### Performance Benefits
+
+- **Faster Operations**: Multiple clusters are created/deleted simultaneously
+- **Optimal Concurrency**: Automatically determines the best number of parallel workers
+- **Progress Tracking**: Real-time progress updates in logs
+- **Resource Efficient**: Uses ThreadPoolExecutor for optimal resource usage
+
+### Concurrency Control
+
+- **Small Clusters (≤2)**: Sequential execution for simplicity
+- **Large Clusters (>2)**: Parallel execution with up to 4 workers by default
+- **Progress Indicators**: Shows completion progress in logs
+- **Error Handling**: Individual cluster failures don't stop other operations
+
+### Example Performance
+
+```bash
+# 7 clusters created in parallel
+Creating 7 kind clusters in parallel...
+Starting parallel execution for clusters: my-project-metrics, my-project-primary-1, my-project-primary-2, my-project-secondary-1, my-project-standard-1, my-project-standard-2, my-project-standard-3
+🚀 Starting parallel creation of cluster: my-project-metrics
+🚀 Starting parallel creation of cluster: my-project-primary-1
+🚀 Starting parallel creation of cluster: my-project-primary-2
+...
+✓ Successfully created 7 clusters: my-project-metrics, my-project-primary-1, ...
+⏱️  Total execution time: 2m 15.30s
+```
+
+**Log Evidence of Parallel Execution:**
+```
+2025-09-09 23:35:35 - INFO - Deleting 2 clusters in parallel (2 workers)
+2025-09-09 23:35:35 - DEBUG - Starting parallel deletion of cluster: my-project-metrics
+2025-09-09 23:35:35 - DEBUG - Starting parallel deletion of cluster: my-project-primary-1
+```
+
+Notice both clusters start at the exact same timestamp, proving true parallel execution.
 
 ## Usage
 

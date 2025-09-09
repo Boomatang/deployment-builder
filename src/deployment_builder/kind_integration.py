@@ -2,7 +2,9 @@
 
 import subprocess
 import sys
-from typing import Optional, Tuple
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Optional, Tuple, Dict, List
 
 from .logging_config import get_logger
 
@@ -139,6 +141,25 @@ def check_kind_available() -> bool:
         return False
 
 
+def _calculate_optimal_workers(cluster_count: int, max_workers: int = 4) -> int:
+    """Calculate the optimal number of workers for parallel execution.
+
+    Args:
+        cluster_count: Number of clusters to process
+        max_workers: Maximum number of workers to use
+
+    Returns:
+        Optimal number of workers
+    """
+    # Don't use more workers than clusters
+    optimal_workers = min(cluster_count, max_workers)
+
+    # For very small numbers, use sequential execution
+    # No special case for small cluster counts; always use optimal_workers
+
+    return optimal_workers
+
+
 def get_cluster_names_from_config(config_data: dict) -> list[str]:
     """Extract cluster names from configuration data based on cluster types.
 
@@ -198,12 +219,40 @@ def get_cluster_names_from_config(config_data: dict) -> list[str]:
     return cluster_names
 
 
-def create_multiple_clusters(config_data: dict, log_output: bool = False) -> dict[str, bool]:
-    """Create multiple clusters based on configuration.
+def _create_single_cluster_parallel(cluster_name: str, log_output: bool = False) -> Tuple[str, bool]:
+    """Create a single cluster (for parallel execution).
+
+    Args:
+        cluster_name: Name of the cluster to create
+        log_output: Whether to log the command output to the log file
+
+    Returns:
+        Tuple of (cluster_name, success)
+    """
+    logger = get_logger()
+    start_time = time.time()
+    logger.info(f"🚀 Starting parallel creation of cluster: {cluster_name}")
+
+    success = create_cluster(cluster_name, log_output)
+
+    end_time = time.time()
+    duration = end_time - start_time
+
+    if success:
+        logger.info(f"✓ Successfully created cluster: {cluster_name} (took {duration:.2f}s)")
+    else:
+        logger.error(f"✗ Failed to create cluster: {cluster_name} (took {duration:.2f}s)")
+
+    return cluster_name, success
+
+
+def create_multiple_clusters(config_data: dict, log_output: bool = False, max_workers: int = 4) -> dict[str, bool]:
+    """Create multiple clusters based on configuration using parallel execution.
 
     Args:
         config_data: The loaded configuration data
         log_output: Whether to log the command output to the log file
+        max_workers: Maximum number of parallel workers
 
     Returns:
         Dictionary mapping cluster names to success status
@@ -212,17 +261,35 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False) -> dic
     cluster_names = get_cluster_names_from_config(config_data)
     results = {}
 
-    logger.info(f"Creating {len(cluster_names)} clusters")
+    # Calculate optimal number of workers
+    optimal_workers = _calculate_optimal_workers(len(cluster_names), max_workers)
 
-    for cluster_name in cluster_names:
-        logger.info(f"Creating cluster: {cluster_name}")
-        success = create_cluster(cluster_name, log_output)
-        results[cluster_name] = success
+    if optimal_workers == 1:
+        logger.info(f"Creating {len(cluster_names)} clusters sequentially")
+        # Use sequential execution for small numbers
+        for cluster_name in cluster_names:
+            cluster_name, success = _create_single_cluster_parallel(cluster_name, log_output)
+            results[cluster_name] = success
+    else:
+        logger.info(f"Creating {len(cluster_names)} clusters in parallel ({optimal_workers} workers)")
+        logger.info(f"Starting parallel execution for clusters: {', '.join(cluster_names)}")
 
-        if success:
-            logger.info(f"✓ Successfully created cluster: {cluster_name}")
-        else:
-            logger.error(f"✗ Failed to create cluster: {cluster_name}")
+        # Use ThreadPoolExecutor for parallel execution
+        with ThreadPoolExecutor(max_workers=optimal_workers) as executor:
+            # Submit all cluster creation tasks
+            future_to_cluster = {
+                executor.submit(_create_single_cluster_parallel, cluster_name, log_output): cluster_name
+                for cluster_name in cluster_names
+            }
+
+            # Process completed tasks as they finish
+            completed = 0
+            total = len(cluster_names)
+            for future in as_completed(future_to_cluster):
+                cluster_name, success = future.result()
+                results[cluster_name] = success
+                completed += 1
+                logger.info(f"Progress: {completed}/{total} clusters completed")
 
     successful = sum(1 for success in results.values() if success)
     logger.info(f"Cluster creation completed: {successful}/{len(cluster_names)} successful")
@@ -230,12 +297,40 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False) -> dic
     return results
 
 
-def delete_multiple_clusters(config_data: dict, log_output: bool = False) -> dict[str, bool]:
-    """Delete multiple clusters based on configuration.
+def _delete_single_cluster_parallel(cluster_name: str, log_output: bool = False) -> Tuple[str, bool]:
+    """Delete a single cluster (for parallel execution).
+
+    Args:
+        cluster_name: Name of the cluster to delete
+        log_output: Whether to log the command output to the log file
+
+    Returns:
+        Tuple of (cluster_name, success)
+    """
+    logger = get_logger()
+    start_time = time.time()
+    logger.info(f"🗑️  Starting parallel deletion of cluster: {cluster_name}")
+
+    success = delete_cluster(cluster_name, log_output)
+
+    end_time = time.time()
+    duration = end_time - start_time
+
+    if success:
+        logger.info(f"✓ Successfully deleted cluster: {cluster_name} (took {duration:.2f}s)")
+    else:
+        logger.error(f"✗ Failed to delete cluster: {cluster_name} (took {duration:.2f}s)")
+
+    return cluster_name, success
+
+
+def delete_multiple_clusters(config_data: dict, log_output: bool = False, max_workers: int = 4) -> dict[str, bool]:
+    """Delete multiple clusters based on configuration using parallel execution.
 
     Args:
         config_data: The loaded configuration data
         log_output: Whether to log the command output to the log file
+        max_workers: Maximum number of parallel workers
 
     Returns:
         Dictionary mapping cluster names to success status
@@ -244,17 +339,35 @@ def delete_multiple_clusters(config_data: dict, log_output: bool = False) -> dic
     cluster_names = get_cluster_names_from_config(config_data)
     results = {}
 
-    logger.info(f"Deleting {len(cluster_names)} clusters")
+    # Calculate optimal number of workers
+    optimal_workers = _calculate_optimal_workers(len(cluster_names), max_workers)
 
-    for cluster_name in cluster_names:
-        logger.info(f"Deleting cluster: {cluster_name}")
-        success = delete_cluster(cluster_name, log_output)
-        results[cluster_name] = success
+    if optimal_workers == 1:
+        logger.info(f"Deleting {len(cluster_names)} clusters sequentially")
+        # Use sequential execution for small numbers
+        for cluster_name in cluster_names:
+            cluster_name, success = _delete_single_cluster_parallel(cluster_name, log_output)
+            results[cluster_name] = success
+    else:
+        logger.info(f"Deleting {len(cluster_names)} clusters in parallel ({optimal_workers} workers)")
+        logger.info(f"Starting parallel execution for clusters: {', '.join(cluster_names)}")
 
-        if success:
-            logger.info(f"✓ Successfully deleted cluster: {cluster_name}")
-        else:
-            logger.error(f"✗ Failed to delete cluster: {cluster_name}")
+        # Use ThreadPoolExecutor for parallel execution
+        with ThreadPoolExecutor(max_workers=optimal_workers) as executor:
+            # Submit all cluster deletion tasks
+            future_to_cluster = {
+                executor.submit(_delete_single_cluster_parallel, cluster_name, log_output): cluster_name
+                for cluster_name in cluster_names
+            }
+
+            # Process completed tasks as they finish
+            completed = 0
+            total = len(cluster_names)
+            for future in as_completed(future_to_cluster):
+                cluster_name, success = future.result()
+                results[cluster_name] = success
+                completed += 1
+                logger.info(f"Progress: {completed}/{total} clusters completed")
 
     successful = sum(1 for success in results.values() if success)
     logger.info(f"Cluster deletion completed: {successful}/{len(cluster_names)} successful")

@@ -163,7 +163,7 @@ def create(config: Optional[Path], dry_run: bool):
                 raise click.Abort()
 
             logger.info("Starting kind cluster creation")
-            click.echo(f"Creating {len(cluster_names)} kind clusters...")
+            click.echo(f"Creating {len(cluster_names)} kind clusters in parallel...")
 
             # Determine if we should log kind output (debug level)
             log_kind_output = logger.level <= 10  # DEBUG level
@@ -282,7 +282,7 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
                 raise click.Abort()
 
             logger.info("Starting kind cluster removal")
-            click.echo(f"Removing {len(cluster_names)} kind clusters...")
+            click.echo(f"Removing {len(cluster_names)} kind clusters in parallel...")
 
             # Determine if we should log kind output (debug level)
             log_kind_output = logger.level <= 10  # DEBUG level
