@@ -6,9 +6,10 @@ A command-line tool for managing deployments using configuration files. Built wi
 
 - **Create deployments** from configuration files
 - **Remove deployments** based on configuration
-- **Multiple config formats** - JSON and YAML support
+- **Multiple config formats** - TOML (default), JSON and YAML support
 - **Dry run mode** - Preview changes before execution
 - **Flexible config discovery** - Automatic config file detection
+- **Environment variable support** - Set config file via `DEPLOYMENT_CONFIG` envvar
 - **Error handling** - Comprehensive error messages and validation
 
 ## Installation
@@ -93,11 +94,13 @@ Options:
 
 ## Configuration Files
 
-The tool supports both JSON and YAML configuration files. Configuration files are automatically discovered in the current directory, or you can specify a custom path using the `--config` flag.
+The tool supports TOML (default), JSON, and YAML configuration files. Configuration files are automatically discovered in the current directory, or you can specify a custom path using the `--config` flag or the `DEPLOYMENT_CONFIG` environment variable.
 
 ### Supported File Names
 
-The tool looks for these files in order:
+The tool looks for these files in order (TOML files are prioritized):
+- `config.toml`
+- `deployment.toml`
 - `config.json`
 - `config.yaml`
 - `config.yml`
@@ -106,6 +109,30 @@ The tool looks for these files in order:
 - `deployment.yml`
 
 ### Configuration Format
+
+#### TOML Example (`config.toml`) - Default Format
+
+```toml
+# Basic deployment configuration
+name = "my-deployment"
+version = "1.0.0"
+environment = "production"
+
+[resources]
+cpu = "2"
+memory = "4Gi"
+replicas = 3
+
+[[services]]
+name = "web"
+port = 8080
+image = "nginx:latest"
+
+[[services]]
+name = "api"
+port = 3000
+image = "node:18-alpine"
+```
 
 #### JSON Example (`config.json`)
 
@@ -153,6 +180,17 @@ services:
     image: node:18-alpine
 ```
 
+## Example Configurations
+
+The `examples/` directory contains sample configuration files in all supported formats:
+
+- `examples/config.toml` - Basic TOML configuration
+- `examples/deployment.toml` - Advanced TOML configuration with multiple services
+- `examples/config.json` - Basic JSON configuration
+- `examples/deployment.yaml` - Advanced YAML configuration
+
+You can copy any of these files to your project directory and customize them for your needs.
+
 ## Examples
 
 ### Using Default Configuration
@@ -174,6 +212,19 @@ poetry run deploy create --config /path/to/my-config.yaml
 # Remove with a specific config file
 poetry run deploy remove --config /path/to/my-config.json
 ```
+
+### Using Environment Variables
+
+```bash
+# Set config file via environment variable
+export DEPLOYMENT_CONFIG=/path/to/my-config.toml
+poetry run deploy create
+
+# Or use inline environment variable
+DEPLOYMENT_CONFIG=examples/deployment.toml poetry run deploy create --dry-run
+```
+
+**Note**: Command-line options take precedence over environment variables. If both are provided, the `--config` flag will be used.
 
 ### Dry Run Mode
 
@@ -220,6 +271,7 @@ deployment-builder/
 
 - `click>=8.0.0` - Command-line interface framework
 - `pyyaml>=6.0` - YAML configuration file support
+- `tomli>=2.0.0` - TOML configuration file support
 
 ### Code Formatting
 

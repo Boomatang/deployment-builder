@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import click
+import tomli
 import yaml
 
 
@@ -23,8 +24,10 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
         ValueError: If config file format is not supported.
     """
     if config_path is None:
-        # Look for common config file names in current directory
+        # Look for common config file names in current directory, TOML first
         config_files = [
+            "config.toml",
+            "deployment.toml",
             "config.json",
             "config.yaml",
             "config.yml",
@@ -44,7 +47,10 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
     # Load based on file extension
-    if config_path.suffix.lower() in [".json"]:
+    if config_path.suffix.lower() in [".toml"]:
+        with open(config_path, "rb") as f:
+            return tomli.load(f)
+    elif config_path.suffix.lower() in [".json"]:
         with open(config_path, "r") as f:
             return json.load(f)
     elif config_path.suffix.lower() in [".yaml", ".yml"]:
@@ -66,7 +72,8 @@ def cli():
     "--config",
     "-c",
     type=click.Path(exists=True, path_type=Path),
-    help="Path to configuration file. If not provided, looks for config files in current directory.",
+    envvar="DEPLOYMENT_CONFIG",
+    help="Path to configuration file. If not provided, looks for config files in current directory. Can also be set via DEPLOYMENT_CONFIG environment variable.",
 )
 @click.option(
     "--dry-run",
@@ -103,7 +110,8 @@ def create(config: Optional[Path], dry_run: bool):
     "--config",
     "-c",
     type=click.Path(exists=True, path_type=Path),
-    help="Path to configuration file. If not provided, looks for config files in current directory.",
+    envvar="DEPLOYMENT_CONFIG",
+    help="Path to configuration file. If not provided, looks for config files in current directory. Can also be set via DEPLOYMENT_CONFIG environment variable.",
 )
 @click.option(
     "--dry-run",
