@@ -7,11 +7,17 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Optional, Tuple, Dict, List
 
+import yaml
+
 from .logging_config import get_logger
 
 
 def run_kind_command(
-    command: str, cluster_name: str, log_output: bool = False, kubeconfig_file: Optional[Path] = None
+    command: str,
+    cluster_name: str,
+    log_output: bool = False,
+    kubeconfig_file: Optional[Path] = None,
+    kind_config_file: Optional[Path] = None,
 ) -> Tuple[bool, str, str]:
     """Run a kind command and return success status and output.
 
@@ -20,6 +26,7 @@ def run_kind_command(
         cluster_name: Name of the cluster to create/delete
         log_output: Whether to log the command output to the log file
         kubeconfig_file: Path to the kubeconfig file for this cluster
+        kind_config_file: Path to the kind configuration file for this cluster
 
     Returns:
         Tuple of (success, stdout, stderr)
@@ -40,6 +47,11 @@ def run_kind_command(
     if kubeconfig_file:
         cmd.extend(["--kubeconfig", str(kubeconfig_file)])
         logger.debug(f"Using kubeconfig: {kubeconfig_file}")
+
+    # Add kind config file if provided (only for create command)
+    if kind_config_file and command == "create":
+        cmd.extend(["--config", str(kind_config_file)])
+        logger.debug(f"Using kind config: {kind_config_file}")
 
     logger.info(f"Running kind command: {' '.join(cmd)}")
 
@@ -75,13 +87,19 @@ def run_kind_command(
         return False, "", error_msg
 
 
-def create_cluster(cluster_name: str, log_output: bool = False, kubeconfig_file: Optional[Path] = None) -> bool:
+def create_cluster(
+    cluster_name: str,
+    log_output: bool = False,
+    kubeconfig_file: Optional[Path] = None,
+    kind_config_file: Optional[Path] = None,
+) -> bool:
     """Create a kind cluster.
 
     Args:
         cluster_name: Name of the cluster to create
         log_output: Whether to log the command output to the log file
         kubeconfig_file: Path to the kubeconfig file for this cluster
+        kind_config_file: Path to the kind configuration file for this cluster
 
     Returns:
         True if successful, False otherwise
@@ -89,7 +107,7 @@ def create_cluster(cluster_name: str, log_output: bool = False, kubeconfig_file:
     logger = get_logger()
     logger.info(f"Creating kind cluster: {cluster_name}")
 
-    success, stdout, stderr = run_kind_command("create", cluster_name, log_output, kubeconfig_file)
+    success, stdout, stderr = run_kind_command("create", cluster_name, log_output, kubeconfig_file, kind_config_file)
 
     if success:
         logger.info(f"Successfully created cluster: {cluster_name}")
@@ -232,7 +250,11 @@ def get_cluster_names_from_config(config_data: dict) -> list[str]:
 
 
 def _create_single_cluster_parallel(
-    cluster_name: str, log_output: bool = False, kubeconfig_dir: Optional[Path] = None
+    cluster_name: str,
+    log_output: bool = False,
+    kubeconfig_dir: Optional[Path] = None,
+    kind_config_dir: Optional[Path] = None,
+    config_data: Optional[dict] = None,
 ) -> Tuple[str, bool]:
     """Create a single cluster (for parallel execution).
 
@@ -240,6 +262,8 @@ def _create_single_cluster_parallel(
         cluster_name: Name of the cluster to create
         log_output: Whether to log the command output to the log file
         kubeconfig_dir: Directory to save kubeconfig file
+        kind_config_dir: Directory to save kind config file
+        config_data: Configuration data for generating kind config
 
     Returns:
         Tuple of (cluster_name, success)
@@ -253,7 +277,14 @@ def _create_single_cluster_parallel(
     if kubeconfig_dir:
         kubeconfig_file = kubeconfig_dir / f"{cluster_name}.kubeconfig"
 
-    success = create_cluster(cluster_name, log_output, kubeconfig_file)
+    # Generate and save kind config if needed
+    kind_config_file = None
+    if kind_config_dir and config_data:
+        kind_config = generate_kind_config(cluster_name, config_data)
+        if save_kind_config(cluster_name, kind_config, kind_config_dir):
+            kind_config_file = kind_config_dir / f"{cluster_name}-kind-config.yaml"
+
+    success = create_cluster(cluster_name, log_output, kubeconfig_file, kind_config_file)
 
     # Extract kubeconfig if cluster creation was successful
     if success and kubeconfig_dir:
@@ -287,9 +318,11 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
     cluster_names = get_cluster_names_from_config(config_data)
     results = {}
 
-    # Get kubeconfig directory
+    # Get kubeconfig and kind config directories
     kubeconfig_dir = get_kubeconfig_path_from_config(config_data)
+    kind_config_dir = get_kind_config_path_from_config(config_data)
     logger.info(f"Kubeconfig directory: {kubeconfig_dir}")
+    logger.info(f"Kind config directory: {kind_config_dir}")
 
     # Calculate optimal number of workers
     optimal_workers = _calculate_optimal_workers(len(cluster_names), max_workers)
@@ -298,7 +331,9 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
         logger.info(f"Creating {len(cluster_names)} clusters sequentially")
         # Use sequential execution for small numbers
         for cluster_name in cluster_names:
-            cluster_name, success = _create_single_cluster_parallel(cluster_name, log_output, kubeconfig_dir)
+            cluster_name, success = _create_single_cluster_parallel(
+                cluster_name, log_output, kubeconfig_dir, kind_config_dir, config_data
+            )
             results[cluster_name] = success
     else:
         logger.info(f"Creating {len(cluster_names)} clusters in parallel ({optimal_workers} workers)")
@@ -308,7 +343,14 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
         with ThreadPoolExecutor(max_workers=optimal_workers) as executor:
             # Submit all cluster creation tasks
             future_to_cluster = {
-                executor.submit(_create_single_cluster_parallel, cluster_name, log_output, kubeconfig_dir): cluster_name
+                executor.submit(
+                    _create_single_cluster_parallel,
+                    cluster_name,
+                    log_output,
+                    kubeconfig_dir,
+                    kind_config_dir,
+                    config_data,
+                ): cluster_name
                 for cluster_name in cluster_names
             }
 
@@ -328,7 +370,10 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
 
 
 def _delete_single_cluster_parallel(
-    cluster_name: str, log_output: bool = False, kubeconfig_dir: Optional[Path] = None
+    cluster_name: str,
+    log_output: bool = False,
+    kubeconfig_dir: Optional[Path] = None,
+    kind_config_dir: Optional[Path] = None,
 ) -> Tuple[str, bool]:
     """Delete a single cluster (for parallel execution).
 
@@ -336,6 +381,7 @@ def _delete_single_cluster_parallel(
         cluster_name: Name of the cluster to delete
         log_output: Whether to log the command output to the log file
         kubeconfig_dir: Directory containing kubeconfig file
+        kind_config_dir: Directory containing kind config file
 
     Returns:
         Tuple of (cluster_name, success)
@@ -349,9 +395,11 @@ def _delete_single_cluster_parallel(
     if kubeconfig_dir:
         kubeconfig_file = kubeconfig_dir / f"{cluster_name}.kubeconfig"
 
-    # Remove kubeconfig first (before cluster deletion)
+    # Remove kubeconfig and kind config first (before cluster deletion)
     if kubeconfig_dir:
         remove_kubeconfig(cluster_name, kubeconfig_dir)
+    if kind_config_dir:
+        remove_kind_config(cluster_name, kind_config_dir)
 
     success = delete_cluster(cluster_name, log_output, kubeconfig_file)
 
@@ -381,9 +429,11 @@ def delete_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
     cluster_names = get_cluster_names_from_config(config_data)
     results = {}
 
-    # Get kubeconfig directory
+    # Get kubeconfig and kind config directories
     kubeconfig_dir = get_kubeconfig_path_from_config(config_data)
+    kind_config_dir = get_kind_config_path_from_config(config_data)
     logger.info(f"Kubeconfig directory: {kubeconfig_dir}")
+    logger.info(f"Kind config directory: {kind_config_dir}")
 
     # Calculate optimal number of workers
     optimal_workers = _calculate_optimal_workers(len(cluster_names), max_workers)
@@ -392,7 +442,9 @@ def delete_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
         logger.info(f"Deleting {len(cluster_names)} clusters sequentially")
         # Use sequential execution for small numbers
         for cluster_name in cluster_names:
-            cluster_name, success = _delete_single_cluster_parallel(cluster_name, log_output, kubeconfig_dir)
+            cluster_name, success = _delete_single_cluster_parallel(
+                cluster_name, log_output, kubeconfig_dir, kind_config_dir
+            )
             results[cluster_name] = success
     else:
         logger.info(f"Deleting {len(cluster_names)} clusters in parallel ({optimal_workers} workers)")
@@ -402,7 +454,9 @@ def delete_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
         with ThreadPoolExecutor(max_workers=optimal_workers) as executor:
             # Submit all cluster deletion tasks
             future_to_cluster = {
-                executor.submit(_delete_single_cluster_parallel, cluster_name, log_output, kubeconfig_dir): cluster_name
+                executor.submit(
+                    _delete_single_cluster_parallel, cluster_name, log_output, kubeconfig_dir, kind_config_dir
+                ): cluster_name
                 for cluster_name in cluster_names
             }
 
@@ -432,6 +486,115 @@ def get_kubeconfig_path_from_config(config_data: dict) -> Path:
     """
     kubeconfig_path = config_data.get("kubeconfig_path", "kubeconfigs")
     return Path(kubeconfig_path).resolve()
+
+
+def get_kind_config_path_from_config(config_data: dict) -> Path:
+    """Get kind config directory path from configuration.
+
+    Args:
+        config_data: The loaded configuration data
+
+    Returns:
+        Path to kind config directory
+    """
+    kind_config_path = config_data.get("kind_config_path", "kind-configs")
+    return Path(kind_config_path).resolve()
+
+
+def generate_kind_config(cluster_name: str, config_data: dict) -> dict:
+    """Generate a kind cluster configuration YAML.
+
+    Args:
+        cluster_name: Name of the cluster
+        config_data: The loaded configuration data
+
+    Returns:
+        Dictionary representing the kind configuration
+    """
+    # Base kind configuration
+    kind_config = {
+        "kind": "Cluster",
+        "apiVersion": "kind.x-k8s.io/v1alpha4",
+        "name": cluster_name,
+    }
+
+    # Add networking configuration if specified
+    if "networking" in config_data:
+        kind_config["networking"] = config_data["networking"]
+
+    # Add feature gates if specified
+    if "feature_gates" in config_data:
+        kind_config["featureGates"] = config_data["feature_gates"]
+
+    # Add runtime config if specified
+    if "runtime_config" in config_data:
+        kind_config["runtimeConfig"] = config_data["runtime_config"]
+
+    # Add nodes configuration if specified
+    if "nodes" in config_data:
+        kind_config["nodes"] = config_data["nodes"]
+
+    return kind_config
+
+
+def save_kind_config(cluster_name: str, kind_config: dict, config_dir: Path) -> bool:
+    """Save kind configuration to a YAML file.
+
+    Args:
+        cluster_name: Name of the cluster
+        kind_config: The kind configuration dictionary
+        config_dir: Directory to save the config file
+
+    Returns:
+        True if successful, False otherwise
+    """
+    logger = get_logger()
+
+    try:
+        # Ensure config directory exists
+        config_dir.mkdir(parents=True, exist_ok=True)
+
+        # Create config file path
+        config_file = config_dir / f"{cluster_name}-kind-config.yaml"
+
+        # Write YAML configuration
+        with open(config_file, "w") as f:
+            yaml.dump(kind_config, f, default_flow_style=False, sort_keys=False)
+
+        logger.info(f"✓ Kind config saved to: {config_file}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Error saving kind config for {cluster_name}: {e}")
+        return False
+
+
+def remove_kind_config(cluster_name: str, config_dir: Path) -> bool:
+    """Remove kind configuration file for a specific cluster.
+
+    Args:
+        cluster_name: Name of the cluster
+        config_dir: Directory containing the config file
+
+    Returns:
+        True if successful, False otherwise
+    """
+    logger = get_logger()
+
+    config_file = config_dir / f"{cluster_name}-kind-config.yaml"
+
+    try:
+        if config_file.exists():
+            config_file.unlink()
+            logger.info(f"✓ Kind config removed: {config_file}")
+            return True
+        else:
+            logger.debug(f"Kind config file not found: {config_file}")
+            return True  # Not an error if file doesn't exist
+
+    except Exception as e:
+        logger.error(f"Error removing kind config for {cluster_name}: {e}")
+        return False
 
 
 def extract_kubeconfig(cluster_name: str, kubeconfig_dir: Path) -> bool:

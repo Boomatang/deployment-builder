@@ -42,6 +42,10 @@ logs/
 kubeconfigs/
 *.kubeconfig
 
+# Kind config files
+kind-configs/
+*-kind-config.yaml
+
 # Temporary files
 *.tmp
 *.temp

@@ -7,6 +7,7 @@ A command-line tool for managing kind Kubernetes clusters using configuration fi
 - **Create multiple kind clusters** from configuration files (with parallel execution)
 - **Remove multiple kind clusters** based on configuration (with parallel execution)
 - **Kubeconfig management** - Automatic kubeconfig file creation and cleanup for each cluster
+- **Kind configuration management** - Automatic kind cluster configuration file generation and cleanup
 - **Multiple config formats** - TOML (default), JSON and YAML support
 - **Dry run mode** - Preview changes before execution
 - **Flexible config discovery** - Automatic config file detection
@@ -203,13 +204,97 @@ The tool automatically uses the `--kubeconfig` flag when running kind commands, 
 
 This ensures that kind commands always operate on the correct cluster context, even when managing multiple clusters simultaneously, and prevents kubeconfig file lock conflicts during parallel operations.
 
+## Kind Configuration Management
+
+The tool automatically generates and manages kind cluster configuration files, allowing you to customize cluster settings according to the [kind configuration documentation](https://kind.sigs.k8s.io/docs/user/configuration/).
+
+### Features
+
+- **Automatic Generation**: Kind configuration files are generated for each cluster based on your configuration
+- **Individual Files**: Each cluster gets its own configuration file named `{cluster_name}-kind-config.yaml`
+- **Configurable Path**: Set the kind config directory in your configuration file
+- **Automatic Cleanup**: Kind config files are removed when clusters are deleted
+- **Directory Management**: Kind config directory is created automatically if it doesn't exist
+- **YAML Format**: Configuration files follow the official kind YAML format
+
+### Configuration
+
+Add the `kind_config_path` field to your configuration:
+
+```toml
+# Basic project information
+name = "my-deployment"
+version = "1.0.0"
+environment = "production"
+prefix = "my-project"
+
+# Kubeconfig configuration
+kubeconfig_path = "kubeconfigs"
+
+# Kind configuration
+kind_config_path = "kind-configs"  # Default: "kind-configs"
+
+# Cluster configuration
+[clusters]
+metrics = true
+primary = 2
+secondary = 1
+standard = 3
+
+# Kind cluster configuration options
+[networking]
+ipFamily = "ipv4"
+apiServerAddress = "127.0.0.1"
+
+[feature_gates]
+"CSIMigration" = true
+```
+
+### Kind Configuration Files
+
+For the above configuration, the following kind config files will be created:
+
+```
+kind-configs/
+├── my-project-metrics-kind-config.yaml
+├── my-project-primary-1-kind-config.yaml
+├── my-project-primary-2-kind-config.yaml
+├── my-project-secondary-1-kind-config.yaml
+├── my-project-standard-1-kind-config.yaml
+├── my-project-standard-2-kind-config.yaml
+└── my-project-standard-3-kind-config.yaml
+```
+
+### Supported Kind Configuration Options
+
+The tool supports all standard kind configuration options:
+
+- **Networking**: IP family, API server address/port, pod/service subnets
+- **Feature Gates**: Kubernetes feature gates
+- **Runtime Config**: API server runtime configuration
+- **Nodes**: Custom node configurations, extra mounts, port mappings, labels
+- **Kubeadm Patches**: Custom kubeadm configuration patches
+
+### Example Kind Config File
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: my-project-metrics
+networking:
+  ipFamily: ipv4
+  apiServerAddress: 127.0.0.1
+featureGates:
+  CSIMigration: true
+```
+
 ### Automatic Cleanup
 
-When you delete clusters, the corresponding kubeconfig files are automatically removed:
+When you delete clusters, the corresponding kubeconfig and kind config files are automatically removed:
 
 ```bash
 poetry run deploy remove --config examples/config.toml
-# Removes both clusters and their kubeconfig files
+# Removes clusters, kubeconfig files, and kind config files
 ```
 
 ## Usage
@@ -302,12 +387,23 @@ prefix = "my-project"
 # Kubeconfig configuration
 kubeconfig_path = "kubeconfigs"  # Default: "kubeconfigs"
 
+# Kind configuration
+kind_config_path = "kind-configs"  # Default: "kind-configs"
+
 # Multi-cluster configuration
 [clusters]
 metrics = true      # Create metrics cluster
 primary = 2         # Create 2 primary clusters
 secondary = 1       # Create 1 secondary cluster
 standard = 3        # Create 3 standard clusters
+
+# Kind cluster configuration options
+[networking]
+ipFamily = "ipv4"
+apiServerAddress = "127.0.0.1"
+
+[feature_gates]
+"CSIMigration" = true
 
 # Resource configuration
 [resources]

@@ -7,12 +7,23 @@ prefix = "my-project"
 # Kubeconfig configuration
 kubeconfig_path = "kubeconfigs"
 
+# Kind configuration
+kind_config_path = "kind-configs"
+
 # Cluster configuration
 [clusters]
 metrics = true
 primary = 2
 secondary = 1
 standard = 3
+
+# Kind cluster configuration options
+[networking]
+ipFamily = "ipv4"
+apiServerAddress = "127.0.0.1"
+
+[feature_gates]
+"CSIMigration" = true
 
 [resources]
 cpu = "2"
