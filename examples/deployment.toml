@@ -4,6 +4,9 @@ version = "2.1.0"
 environment = "staging"
 prefix = "advanced-project"
 
+# Kubeconfig configuration
+kubeconfig_path = "kubeconfigs"
+
 [metadata]
 description = "Advanced deployment with multiple services and monitoring"
 team = "platform-engineering"

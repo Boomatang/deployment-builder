@@ -4,18 +4,22 @@ import subprocess
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 from typing import Optional, Tuple, Dict, List
 
 from .logging_config import get_logger
 
 
-def run_kind_command(command: str, cluster_name: str, log_output: bool = False) -> Tuple[bool, str, str]:
+def run_kind_command(
+    command: str, cluster_name: str, log_output: bool = False, kubeconfig_file: Optional[Path] = None
+) -> Tuple[bool, str, str]:
     """Run a kind command and return success status and output.
 
     Args:
         command: The kind command to run ('create' or 'delete')
         cluster_name: Name of the cluster to create/delete
         log_output: Whether to log the command output to the log file
+        kubeconfig_file: Path to the kubeconfig file for this cluster
 
     Returns:
         Tuple of (success, stdout, stderr)
@@ -30,6 +34,12 @@ def run_kind_command(command: str, cluster_name: str, log_output: bool = False) 
         cmd = ["kind", "create", "cluster", "--name", cluster_name]
     else:  # delete
         cmd = ["kind", "delete", "cluster", "--name", cluster_name]
+
+    # Add kubeconfig flag if provided
+    env = None
+    if kubeconfig_file:
+        cmd.extend(["--kubeconfig", str(kubeconfig_file)])
+        logger.debug(f"Using kubeconfig: {kubeconfig_file}")
 
     logger.info(f"Running kind command: {' '.join(cmd)}")
 
@@ -65,12 +75,13 @@ def run_kind_command(command: str, cluster_name: str, log_output: bool = False) 
         return False, "", error_msg
 
 
-def create_cluster(cluster_name: str, log_output: bool = False) -> bool:
+def create_cluster(cluster_name: str, log_output: bool = False, kubeconfig_file: Optional[Path] = None) -> bool:
     """Create a kind cluster.
 
     Args:
         cluster_name: Name of the cluster to create
         log_output: Whether to log the command output to the log file
+        kubeconfig_file: Path to the kubeconfig file for this cluster
 
     Returns:
         True if successful, False otherwise
@@ -78,7 +89,7 @@ def create_cluster(cluster_name: str, log_output: bool = False) -> bool:
     logger = get_logger()
     logger.info(f"Creating kind cluster: {cluster_name}")
 
-    success, stdout, stderr = run_kind_command("create", cluster_name, log_output)
+    success, stdout, stderr = run_kind_command("create", cluster_name, log_output, kubeconfig_file)
 
     if success:
         logger.info(f"Successfully created cluster: {cluster_name}")
@@ -90,12 +101,13 @@ def create_cluster(cluster_name: str, log_output: bool = False) -> bool:
         return False
 
 
-def delete_cluster(cluster_name: str, log_output: bool = False) -> bool:
+def delete_cluster(cluster_name: str, log_output: bool = False, kubeconfig_file: Optional[Path] = None) -> bool:
     """Delete a kind cluster.
 
     Args:
         cluster_name: Name of the cluster to delete
         log_output: Whether to log the command output to the log file
+        kubeconfig_file: Path to the kubeconfig file for this cluster
 
     Returns:
         True if successful, False otherwise
@@ -103,7 +115,7 @@ def delete_cluster(cluster_name: str, log_output: bool = False) -> bool:
     logger = get_logger()
     logger.info(f"Deleting kind cluster: {cluster_name}")
 
-    success, stdout, stderr = run_kind_command("delete", cluster_name, log_output)
+    success, stdout, stderr = run_kind_command("delete", cluster_name, log_output, kubeconfig_file)
 
     if success:
         logger.info(f"Successfully deleted cluster: {cluster_name}")
@@ -219,12 +231,15 @@ def get_cluster_names_from_config(config_data: dict) -> list[str]:
     return cluster_names
 
 
-def _create_single_cluster_parallel(cluster_name: str, log_output: bool = False) -> Tuple[str, bool]:
+def _create_single_cluster_parallel(
+    cluster_name: str, log_output: bool = False, kubeconfig_dir: Optional[Path] = None
+) -> Tuple[str, bool]:
     """Create a single cluster (for parallel execution).
 
     Args:
         cluster_name: Name of the cluster to create
         log_output: Whether to log the command output to the log file
+        kubeconfig_dir: Directory to save kubeconfig file
 
     Returns:
         Tuple of (cluster_name, success)
@@ -233,7 +248,18 @@ def _create_single_cluster_parallel(cluster_name: str, log_output: bool = False)
     start_time = time.time()
     logger.info(f"🚀 Starting parallel creation of cluster: {cluster_name}")
 
-    success = create_cluster(cluster_name, log_output)
+    # Get kubeconfig file path
+    kubeconfig_file = None
+    if kubeconfig_dir:
+        kubeconfig_file = kubeconfig_dir / f"{cluster_name}.kubeconfig"
+
+    success = create_cluster(cluster_name, log_output, kubeconfig_file)
+
+    # Extract kubeconfig if cluster creation was successful
+    if success and kubeconfig_dir:
+        kubeconfig_success = extract_kubeconfig(cluster_name, kubeconfig_dir)
+        if not kubeconfig_success:
+            logger.warning(f"Failed to extract kubeconfig for {cluster_name}, but cluster was created")
 
     end_time = time.time()
     duration = end_time - start_time
@@ -261,6 +287,10 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
     cluster_names = get_cluster_names_from_config(config_data)
     results = {}
 
+    # Get kubeconfig directory
+    kubeconfig_dir = get_kubeconfig_path_from_config(config_data)
+    logger.info(f"Kubeconfig directory: {kubeconfig_dir}")
+
     # Calculate optimal number of workers
     optimal_workers = _calculate_optimal_workers(len(cluster_names), max_workers)
 
@@ -268,7 +298,7 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
         logger.info(f"Creating {len(cluster_names)} clusters sequentially")
         # Use sequential execution for small numbers
         for cluster_name in cluster_names:
-            cluster_name, success = _create_single_cluster_parallel(cluster_name, log_output)
+            cluster_name, success = _create_single_cluster_parallel(cluster_name, log_output, kubeconfig_dir)
             results[cluster_name] = success
     else:
         logger.info(f"Creating {len(cluster_names)} clusters in parallel ({optimal_workers} workers)")
@@ -278,7 +308,7 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
         with ThreadPoolExecutor(max_workers=optimal_workers) as executor:
             # Submit all cluster creation tasks
             future_to_cluster = {
-                executor.submit(_create_single_cluster_parallel, cluster_name, log_output): cluster_name
+                executor.submit(_create_single_cluster_parallel, cluster_name, log_output, kubeconfig_dir): cluster_name
                 for cluster_name in cluster_names
             }
 
@@ -297,12 +327,15 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
     return results
 
 
-def _delete_single_cluster_parallel(cluster_name: str, log_output: bool = False) -> Tuple[str, bool]:
+def _delete_single_cluster_parallel(
+    cluster_name: str, log_output: bool = False, kubeconfig_dir: Optional[Path] = None
+) -> Tuple[str, bool]:
     """Delete a single cluster (for parallel execution).
 
     Args:
         cluster_name: Name of the cluster to delete
         log_output: Whether to log the command output to the log file
+        kubeconfig_dir: Directory containing kubeconfig file
 
     Returns:
         Tuple of (cluster_name, success)
@@ -311,7 +344,16 @@ def _delete_single_cluster_parallel(cluster_name: str, log_output: bool = False)
     start_time = time.time()
     logger.info(f"🗑️  Starting parallel deletion of cluster: {cluster_name}")
 
-    success = delete_cluster(cluster_name, log_output)
+    # Get kubeconfig file path
+    kubeconfig_file = None
+    if kubeconfig_dir:
+        kubeconfig_file = kubeconfig_dir / f"{cluster_name}.kubeconfig"
+
+    # Remove kubeconfig first (before cluster deletion)
+    if kubeconfig_dir:
+        remove_kubeconfig(cluster_name, kubeconfig_dir)
+
+    success = delete_cluster(cluster_name, log_output, kubeconfig_file)
 
     end_time = time.time()
     duration = end_time - start_time
@@ -339,6 +381,10 @@ def delete_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
     cluster_names = get_cluster_names_from_config(config_data)
     results = {}
 
+    # Get kubeconfig directory
+    kubeconfig_dir = get_kubeconfig_path_from_config(config_data)
+    logger.info(f"Kubeconfig directory: {kubeconfig_dir}")
+
     # Calculate optimal number of workers
     optimal_workers = _calculate_optimal_workers(len(cluster_names), max_workers)
 
@@ -346,7 +392,7 @@ def delete_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
         logger.info(f"Deleting {len(cluster_names)} clusters sequentially")
         # Use sequential execution for small numbers
         for cluster_name in cluster_names:
-            cluster_name, success = _delete_single_cluster_parallel(cluster_name, log_output)
+            cluster_name, success = _delete_single_cluster_parallel(cluster_name, log_output, kubeconfig_dir)
             results[cluster_name] = success
     else:
         logger.info(f"Deleting {len(cluster_names)} clusters in parallel ({optimal_workers} workers)")
@@ -356,7 +402,7 @@ def delete_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
         with ThreadPoolExecutor(max_workers=optimal_workers) as executor:
             # Submit all cluster deletion tasks
             future_to_cluster = {
-                executor.submit(_delete_single_cluster_parallel, cluster_name, log_output): cluster_name
+                executor.submit(_delete_single_cluster_parallel, cluster_name, log_output, kubeconfig_dir): cluster_name
                 for cluster_name in cluster_names
             }
 
@@ -373,6 +419,88 @@ def delete_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
     logger.info(f"Cluster deletion completed: {successful}/{len(cluster_names)} successful")
 
     return results
+
+
+def get_kubeconfig_path_from_config(config_data: dict) -> Path:
+    """Get kubeconfig directory path from configuration.
+
+    Args:
+        config_data: The loaded configuration data
+
+    Returns:
+        Path to kubeconfig directory
+    """
+    kubeconfig_path = config_data.get("kubeconfig_path", "kubeconfigs")
+    return Path(kubeconfig_path).resolve()
+
+
+def extract_kubeconfig(cluster_name: str, kubeconfig_dir: Path) -> bool:
+    """Extract kubeconfig for a specific cluster.
+
+    Args:
+        cluster_name: Name of the cluster
+        kubeconfig_dir: Directory to save the kubeconfig file
+
+    Returns:
+        True if successful, False otherwise
+    """
+    logger = get_logger()
+
+    # Ensure kubeconfig directory exists
+    kubeconfig_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create kubeconfig file path
+    kubeconfig_file = kubeconfig_dir / f"{cluster_name}.kubeconfig"
+
+    try:
+        # Extract kubeconfig using kind
+        cmd = ["kind", "get", "kubeconfig", "--name", cluster_name]
+        logger.debug(f"Extracting kubeconfig for {cluster_name}: {' '.join(cmd)}")
+
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+
+        # Write kubeconfig to file
+        with open(kubeconfig_file, "w") as f:
+            f.write(result.stdout)
+
+        logger.info(f"✓ Kubeconfig saved to: {kubeconfig_file}")
+        return True
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to extract kubeconfig for {cluster_name}: {e}")
+        logger.debug(f"Error output: {e.stderr}")
+        return False
+    except Exception as e:
+        logger.error(f"Error saving kubeconfig for {cluster_name}: {e}")
+        return False
+
+
+def remove_kubeconfig(cluster_name: str, kubeconfig_dir: Path) -> bool:
+    """Remove kubeconfig file for a specific cluster.
+
+    Args:
+        cluster_name: Name of the cluster
+        kubeconfig_dir: Directory containing the kubeconfig file
+
+    Returns:
+        True if successful, False otherwise
+    """
+    logger = get_logger()
+
+    kubeconfig_file = kubeconfig_dir / f"{cluster_name}.kubeconfig"
+
+    try:
+        if kubeconfig_file.exists():
+            kubeconfig_file.unlink()
+            logger.info(f"✓ Kubeconfig removed: {kubeconfig_file}")
+            return True
+        else:
+            logger.debug(f"Kubeconfig file not found: {kubeconfig_file}")
+            return True  # Not an error if file doesn't exist
+
+    except Exception as e:
+        logger.error(f"Error removing kubeconfig for {cluster_name}: {e}")
+        return False
 
 
 def get_cluster_name_from_config(config_data: dict) -> str:

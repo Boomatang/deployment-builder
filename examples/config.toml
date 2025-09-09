@@ -4,6 +4,9 @@ version = "1.0.0"
 environment = "production"
 prefix = "my-project"
 
+# Kubeconfig configuration
+kubeconfig_path = "kubeconfigs"
+
 # Cluster configuration
 [clusters]
 metrics = true

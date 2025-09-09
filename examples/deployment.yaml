@@ -2,6 +2,7 @@ name: advanced-deployment
 version: 2.1.0
 environment: staging
 prefix: advanced-project
+kubeconfig_path: kubeconfigs
 
 metadata:
   description: "Advanced deployment with multiple services and monitoring"

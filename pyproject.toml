@@ -15,6 +15,7 @@ dependencies = [
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.0.0"
+pytest = "^8.0.0"
 
 [tool.poetry]
 packages = [{include = "deployment_builder", from = "src"}]

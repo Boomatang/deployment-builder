@@ -32,12 +32,17 @@
 - Always test CLI commands after making changes
 
 ## Testing
+- **ALWAYS use pytest for testing** - Never create standalone test scripts
+- Add tests to `tests/` directory following the existing test structure
+- Use `@patch` decorators for mocking external dependencies
+- Test both success and failure scenarios
+- Run `poetry run pytest tests/ -v` to run all tests
 - Run `poetry run deploy --help` to verify CLI works
 - Test with sample configuration files
 - Ensure error handling works correctly
 - Verify dry-run mode functions properly
 
 ## Dependencies
-- Production: click, pyyaml
-- Development: black
+- Production: click, pyyaml, tomli
+- Development: black, pytest
 - Always update poetry.lock when adding dependencies

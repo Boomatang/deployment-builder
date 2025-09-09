@@ -38,6 +38,10 @@ Thumbs.db
 logs/
 *.log
 
+# Kubeconfig files
+kubeconfigs/
+*.kubeconfig
+
 # Temporary files
 *.tmp
 *.temp

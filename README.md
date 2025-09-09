@@ -6,6 +6,7 @@ A command-line tool for managing kind Kubernetes clusters using configuration fi
 
 - **Create multiple kind clusters** from configuration files (with parallel execution)
 - **Remove multiple kind clusters** based on configuration (with parallel execution)
+- **Kubeconfig management** - Automatic kubeconfig file creation and cleanup for each cluster
 - **Multiple config formats** - TOML (default), JSON and YAML support
 - **Dry run mode** - Preview changes before execution
 - **Flexible config discovery** - Automatic config file detection
@@ -128,6 +129,89 @@ Starting parallel execution for clusters: my-project-metrics, my-project-primary
 
 Notice both clusters start at the exact same timestamp, proving true parallel execution.
 
+## Kubeconfig Management
+
+The tool automatically manages kubeconfig files for each cluster, making it easy to work with multiple clusters.
+
+### Features
+
+- **Automatic Creation**: Kubeconfig files are created for each cluster after successful creation
+- **Individual Files**: Each cluster gets its own kubeconfig file named `{cluster_name}.kubeconfig`
+- **Configurable Path**: Set the kubeconfig directory in your configuration file
+- **Automatic Cleanup**: Kubeconfig files are removed when clusters are deleted
+- **Directory Management**: Kubeconfig directory is created automatically if it doesn't exist
+- **Command Integration**: `--kubeconfig` flag is used with kind commands to specify the correct kubeconfig file
+
+### Configuration
+
+Add the `kubeconfig_path` field to your configuration:
+
+```toml
+# Basic project information
+name = "my-deployment"
+version = "1.0.0"
+environment = "production"
+prefix = "my-project"
+
+# Kubeconfig configuration
+kubeconfig_path = "kubeconfigs"  # Default: "kubeconfigs"
+
+# Cluster configuration
+[clusters]
+metrics = true
+primary = 2
+secondary = 1
+standard = 3
+```
+
+### Kubeconfig Files
+
+For the above configuration, the following kubeconfig files will be created:
+
+```
+kubeconfigs/
+├── my-project-metrics.kubeconfig
+├── my-project-primary-1.kubeconfig
+├── my-project-primary-2.kubeconfig
+├── my-project-secondary-1.kubeconfig
+├── my-project-standard-1.kubeconfig
+├── my-project-standard-2.kubeconfig
+└── my-project-standard-3.kubeconfig
+```
+
+### Using Kubeconfig Files
+
+You can use these kubeconfig files with `kubectl`:
+
+```bash
+# Use a specific cluster's kubeconfig
+kubectl --kubeconfig=kubeconfigs/my-project-metrics.kubeconfig get nodes
+
+# Or set KUBECONFIG environment variable
+export KUBECONFIG=kubeconfigs/my-project-metrics.kubeconfig
+kubectl get nodes
+```
+
+### Kubeconfig Command Integration
+
+The tool automatically uses the `--kubeconfig` flag when running kind commands, ensuring that each cluster operation uses the correct kubeconfig file:
+
+- **During Cluster Creation**: The `--kubeconfig` flag is added to point to the cluster's kubeconfig file when running `kind create cluster`
+- **During Cluster Deletion**: The `--kubeconfig` flag is added to point to the cluster's kubeconfig file when running `kind delete cluster`
+- **Automatic Management**: This happens transparently - you don't need to manually specify kubeconfig files
+- **Parallel Safety**: Each parallel operation uses its own kubeconfig file, preventing conflicts
+
+This ensures that kind commands always operate on the correct cluster context, even when managing multiple clusters simultaneously, and prevents kubeconfig file lock conflicts during parallel operations.
+
+### Automatic Cleanup
+
+When you delete clusters, the corresponding kubeconfig files are automatically removed:
+
+```bash
+poetry run deploy remove --config examples/config.toml
+# Removes both clusters and their kubeconfig files
+```
+
 ## Usage
 
 ### Basic Commands
@@ -214,6 +298,9 @@ name = "my-deployment"
 version = "1.0.0"
 environment = "production"
 prefix = "my-project"
+
+# Kubeconfig configuration
+kubeconfig_path = "kubeconfigs"  # Default: "kubeconfigs"
 
 # Multi-cluster configuration
 [clusters]
