@@ -317,6 +317,23 @@ def get_cluster_names_from_config(config_data: dict) -> list[str]:
     return cluster_names
 
 
+def get_cluster_names_from_config_object(config: "DeploymentConfig") -> list[str]:
+    """Extract cluster names from a DeploymentConfig object.
+
+    Args:
+        config: The DeploymentConfig object
+
+    Returns:
+        List of cluster names to create
+    """
+    logger = get_logger()
+    logger.debug("Using DeploymentConfig object for cluster name generation")
+
+    cluster_names = config.get_cluster_names()
+    logger.info(f"Generated {len(cluster_names)} cluster names: {cluster_names}")
+    return cluster_names
+
+
 def _create_single_cluster_parallel(
     cluster_name: str,
     log_output: bool = False,

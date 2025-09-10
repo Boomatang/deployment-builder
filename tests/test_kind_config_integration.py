@@ -367,23 +367,26 @@ count = 2
             temp_file = f.name
 
         try:
-            # Load the configuration
-            config_data = load_config(temp_file)
+            # Load the configuration using the new configuration object
+            from deployment_builder.config import load_config_from_file
 
-            # Verify that [general] section values are flattened to top level
-            assert config_data["name"] == "test-deployment"
-            assert config_data["version"] == "1.0.0"
-            assert config_data["prefix"] == "test-project"
-            assert config_data["kubeconfig_path"] == "test-kubeconfigs"
-            assert config_data["kind_config_path"] == "test-kind-configs"
+            config_obj = load_config_from_file(temp_file)
+
+            # Verify that [general] section values are in the general section
+            assert config_obj.general.name == "test-deployment"
+            assert config_obj.general.version == "1.0.0"
+            assert config_obj.general.prefix == "test-project"
+            assert config_obj.general.kubeconfig_path == "test-kubeconfigs"
+            assert config_obj.general.kind_config_path == "test-kind-configs"
 
             # Verify that clusters section is preserved
-            assert "clusters" in config_data
-            assert config_data["clusters"]["metrics"]["enable"] is True
-            assert config_data["clusters"]["primary"]["count"] == 2
+            assert config_obj.clusters["metrics"].enable is True
+            assert config_obj.clusters["primary"].count == 2
 
-            # Verify that [general] section is not present at top level
-            assert "general" not in config_data
+            # Verify that the general section is present in the dict representation
+            config_dict = config_obj.to_dict()
+            assert "general" in config_dict
+            assert config_dict["general"]["name"] == "test-deployment"
 
         finally:
             # Clean up

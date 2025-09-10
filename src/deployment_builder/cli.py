@@ -89,15 +89,7 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
             logger.error(f"Unsupported configuration file format: {config_path.suffix}")
             raise ValueError(f"Unsupported configuration file format: {config_path.suffix}")
 
-        # Handle [general] section by flattening it to the top level
-        if "general" in config_data and isinstance(config_data["general"], dict):
-            logger.debug("Found [general] section, flattening configuration")
-            # Extract general section values to top level
-            general_config = config_data["general"]
-            # Remove general section from config_data
-            config_data = {k: v for k, v in config_data.items() if k != "general"}
-            # Merge general config into top level
-            config_data.update(general_config)
+        # Note: [general] section handling is now done in the DeploymentConfig object
 
         log_config_loaded(config_data, str(config_path))
         return config_data
@@ -149,16 +141,19 @@ def create(config: Optional[Path], dry_run: bool):
     log_command_start("create", str(config) if config else None, dry_run=dry_run)
 
     try:
-        config_data = load_config(str(config) if config else None)
+        from .config import load_config_from_file
 
-        # Extract cluster names from configuration
-        cluster_names = get_cluster_names_from_config(config_data)
+        # Load configuration using the new configuration object
+        config_obj = load_config_from_file(str(config) if config else None)
+
+        # Extract cluster names from configuration object
+        cluster_names = config_obj.get_cluster_names()
         logger.info(f"Will create {len(cluster_names)} clusters: {cluster_names}")
 
         if dry_run:
             logger.info("Executing dry run for create command")
             click.echo("DRY RUN: Would create kind clusters with the following configuration:")
-            click.echo(json.dumps(config_data, indent=2))
+            click.echo(json.dumps(config_obj.to_dict(), indent=2))
             click.echo(f"Clusters to create: {', '.join(cluster_names)}")
             log_command_end("create", success=True, message="Dry run completed")
             # Log timing report for dry run
@@ -179,7 +174,7 @@ def create(config: Optional[Path], dry_run: bool):
             log_kind_output = logger.level <= 10  # DEBUG level
 
             # Create the clusters
-            results = create_multiple_clusters(config_data, log_output=log_kind_output)
+            results = create_multiple_clusters(config_obj.to_dict(), log_output=log_kind_output)
 
             # Report results
             successful = [name for name, success in results.items() if success]
@@ -258,16 +253,19 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
     log_command_start("remove", str(config) if config else None, dry_run=dry_run, force=force)
 
     try:
-        config_data = load_config(str(config) if config else None)
+        from .config import load_config_from_file
 
-        # Extract cluster names from configuration
-        cluster_names = get_cluster_names_from_config(config_data)
+        # Load configuration using the new configuration object
+        config_obj = load_config_from_file(str(config) if config else None)
+
+        # Extract cluster names from configuration object
+        cluster_names = config_obj.get_cluster_names()
         logger.info(f"Will remove {len(cluster_names)} clusters: {cluster_names}")
 
         if dry_run:
             logger.info("Executing dry run for remove command")
             click.echo("DRY RUN: Would remove kind clusters with the following configuration:")
-            click.echo(json.dumps(config_data, indent=2))
+            click.echo(json.dumps(config_obj.to_dict(), indent=2))
             click.echo(f"Clusters to remove: {', '.join(cluster_names)}")
             log_command_end("remove", success=True, message="Dry run completed")
             # Log timing report for dry run
@@ -298,7 +296,7 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
             log_kind_output = logger.level <= 10  # DEBUG level
 
             # Delete the clusters
-            results = delete_multiple_clusters(config_data, log_output=log_kind_output)
+            results = delete_multiple_clusters(config_obj.to_dict(), log_output=log_kind_output)
 
             # Report results
             successful = [name for name, success in results.items() if success]
@@ -344,6 +342,64 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
         log_command_end("remove", success=False, message=f"Unexpected error: {e}")
         # Log timing report for error
         duration_str = log_timing_report(start_time, "remove", success=False)
+        click.echo(f"⏱️  Total execution time: {duration_str}")
+        raise click.Abort()
+
+
+@cli.command()
+def defaults():
+    """Show the default configuration values used by the tool."""
+    import time
+
+    # Start timing
+    start_time = time.time()
+
+    # Get logger instance
+    logger = get_logger()
+
+    # Log command start
+    log_command_start("defaults", None)
+
+    try:
+        from .config import create_default_config
+
+        # Create default configuration
+        logger.info("Creating default configuration object")
+        default_config = create_default_config()
+
+        # Display default values in dot-separated format
+        logger.info("Displaying default configuration values")
+        click.echo("Default Configuration Values:")
+        click.echo("=" * 50)
+
+        def format_config_dict(data, prefix=""):
+            """Recursively format configuration dictionary with dot notation."""
+            lines = []
+            for key, value in data.items():
+                current_key = f"{prefix}.{key}" if prefix else key
+
+                if isinstance(value, dict):
+                    lines.extend(format_config_dict(value, current_key))
+                else:
+                    lines.append(f"{current_key} = {value}")
+            return lines
+
+        # Format and display the configuration
+        config_dict = default_config.to_dict()
+        formatted_lines = format_config_dict(config_dict)
+        logger.debug(f"Formatted {len(formatted_lines)} configuration lines")
+
+        for line in sorted(formatted_lines):
+            click.echo(line)
+
+        logger.info("Successfully displayed default configuration values")
+        log_command_end("defaults", success=True)
+        duration_str = log_timing_report(start_time, "defaults", success=True)
+
+    except Exception as e:
+        log_error(e, "displaying default configuration values")
+        log_command_end("defaults", success=False)
+        duration_str = log_timing_report(start_time, "defaults", success=False)
         click.echo(f"⏱️  Total execution time: {duration_str}")
         raise click.Abort()
 
