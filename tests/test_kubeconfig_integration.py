@@ -293,7 +293,7 @@ users:
                 "metrics": {"enable": True},
                 "primary": {"count": 2},
                 "secondary": {"count": 3},
-                "standard": {"count": 1},
+                "standalone": {"count": 1},
             },
         }
 
@@ -306,7 +306,7 @@ users:
             "test-project-secondary-1",
             "test-project-secondary-2",
             "test-project-secondary-3",
-            "test-project-standard-1",
+            "test-project-standalone-1",
         ]
         assert cluster_names == expected_names
 
@@ -318,7 +318,7 @@ users:
                 "metrics": True,
                 "primary": 2,
                 "secondary": 1,
-                "standard": 3,
+                "standalone": 3,
             },
         }
 
@@ -329,8 +329,8 @@ users:
             "test-project-primary-1",
             "test-project-primary-2",
             "test-project-secondary-1",
-            "test-project-standard-1",
-            "test-project-standard-2",
-            "test-project-standard-3",
+            "test-project-standalone-1",
+            "test-project-standalone-2",
+            "test-project-standalone-3",
         ]
         assert cluster_names == expected_names

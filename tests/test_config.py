@@ -88,7 +88,7 @@ class TestDeploymentConfig:
         assert "metrics" in config.clusters
         assert "primary" in config.clusters
         assert "secondary" in config.clusters
-        assert "standard" in config.clusters
+        assert "standalone" in config.clusters
 
         for cluster_type, cluster_config in config.clusters.items():
             assert isinstance(cluster_config, ClusterConfig)
@@ -113,7 +113,7 @@ class TestDeploymentConfig:
                 "metrics": {"enable": True, "count": 0},
                 "primary": {"enable": False, "count": 3},
                 "secondary": {"enable": True, "count": 2},
-                "standard": {"enable": False, "count": 1},
+                "standalone": {"enable": False, "count": 1},
             },
         }
 
@@ -135,8 +135,8 @@ class TestDeploymentConfig:
         assert config.clusters["primary"].count == 3
         assert config.clusters["secondary"].enable is True
         assert config.clusters["secondary"].count == 2
-        assert config.clusters["standard"].enable is False
-        assert config.clusters["standard"].count == 1
+        assert config.clusters["standalone"].enable is False
+        assert config.clusters["standalone"].count == 1
 
     def test_update_from_dict_legacy_format(self):
         """Test updating configuration from legacy format."""
@@ -154,7 +154,7 @@ class TestDeploymentConfig:
                 "metrics": True,  # Legacy: boolean value
                 "primary": 2,  # Legacy: integer value
                 "secondary": 0,  # Legacy: zero count
-                "standard": 1,  # Legacy: integer value
+                "standalone": 1,  # Legacy: integer value
             },
         }
 
@@ -176,8 +176,8 @@ class TestDeploymentConfig:
         assert config.clusters["primary"].count == 2
         assert config.clusters["secondary"].enable is False
         assert config.clusters["secondary"].count == 0
-        assert config.clusters["standard"].enable is True
-        assert config.clusters["standard"].count == 1
+        assert config.clusters["standalone"].enable is True
+        assert config.clusters["standalone"].count == 1
 
     def test_update_from_dict_mixed_format(self):
         """Test updating configuration from mixed new/legacy format."""
@@ -192,7 +192,7 @@ class TestDeploymentConfig:
                 "metrics": {"enable": True},  # New format: dict with enable
                 "primary": 3,  # Legacy format: integer
                 "secondary": {"count": 2},  # New format: dict with count
-                "standard": False,  # Legacy format: boolean
+                "standalone": False,  # Legacy format: boolean
             },
         }
 
@@ -215,8 +215,8 @@ class TestDeploymentConfig:
         assert config.clusters["primary"].count == 3
         assert config.clusters["secondary"].enable is False  # Dict ignored in legacy format
         assert config.clusters["secondary"].count == 0  # Dict ignored in legacy format
-        assert config.clusters["standard"].enable is False
-        assert config.clusters["standard"].count == 0  # Boolean False becomes count 0
+        assert config.clusters["standalone"].enable is False
+        assert config.clusters["standalone"].count == 0  # Boolean False becomes count 0
 
     def test_update_from_dict_partial_override(self):
         """Test updating configuration with partial overrides."""
@@ -293,7 +293,7 @@ class TestDeploymentConfig:
         config.clusters["metrics"].enable = True
         config.clusters["primary"].count = 2
         config.clusters["secondary"].count = 1
-        config.clusters["standard"].count = 3
+        config.clusters["standalone"].count = 3
 
         cluster_names = config.get_cluster_names()
         expected = [
@@ -301,9 +301,9 @@ class TestDeploymentConfig:
             "test-project-primary-1",
             "test-project-primary-2",
             "test-project-secondary-1",
-            "test-project-standard-1",
-            "test-project-standard-2",
-            "test-project-standard-3",
+            "test-project-standalone-1",
+            "test-project-standalone-2",
+            "test-project-standalone-3",
         ]
         assert cluster_names == expected
 
@@ -446,7 +446,7 @@ max_workers = 12
 metrics = true
 primary = 2
 secondary = 0
-standard = 1
+standalone = 1
 """
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
@@ -465,8 +465,8 @@ standard = 1
             assert config.clusters["primary"].count == 2
             assert config.clusters["secondary"].enable is False
             assert config.clusters["secondary"].count == 0
-            assert config.clusters["standard"].enable is True
-            assert config.clusters["standard"].count == 1
+            assert config.clusters["standalone"].enable is True
+            assert config.clusters["standalone"].count == 1
 
         finally:
             Path(temp_file).unlink()
@@ -481,7 +481,7 @@ max_workers = 14
 metrics = true
 primary = 3
 secondary = 2
-standard = false
+standalone = false
 """
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
@@ -499,8 +499,8 @@ standard = false
             assert config.clusters["primary"].count == 3
             assert config.clusters["secondary"].enable is True
             assert config.clusters["secondary"].count == 2
-            assert config.clusters["standard"].enable is False
-            assert config.clusters["standard"].count == 0
+            assert config.clusters["standalone"].enable is False
+            assert config.clusters["standalone"].count == 0
 
         finally:
             Path(temp_file).unlink()
@@ -670,7 +670,7 @@ class TestConfigurationEdgeCases:
         assert set(result["general"].keys()) == general_keys
 
         # Clusters should have all expected cluster types
-        cluster_keys = {"metrics", "primary", "secondary", "standard"}
+        cluster_keys = {"metrics", "primary", "secondary", "standalone"}
         assert set(result["clusters"].keys()) == cluster_keys
 
         # Each cluster should have enable and count

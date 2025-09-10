@@ -14,6 +14,6 @@ clusters:
     count: 3
   secondary:
     count: 2
-  standard:
+  standalone:
     count: 5
 

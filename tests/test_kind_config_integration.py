@@ -236,7 +236,7 @@ class TestKindConfigIntegration:
                 "metrics": {"enable": True},
                 "primary": {"count": 2},
                 "secondary": {"count": 3},
-                "standard": {"count": 1},
+                "standalone": {"count": 1},
             },
         }
 
@@ -249,7 +249,7 @@ class TestKindConfigIntegration:
             "test-project-secondary-1",
             "test-project-secondary-2",
             "test-project-secondary-3",
-            "test-project-standard-1",
+            "test-project-standalone-1",
         ]
         assert cluster_names == expected_names
 
@@ -261,7 +261,7 @@ class TestKindConfigIntegration:
                 "metrics": {"enable": False},
                 "primary": {"count": 1},
                 "secondary": {"count": 0},
-                "standard": {"count": 2},
+                "standalone": {"count": 2},
             },
         }
 
@@ -269,8 +269,8 @@ class TestKindConfigIntegration:
 
         expected_names = [
             "test-project-primary-1",
-            "test-project-standard-1",
-            "test-project-standard-2",
+            "test-project-standalone-1",
+            "test-project-standalone-2",
         ]
         assert cluster_names == expected_names
 
@@ -282,7 +282,7 @@ class TestKindConfigIntegration:
                 "metrics": True,
                 "primary": 2,
                 "secondary": 1,
-                "standard": 3,
+                "standalone": 3,
             },
         }
 
@@ -293,9 +293,9 @@ class TestKindConfigIntegration:
             "test-project-primary-1",
             "test-project-primary-2",
             "test-project-secondary-1",
-            "test-project-standard-1",
-            "test-project-standard-2",
-            "test-project-standard-3",
+            "test-project-standalone-1",
+            "test-project-standalone-2",
+            "test-project-standalone-3",
         ]
         assert cluster_names == expected_names
 
@@ -307,14 +307,14 @@ class TestKindConfigIntegration:
                 "metrics": {"enable": True},  # New format
                 "primary": 2,  # Legacy format
                 "secondary": {"count": 1},  # New format
-                "standard": 0,  # Legacy format
+                "standalone": 0,  # Legacy format
             },
         }
 
         cluster_names = get_cluster_names_from_config(config_data)
 
         # Should fall back to legacy format since not all values are dicts
-        # standard: 0 means no standard clusters should be created
+        # standalone: 0 means no standalone clusters should be created
         expected_names = [
             "test-project-metrics",
             "test-project-primary-1",

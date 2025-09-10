@@ -39,7 +39,7 @@ class DeploymentConfig:
             "metrics": ClusterConfig(enable=False, count=0),
             "primary": ClusterConfig(enable=False, count=0),
             "secondary": ClusterConfig(enable=False, count=0),
-            "standard": ClusterConfig(enable=False, count=0),
+            "standalone": ClusterConfig(enable=False, count=0),
         }
     )
 
@@ -139,9 +139,9 @@ class DeploymentConfig:
         for i in range(1, self.clusters["secondary"].count + 1):
             cluster_names.append(f"{prefix}-secondary-{i}")
 
-        # Standard clusters
-        for i in range(1, self.clusters["standard"].count + 1):
-            cluster_names.append(f"{prefix}-standard-{i}")
+        # Standalone clusters
+        for i in range(1, self.clusters["standalone"].count + 1):
+            cluster_names.append(f"{prefix}-standalone-{i}")
 
         # If no clusters defined, create a default one
         if not cluster_names:

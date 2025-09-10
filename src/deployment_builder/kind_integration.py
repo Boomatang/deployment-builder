@@ -248,12 +248,12 @@ def get_cluster_names_from_config(config_data: dict) -> list[str]:
                 logger.info(f"Including secondary cluster {i}")
 
         # Standard clusters
-        standard_config = clusters_config.get("standard", {})
-        if isinstance(standard_config, dict):
-            standard_count = standard_config.get("count", 0)
-            for i in range(1, standard_count + 1):
-                cluster_names.append(f"{prefix}-standard-{i}")
-                logger.info(f"Including standard cluster {i}")
+        standalone_config = clusters_config.get("standalone", {})
+        if isinstance(standalone_config, dict):
+            standalone_count = standalone_config.get("count", 0)
+            for i in range(1, standalone_count + 1):
+                cluster_names.append(f"{prefix}-standalone-{i}")
+                logger.info(f"Including standalone cluster {i}")
 
     else:
         # Legacy format: metrics = true, primary = 2, etc.
@@ -296,17 +296,17 @@ def get_cluster_names_from_config(config_data: dict) -> list[str]:
             cluster_names.append(f"{prefix}-secondary-{i}")
             logger.info(f"Including secondary cluster {i}")
 
-        # Standard clusters
-        standard_value = clusters_config.get("standard", 0)
-        if isinstance(standard_value, dict):
+        # Standalone clusters
+        standalone_value = clusters_config.get("standalone", 0)
+        if isinstance(standalone_value, dict):
             # New format within legacy detection
-            standard_count = standard_value.get("count", 0)
+            standalone_count = standalone_value.get("count", 0)
         else:
             # Legacy format
-            standard_count = standard_value
-        for i in range(1, standard_count + 1):
-            cluster_names.append(f"{prefix}-standard-{i}")
-            logger.info(f"Including standard cluster {i}")
+            standalone_count = standalone_value
+        for i in range(1, standalone_count + 1):
+            cluster_names.append(f"{prefix}-standalone-{i}")
+            logger.info(f"Including standalone cluster {i}")
 
     # If no clusters defined, create a default one
     if not cluster_names:
