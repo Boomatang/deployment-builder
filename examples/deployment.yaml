@@ -10,12 +10,22 @@ general:
 clusters:
   metrics:
     enable: true
+    services: {}
   primary:
     count: 3
+    services:
+      namespaces:
+        kubeconfig.flag: "--kubeconfig"
+        cmd: "kubectl get namespaces"
   secondary:
     count: 2
+    services:
+      deployments:
+        kubeconfig.flag: "--kubeconfig"
+        cmd: "kubectl get deployments -A"
   standalone:
     count: 5
+    services: {}
 
 services:
   pods:

@@ -9,16 +9,25 @@
   },
   "clusters": {
     "metrics": {
-      "enable": true
+      "enable": true,
+      "services": {}
     },
     "primary": {
-      "count": 2
+      "count": 2,
+      "services": {
+        "namespaces": {
+          "kubeconfig.flag": "--kubeconfig",
+          "cmd": "kubectl get namespaces"
+        }
+      }
     },
     "secondary": {
-      "count": 1
+      "count": 1,
+      "services": {}
     },
     "standalone": {
-      "count": 3
+      "count": 3,
+      "services": {}
     }
   },
   "services": {

@@ -24,6 +24,7 @@ count = 2
 [clusters.standalone]
 count = 5
 
+# Global services (run on all clusters)
 [services]
 [services.pods]
 "kubeconfig.flag" = "--kubeconfig"
@@ -36,3 +37,14 @@ cmd = "kubectl get services -A"
 [services.ingress]
 "kubeconfig.flag" = "--kubeconfig"
 cmd = "kubectl get ingress -A"
+
+# Cluster-specific services
+[clusters.primary.services]
+[clusters.primary.services.namespaces]
+"kubeconfig.flag" = "--kubeconfig"
+cmd = "kubectl get namespaces"
+
+[clusters.secondary.services]
+[clusters.secondary.services.deployments]
+"kubeconfig.flag" = "--kubeconfig"
+cmd = "kubectl get deployments -A"

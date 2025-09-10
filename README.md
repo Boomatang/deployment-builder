@@ -19,6 +19,9 @@ A command-line tool for managing kind Kubernetes clusters using configuration fi
 - **Execution timing** - Total execution time and per-cluster timing reports
 - **Error handling** - Comprehensive error messages and validation
 - **Configurable parallelism** - Control the number of parallel workers via `max_workers`
+- **Service execution** - Run commands against clusters after creation
+- **Global services** - Services that run on all clusters
+- **Cluster-specific services** - Services that run only on specific cluster types
 
 ## Installation
 
@@ -442,6 +445,22 @@ count = 1
 
 [clusters.standalone]
 count = 3
+
+# Global services (run on all clusters)
+[services]
+[services.pods]
+"kubeconfig.flag" = "--kubeconfig"
+cmd = "kubectl get pods -n kube-system"
+
+[services.nodes]
+"kubeconfig.flag" = "--kubeconfig"
+cmd = "kubectl get nodes"
+
+# Cluster-specific services (run only on primary clusters)
+[clusters.primary.services]
+[clusters.primary.services.namespaces]
+"kubeconfig.flag" = "--kubeconfig"
+cmd = "kubectl get namespaces"
 ```
 
 ### Legacy Configuration Format (Still Supported)
@@ -497,6 +516,18 @@ Both formats create 7 clusters:
 - **`[clusters.standalone]`**: Standalone cluster configuration
   - `enable`: Enable standalone clusters (boolean)
   - `count`: Number of standalone clusters (integer)
+
+#### Services Section (`[services]`)
+- **Global Services**: Services that run on all clusters
+  - `[services.service_name]`: Service configuration
+    - `kubeconfig.flag`: Kubeconfig flag for the command (default: "--kubeconfig")
+    - `cmd`: Command to execute against the cluster
+
+#### Cluster-Specific Services
+- **Per-Cluster Services**: Services that run only on specific cluster types
+  - `[clusters.cluster_type.services.service_name]`: Cluster-specific service configuration
+    - `kubeconfig.flag`: Kubeconfig flag for the command (default: "--kubeconfig")
+    - `cmd`: Command to execute against the cluster
 
 #### Backward Compatibility
 The tool maintains full backward compatibility with the legacy configuration format. You can mix and match formats, and the tool will automatically detect and handle both formats correctly.

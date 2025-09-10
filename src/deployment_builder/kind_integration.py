@@ -334,23 +334,41 @@ def _create_single_cluster_parallel(
             logger.warning(f"Failed to extract kubeconfig for {cluster_name}, but cluster was created")
 
         # Execute services if cluster creation was successful and services are configured
-        if success and services and kubeconfig_file:
-            logger.info(f"Executing {len(services)} services for cluster: {cluster_name}")
-            service_results = execute_services_for_cluster(cluster_name, services, kubeconfig_file, log_output)
+        if success and kubeconfig_file:
+            # Determine which services to run for this cluster
+            cluster_services = {}
 
-            # Log service results
-            successful_services = sum(1 for _, success, _, _ in service_results if success)
-            total_services = len(service_results)
+            # Add global services
+            global_services = services.get("global", {})
+            if global_services:
+                cluster_services.update(global_services)
 
-            if total_services > 0:
-                logger.info(
-                    f"✓ Executed {successful_services}/{total_services} services successfully for {cluster_name}"
+            # Add cluster-specific services based on cluster name
+            cluster_type = _get_cluster_type_from_name(cluster_name)
+            if cluster_type and cluster_type in services:
+                cluster_services.update(services[cluster_type])
+
+            if cluster_services:
+                logger.info(f"Executing {len(cluster_services)} services for cluster: {cluster_name}")
+                service_results = execute_services_for_cluster(
+                    cluster_name, cluster_services, kubeconfig_file, log_output
                 )
 
-                # Log any failed services
-                for service_name, service_success, _, stderr in service_results:
-                    if not service_success:
-                        logger.error(f"✗ Service '{service_name}' failed on {cluster_name}: {stderr}")
+                # Log service results
+                successful_services = sum(1 for _, success, _, _ in service_results if success)
+                total_services = len(service_results)
+
+                if total_services > 0:
+                    logger.info(
+                        f"✓ Executed {successful_services}/{total_services} services successfully for {cluster_name}"
+                    )
+
+                    # Log any failed services
+                    for service_name, service_success, _, stderr in service_results:
+                        if not service_success:
+                            logger.error(f"✗ Service '{service_name}' failed on {cluster_name}: {stderr}")
+            else:
+                logger.debug(f"No services configured for cluster: {cluster_name}")
 
     end_time = time.time()
     duration = end_time - start_time
@@ -385,10 +403,25 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
     logger.info(f"Kind config directory: {kind_config_dir}")
 
     # Extract services configuration
-    services = config_data.get("services", {})
-    if services:
-        logger.info(f"Services configured: {list(services.keys())}")
-    else:
+    services = {}
+
+    # Add global services
+    global_services = config_data.get("services", {})
+    if global_services:
+        services["global"] = global_services
+        logger.info(f"Global services configured: {list(global_services.keys())}")
+
+    # Add cluster-specific services
+    clusters_config = config_data.get("clusters", {})
+    if isinstance(clusters_config, dict):
+        for cluster_type, cluster_config in clusters_config.items():
+            if isinstance(cluster_config, dict) and "services" in cluster_config:
+                cluster_services = cluster_config["services"]
+                if cluster_services:
+                    services[cluster_type] = cluster_services
+                    logger.info(f"Services configured for {cluster_type}: {list(cluster_services.keys())}")
+
+    if not services:
         logger.info("No services configured")
 
     # Calculate optimal number of workers
@@ -732,6 +765,25 @@ def remove_kubeconfig(cluster_name: str, kubeconfig_dir: Path) -> bool:
     except Exception as e:
         logger.error(f"Error removing kubeconfig for {cluster_name}: {e}")
         return False
+
+
+def _get_cluster_type_from_name(cluster_name: str) -> Optional[str]:
+    """Extract cluster type from cluster name.
+
+    Args:
+        cluster_name: Name of the cluster (e.g., "my-project-primary-1")
+
+    Returns:
+        Cluster type (e.g., "primary") or None if not found
+    """
+    # Extract cluster type from cluster name pattern: prefix-type-number
+    parts = cluster_name.split("-")
+    if len(parts) >= 2:
+        # Look for known cluster types
+        for part in parts[1:]:  # Skip prefix
+            if part in ["metrics", "primary", "secondary", "standalone"]:
+                return part
+    return None
 
 
 def get_cluster_name_from_config(config_data: dict) -> str:

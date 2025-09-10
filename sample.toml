@@ -9,6 +9,10 @@ enable = true
 
 [clusters.primary]
 count = 1
+[clusters.primary.services]
+[clusters.primary.services.namespaces]
+kubeconfig.flag="--kubeconfig"
+cmd = "kubectl get namespace"
 
 [clusters.secondary]
 count = 1

@@ -33,6 +33,21 @@ class TestClusterConfig:
         assert cluster.enable is True
         assert cluster.count == 3
 
+    def test_services_field(self):
+        """Test that ClusterConfig has services field."""
+        cluster = ClusterConfig()
+        assert isinstance(cluster.services, dict)
+        assert len(cluster.services) == 0
+
+    def test_services_with_custom_values(self):
+        """Test that ClusterConfig can have services."""
+        service = ServiceConfig(kubeconfig_flag="--kubeconfig", cmd="kubectl get pods")
+        cluster = ClusterConfig(enable=True, count=2, services={"pods": service})
+        assert cluster.enable is True
+        assert cluster.count == 2
+        assert "pods" in cluster.services
+        assert cluster.services["pods"].cmd == "kubectl get pods"
+
 
 class TestGeneralConfig:
     """Test GeneralConfig dataclass."""
@@ -145,6 +160,44 @@ class TestDeploymentConfig:
         assert isinstance(nodes_service, ServiceConfig)
         assert nodes_service.kubeconfig_flag == "--kubeconfig-file"
         assert nodes_service.cmd == "kubectl get nodes"
+
+    def test_update_from_dict_with_cluster_specific_services(self):
+        """Test updating configuration with cluster-specific services."""
+        config = create_default_config()
+        config_data = {
+            "general": {
+                "name": "test-deployment",
+            },
+            "clusters": {
+                "primary": {
+                    "count": 2,
+                    "services": {"namespaces": {"kubeconfig.flag": "--kubeconfig", "cmd": "kubectl get namespaces"}},
+                },
+                "secondary": {
+                    "count": 1,
+                    "services": {"pods": {"kubeconfig.flag": "--kubeconfig", "cmd": "kubectl get pods"}},
+                },
+            },
+            "services": {"global": {"kubeconfig.flag": "--kubeconfig", "cmd": "kubectl get nodes"}},
+        }
+
+        config.update_from_dict(config_data)
+
+        # Test cluster-specific services
+        assert config.clusters["primary"].count == 2
+        assert len(config.clusters["primary"].services) == 1
+        assert "namespaces" in config.clusters["primary"].services
+        assert config.clusters["primary"].services["namespaces"].cmd == "kubectl get namespaces"
+
+        assert config.clusters["secondary"].count == 1
+        assert len(config.clusters["secondary"].services) == 1
+        assert "pods" in config.clusters["secondary"].services
+        assert config.clusters["secondary"].services["pods"].cmd == "kubectl get pods"
+
+        # Test global services
+        assert len(config.services) == 1
+        assert "global" in config.services
+        assert config.services["global"].cmd == "kubectl get nodes"
 
     def test_update_from_dict_new_format(self):
         """Test updating configuration from new structured format."""

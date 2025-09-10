@@ -27,6 +27,7 @@ count = 1
 [clusters.standalone]
 count = 3
 
+# Global services (run on all clusters)
 [services]
 [services.pods]
 "kubeconfig.flag" = "--kubeconfig"
@@ -35,3 +36,9 @@ cmd = "kubectl get pods -n kube-system"
 [services.nodes]
 "kubeconfig.flag" = "--kubeconfig"
 cmd = "kubectl get nodes"
+
+# Cluster-specific services (run only on primary clusters)
+[clusters.primary.services]
+[clusters.primary.services.namespaces]
+"kubeconfig.flag" = "--kubeconfig"
+cmd = "kubectl get namespaces"

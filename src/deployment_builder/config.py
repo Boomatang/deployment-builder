@@ -6,19 +6,20 @@ from pathlib import Path
 
 
 @dataclass
-class ClusterConfig:
-    """Configuration for a specific cluster type."""
-
-    enable: bool = False
-    count: int = 0
-
-
-@dataclass
 class ServiceConfig:
     """Configuration for services to run against clusters."""
 
     kubeconfig_flag: str = "--kubeconfig"
     cmd: str = ""
+
+
+@dataclass
+class ClusterConfig:
+    """Configuration for a specific cluster type."""
+
+    enable: bool = False
+    count: int = 0
+    services: Dict[str, ServiceConfig] = field(default_factory=dict)
 
 
 @dataclass
@@ -109,6 +110,18 @@ class DeploymentConfig:
                             self.clusters[cluster_type].enable = cluster_config["enable"]
                         if "count" in cluster_config:
                             self.clusters[cluster_type].count = cluster_config["count"]
+
+                        # Handle cluster-specific services
+                        if "services" in cluster_config:
+                            cluster_services = cluster_config["services"]
+                            if isinstance(cluster_services, dict):
+                                for service_name, service_config in cluster_services.items():
+                                    if isinstance(service_config, dict):
+                                        kubeconfig_flag = service_config.get("kubeconfig.flag", "--kubeconfig")
+                                        cmd = service_config.get("cmd", "")
+                                        self.clusters[cluster_type].services[service_name] = ServiceConfig(
+                                            kubeconfig_flag=kubeconfig_flag, cmd=cmd
+                                        )
             else:
                 # Legacy format: metrics = true, primary = 2, etc.
                 for cluster_type, value in clusters_data.items():
@@ -187,7 +200,21 @@ class DeploymentConfig:
                 "max_workers": self.general.max_workers,
             },
             "clusters": {
-                cluster_type: {"enable": cluster_config.enable, "count": cluster_config.count}
+                cluster_type: {
+                    "enable": cluster_config.enable,
+                    "count": cluster_config.count,
+                    "services": (
+                        {
+                            service_name: {
+                                "kubeconfig.flag": service_config.kubeconfig_flag,
+                                "cmd": service_config.cmd,
+                            }
+                            for service_name, service_config in cluster_config.services.items()
+                        }
+                        if cluster_config.services
+                        else {}
+                    ),
+                }
                 for cluster_type, cluster_config in self.clusters.items()
             },
             "services": {
