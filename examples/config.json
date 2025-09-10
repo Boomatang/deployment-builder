@@ -4,7 +4,8 @@
     "version": "1.0.0",
     "environment": "production",
     "prefix": "my-project",
-    "kubeconfig_path": "kubeconfigs"
+    "kubeconfig_path": "kubeconfigs",
+    "max_workers": 4
   },
   "clusters": {
     "metrics": {

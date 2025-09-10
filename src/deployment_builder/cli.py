@@ -174,7 +174,9 @@ def create(config: Optional[Path], dry_run: bool):
             log_kind_output = logger.level <= 10  # DEBUG level
 
             # Create the clusters
-            results = create_multiple_clusters(config_obj.to_dict(), log_output=log_kind_output)
+            results = create_multiple_clusters(
+                config_obj.to_dict(), log_output=log_kind_output, max_workers=config_obj.general.max_workers
+            )
 
             # Report results
             successful = [name for name, success in results.items() if success]
@@ -296,7 +298,9 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
             log_kind_output = logger.level <= 10  # DEBUG level
 
             # Delete the clusters
-            results = delete_multiple_clusters(config_obj.to_dict(), log_output=log_kind_output)
+            results = delete_multiple_clusters(
+                config_obj.to_dict(), log_output=log_kind_output, max_workers=config_obj.general.max_workers
+            )
 
             # Report results
             successful = [name for name, success in results.items() if success]

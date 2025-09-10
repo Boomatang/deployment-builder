@@ -7,6 +7,9 @@ prefix = "advanced-project"
 # Kubeconfig configuration
 kubeconfig_path = "kubeconfigs"
 
+# Parallel processing
+max_workers = 6
+
 # Cluster configuration
 [clusters]
 [clusters.metrics]

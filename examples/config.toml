@@ -10,6 +10,9 @@ kubeconfig_path = "kubeconfigs"
 # Kind configuration
 kind_config_path = "kind-configs"
 
+# Parallel processing
+max_workers = 4
+
 # Cluster configuration
 [clusters]
 [clusters.metrics]

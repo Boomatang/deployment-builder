@@ -4,6 +4,7 @@ general:
   environment: staging
   prefix: advanced-project
   kubeconfig_path: kubeconfigs
+  max_workers: 6
 
 # Cluster configuration
 clusters:

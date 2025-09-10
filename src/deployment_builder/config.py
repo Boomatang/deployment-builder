@@ -23,6 +23,7 @@ class GeneralConfig:
     prefix: str = "default"
     kubeconfig_path: str = "kubeconfigs"
     kind_config_path: str = "kind-configs"
+    max_workers: int = 4
 
 
 @dataclass
@@ -63,6 +64,8 @@ class DeploymentConfig:
                 self.general.kubeconfig_path = general_data["kubeconfig_path"]
             if "kind_config_path" in general_data:
                 self.general.kind_config_path = general_data["kind_config_path"]
+            if "max_workers" in general_data:
+                self.general.max_workers = general_data["max_workers"]
         else:
             # Update general configuration from top-level keys (legacy format)
             if "name" in config_data:
@@ -77,6 +80,8 @@ class DeploymentConfig:
                 self.general.kubeconfig_path = config_data["kubeconfig_path"]
             if "kind_config_path" in config_data:
                 self.general.kind_config_path = config_data["kind_config_path"]
+            if "max_workers" in config_data:
+                self.general.max_workers = config_data["max_workers"]
 
         # Update cluster configuration
         if "clusters" in config_data:
@@ -158,6 +163,7 @@ class DeploymentConfig:
                 "prefix": self.general.prefix,
                 "kubeconfig_path": self.general.kubeconfig_path,
                 "kind_config_path": self.general.kind_config_path,
+                "max_workers": self.general.max_workers,
             },
             "clusters": {
                 cluster_type: {"enable": cluster_config.enable, "count": cluster_config.count}
