@@ -6,15 +6,19 @@ A command-line tool for managing kind Kubernetes clusters using configuration fi
 
 - **Create multiple kind clusters** from configuration files (with parallel execution)
 - **Remove multiple kind clusters** based on configuration (with parallel execution)
+- **Show default configuration** - Display all default configuration values
 - **Kubeconfig management** - Automatic kubeconfig file creation and cleanup for each cluster
 - **Kind configuration management** - Automatic kind cluster configuration file generation and cleanup
 - **Multiple config formats** - TOML (default), JSON and YAML support
+- **Structured configuration** - New structured format with `[general]` and `[clusters.*]` sections
+- **Legacy format support** - Backward compatibility with old configuration format
 - **Dry run mode** - Preview changes before execution
 - **Flexible config discovery** - Automatic config file detection
 - **Environment variable support** - Set config file via `DEPLOYMENT_CONFIG` envvar
 - **Comprehensive logging** - Detailed logs written to `logs/deployment_builder.log`
 - **Execution timing** - Total execution time and per-cluster timing reports
 - **Error handling** - Comprehensive error messages and validation
+- **Configurable parallelism** - Control the number of parallel workers via `max_workers`
 
 ## Installation
 
@@ -65,27 +69,41 @@ The tool supports creating multiple clusters based on configuration:
    - Backup or secondary clusters
    - Names: `{prefix}-secondary-1`, `{prefix}-secondary-2`, etc.
 
-4. **Standard Clusters** (`standard: <number>`)
+4. **Standalone Clusters** (`standalone: <number>`)
    - General purpose clusters
-   - Names: `{prefix}-standard-1`, `{prefix}-standard-2`, etc.
+   - Names: `{prefix}-standalone-1`, `{prefix}-standalone-2`, etc.
 
 #### Configuration Structure
 
 ```toml
+[general]
+name = "my-deployment"
+version = "1.0.0"
+environment = "production"
 prefix = "my-project"
+kubeconfig_path = "kubeconfigs"
+kind_config_path = "kind-configs"
+max_workers = 4
 
 [clusters]
-metrics = true
-primary = 2
-secondary = 1
-standard = 3
+[clusters.metrics]
+enable = true
+
+[clusters.primary]
+count = 2
+
+[clusters.secondary]
+count = 1
+
+[clusters.standalone]
+count = 3
 ```
 
 This creates 7 clusters:
 - `my-project-metrics`
 - `my-project-primary-1`, `my-project-primary-2`
 - `my-project-secondary-1`
-- `my-project-standard-1`, `my-project-standard-2`, `my-project-standard-3`
+- `my-project-standalone-1`, `my-project-standalone-2`, `my-project-standalone-3`
 
 The prefix is automatically sanitized to be valid for kind (lowercase, alphanumeric, hyphens only).
 
@@ -103,7 +121,8 @@ The tool automatically uses parallel execution to speed up cluster operations:
 ### Concurrency Control
 
 - **Small Clusters (≤2)**: Sequential execution for simplicity
-- **Large Clusters (>2)**: Parallel execution with up to 4 workers by default
+- **Large Clusters (>2)**: Parallel execution with configurable workers (default: 4)
+- **Configurable Workers**: Set `max_workers` in configuration to control parallelism
 - **Progress Indicators**: Shows completion progress in logs
 - **Error Handling**: Individual cluster failures don't stop other operations
 
@@ -112,7 +131,7 @@ The tool automatically uses parallel execution to speed up cluster operations:
 ```bash
 # 7 clusters created in parallel
 Creating 7 kind clusters in parallel...
-Starting parallel execution for clusters: my-project-metrics, my-project-primary-1, my-project-primary-2, my-project-secondary-1, my-project-standard-1, my-project-standard-2, my-project-standard-3
+Starting parallel execution for clusters: my-project-metrics, my-project-primary-1, my-project-primary-2, my-project-secondary-1, my-project-standalone-1, my-project-standalone-2, my-project-standalone-3
 🚀 Starting parallel creation of cluster: my-project-metrics
 🚀 Starting parallel creation of cluster: my-project-primary-1
 🚀 Starting parallel creation of cluster: my-project-primary-2
@@ -148,21 +167,25 @@ The tool automatically manages kubeconfig files for each cluster, making it easy
 Add the `kubeconfig_path` field to your configuration:
 
 ```toml
-# Basic project information
+[general]
 name = "my-deployment"
 version = "1.0.0"
 environment = "production"
 prefix = "my-project"
-
-# Kubeconfig configuration
 kubeconfig_path = "kubeconfigs"  # Default: "kubeconfigs"
 
-# Cluster configuration
 [clusters]
-metrics = true
-primary = 2
-secondary = 1
-standard = 3
+[clusters.metrics]
+enable = true
+
+[clusters.primary]
+count = 2
+
+[clusters.secondary]
+count = 1
+
+[clusters.standalone]
+count = 3
 ```
 
 ### Kubeconfig Files
@@ -175,9 +198,9 @@ kubeconfigs/
 ├── my-project-primary-1.kubeconfig
 ├── my-project-primary-2.kubeconfig
 ├── my-project-secondary-1.kubeconfig
-├── my-project-standard-1.kubeconfig
-├── my-project-standard-2.kubeconfig
-└── my-project-standard-3.kubeconfig
+├── my-project-standalone-1.kubeconfig
+├── my-project-standalone-2.kubeconfig
+└── my-project-standalone-3.kubeconfig
 ```
 
 ### Using Kubeconfig Files
@@ -222,32 +245,26 @@ The tool automatically generates and manages kind cluster configuration files, a
 Add the `kind_config_path` field to your configuration:
 
 ```toml
-# Basic project information
+[general]
 name = "my-deployment"
 version = "1.0.0"
 environment = "production"
 prefix = "my-project"
-
-# Kubeconfig configuration
 kubeconfig_path = "kubeconfigs"
-
-# Kind configuration
 kind_config_path = "kind-configs"  # Default: "kind-configs"
 
-# Cluster configuration
 [clusters]
-metrics = true
-primary = 2
-secondary = 1
-standard = 3
+[clusters.metrics]
+enable = true
 
-# Kind cluster configuration options
-[networking]
-ipFamily = "ipv4"
-apiServerAddress = "127.0.0.1"
+[clusters.primary]
+count = 2
 
-[feature_gates]
-"CSIMigration" = true
+[clusters.secondary]
+count = 1
+
+[clusters.standalone]
+count = 3
 ```
 
 ### Kind Configuration Files
@@ -260,9 +277,9 @@ kind-configs/
 ├── my-project-primary-1-kind-config.yaml
 ├── my-project-primary-2-kind-config.yaml
 ├── my-project-secondary-1-kind-config.yaml
-├── my-project-standard-1-kind-config.yaml
-├── my-project-standard-2-kind-config.yaml
-└── my-project-standard-3-kind-config.yaml
+├── my-project-standalone-1-kind-config.yaml
+├── my-project-standalone-2-kind-config.yaml
+└── my-project-standalone-3-kind-config.yaml
 ```
 
 ### Supported Kind Configuration Options
@@ -307,6 +324,9 @@ poetry run deploy remove --config examples/config.toml
 # Show help
 poetry run deploy --help
 
+# Show default configuration values
+poetry run deploy defaults
+
 # Create multiple kind clusters
 poetry run deploy create
 
@@ -322,6 +342,9 @@ poetry run deploy --log-level=debug create --dry-run
 ```bash
 # Show help
 python -m deployment_builder --help
+
+# Show default configuration
+python -m deployment_builder defaults
 
 # Create deployment
 python -m deployment_builder create
@@ -371,11 +394,57 @@ Options:
   --help             Show this message and exit.
 ```
 
+#### Defaults Command
+
+```bash
+poetry run deploy defaults
+
+Description:
+  Show the default configuration values used by the tool.
+  
+  This command displays all default configuration values in a dot-separated
+  format, making it easy to understand what values will be used when no
+  configuration file is provided or when configuration values are not specified.
+  
+  Example output:
+  general.name = default-deployment
+  general.version = 1.0.0
+  general.max_workers = 4
+  clusters.metrics.enable = False
+  clusters.standalone.count = 0
+```
+
 ## Configuration Files
 
 The tool supports TOML (default), JSON, and YAML configuration files with multi-cluster support. Configuration files are automatically discovered in the current directory, or you can specify a custom path using the `--config` flag or the `DEPLOYMENT_CONFIG` environment variable.
 
-### Multi-Cluster Configuration Structure
+### New Structured Configuration Format (Recommended)
+
+```toml
+[general]
+name = "my-deployment"
+version = "1.0.0"
+environment = "production"
+prefix = "my-project"
+kubeconfig_path = "kubeconfigs"
+kind_config_path = "kind-configs"
+max_workers = 4
+
+[clusters]
+[clusters.metrics]
+enable = true
+
+[clusters.primary]
+count = 2
+
+[clusters.secondary]
+count = 1
+
+[clusters.standalone]
+count = 3
+```
+
+### Legacy Configuration Format (Still Supported)
 
 ```toml
 # Basic project information
@@ -395,39 +464,42 @@ kind_config_path = "kind-configs"  # Default: "kind-configs"
 metrics = true      # Create metrics cluster
 primary = 2         # Create 2 primary clusters
 secondary = 1       # Create 1 secondary cluster
-standard = 3        # Create 3 standard clusters
-
-# Kind cluster configuration options
-[networking]
-ipFamily = "ipv4"
-apiServerAddress = "127.0.0.1"
-
-[feature_gates]
-"CSIMigration" = true
-
-# Resource configuration
-[resources]
-cpu = "2"
-memory = "4Gi"
-replicas = 3
-
-# Service definitions
-[[services]]
-name = "web"
-port = 8080
-image = "nginx:latest"
-
-[[services]]
-name = "api"
-port = 3000
-image = "node:18-alpine"
+standalone = 3      # Create 3 standalone clusters
 ```
 
-This configuration creates 7 clusters:
+Both formats create 7 clusters:
 - `my-project-metrics`
 - `my-project-primary-1`, `my-project-primary-2`
 - `my-project-secondary-1`
-- `my-project-standard-1`, `my-project-standard-2`, `my-project-standard-3`
+- `my-project-standalone-1`, `my-project-standalone-2`, `my-project-standalone-3`
+
+### Configuration Features
+
+#### General Section (`[general]`)
+- **`name`**: Deployment name (default: "default-deployment")
+- **`version`**: Deployment version (default: "1.0.0")
+- **`environment`**: Environment type (default: "development")
+- **`prefix`**: Cluster name prefix (default: "default")
+- **`kubeconfig_path`**: Directory for kubeconfig files (default: "kubeconfigs")
+- **`kind_config_path`**: Directory for kind config files (default: "kind-configs")
+- **`max_workers`**: Number of parallel workers (default: 4)
+
+#### Clusters Section (`[clusters]`)
+- **`[clusters.metrics]`**: Metrics cluster configuration
+  - `enable`: Enable metrics cluster (boolean)
+  - `count`: Number of metrics clusters (integer, usually 0 or 1)
+- **`[clusters.primary]`**: Primary cluster configuration
+  - `enable`: Enable primary clusters (boolean)
+  - `count`: Number of primary clusters (integer)
+- **`[clusters.secondary]`**: Secondary cluster configuration
+  - `enable`: Enable secondary clusters (boolean)
+  - `count`: Number of secondary clusters (integer)
+- **`[clusters.standalone]`**: Standalone cluster configuration
+  - `enable`: Enable standalone clusters (boolean)
+  - `count`: Number of standalone clusters (integer)
+
+#### Backward Compatibility
+The tool maintains full backward compatibility with the legacy configuration format. You can mix and match formats, and the tool will automatically detect and handle both formats correctly.
 
 ### Supported File Names
 
@@ -443,97 +515,134 @@ The tool looks for these files in order (TOML files are prioritized):
 
 ### Configuration Format
 
-#### TOML Example (`config.toml`) - Default Format
+#### TOML Example (`config.toml`) - New Structured Format
 
 ```toml
-# Basic deployment configuration
+[general]
 name = "my-deployment"
 version = "1.0.0"
 environment = "production"
+prefix = "my-project"
+kubeconfig_path = "kubeconfigs"
+kind_config_path = "kind-configs"
+max_workers = 4
 
-[resources]
-cpu = "2"
-memory = "4Gi"
-replicas = 3
+[clusters]
+[clusters.metrics]
+enable = true
 
-[[services]]
-name = "web"
-port = 8080
-image = "nginx:latest"
+[clusters.primary]
+count = 2
 
-[[services]]
-name = "api"
-port = 3000
-image = "node:18-alpine"
+[clusters.secondary]
+count = 1
+
+[clusters.standalone]
+count = 3
 ```
 
 #### JSON Example (`config.json`)
 
 ```json
 {
-  "name": "my-deployment",
-  "version": "1.0.0",
-  "environment": "production",
-  "resources": {
-    "cpu": "2",
-    "memory": "4Gi",
-    "replicas": 3
+  "general": {
+    "name": "my-deployment",
+    "version": "1.0.0",
+    "environment": "production",
+    "prefix": "my-project",
+    "kubeconfig_path": "kubeconfigs",
+    "kind_config_path": "kind-configs",
+    "max_workers": 4
   },
-  "services": [
-    {
-      "name": "web",
-      "port": 8080,
-      "image": "nginx:latest"
+  "clusters": {
+    "metrics": {
+      "enable": true
     },
-    {
-      "name": "api",
-      "port": 3000,
-      "image": "node:18-alpine"
+    "primary": {
+      "count": 2
+    },
+    "secondary": {
+      "count": 1
+    },
+    "standalone": {
+      "count": 3
     }
-  ]
+  }
 }
 ```
 
 #### YAML Example (`deployment.yaml`)
 
 ```yaml
-name: my-deployment
-version: 1.0.0
-environment: production
-resources:
-  cpu: "2"
-  memory: "4Gi"
-  replicas: 3
-services:
-  - name: web
-    port: 8080
-    image: nginx:latest
-  - name: api
-    port: 3000
-    image: node:18-alpine
+general:
+  name: my-deployment
+  version: 1.0.0
+  environment: production
+  prefix: my-project
+  kubeconfig_path: kubeconfigs
+  kind_config_path: kind-configs
+  max_workers: 4
+
+clusters:
+  metrics:
+    enable: true
+  primary:
+    count: 2
+  secondary:
+    count: 1
+  standalone:
+    count: 3
 ```
 
 ## Example Configurations
 
 The `examples/` directory contains sample configuration files in all supported formats:
 
-- `examples/config.toml` - Basic TOML configuration
-- `examples/deployment.toml` - Advanced TOML configuration with multiple services
-- `examples/config.json` - Basic JSON configuration
-- `examples/deployment.yaml` - Advanced YAML configuration
+- `examples/config.toml` - Basic TOML configuration (new structured format)
+- `examples/deployment.toml` - Advanced TOML configuration (new structured format)
+- `examples/config.json` - Basic JSON configuration (new structured format)
+- `examples/deployment.yaml` - Advanced YAML configuration (new structured format)
 
-You can copy any of these files to your project directory and customize them for your needs.
+All example files use the new structured configuration format with `[general]` and `[clusters.*]` sections. You can copy any of these files to your project directory and customize them for your needs.
 
 ## Examples
 
 ### Using Default Configuration
 
 ```bash
+# Show default configuration values
+poetry run deploy defaults
+
 # Create a deployment using the default config file
 poetry run deploy create
 
 # Remove the deployment
 poetry run deploy remove
+```
+
+### Viewing Default Configuration
+
+The `defaults` command shows all default configuration values in a dot-separated format:
+
+```bash
+$ poetry run deploy defaults
+Default Configuration Values:
+==================================================
+clusters.metrics.count = 0
+clusters.metrics.enable = False
+clusters.primary.count = 0
+clusters.primary.enable = False
+clusters.secondary.count = 0
+clusters.secondary.enable = False
+clusters.standalone.count = 0
+clusters.standalone.enable = False
+general.environment = development
+general.kind_config_path = kind-configs
+general.kubeconfig_path = kubeconfigs
+general.max_workers = 4
+general.name = default-deployment
+general.prefix = default
+general.version = 1.0.0
 ```
 
 ### Using Custom Configuration
@@ -697,17 +806,35 @@ deployment-builder/
 │   └── deployment_builder/
 │       ├── __init__.py
 │       ├── __main__.py
-│       └── cli.py
+│       ├── cli.py
+│       ├── config.py
+│       ├── kind_integration.py
+│       └── logging_config.py
 ├── tests/
+│   ├── test_config.py
+│   ├── test_kind_config_integration.py
+│   └── test_kubeconfig_integration.py
+├── examples/
+│   ├── config.toml
+│   ├── deployment.toml
+│   ├── config.json
+│   └── deployment.yaml
+├── hack/
+│   └── test_examples.fish
 ├── pyproject.toml
 └── README.md
 ```
 
 ### Dependencies
 
+**Production Dependencies:**
 - `click>=8.0.0` - Command-line interface framework
 - `pyyaml>=6.0` - YAML configuration file support
 - `tomli>=2.0.0` - TOML configuration file support
+
+**Development Dependencies:**
+- `black>=23.0.0` - Code formatting
+- `pytest>=7.0.0` - Testing framework
 
 ### Code Formatting
 
@@ -724,9 +851,43 @@ poetry run black --check src/ tests/
 ### Running Tests
 
 ```bash
-# Run tests (when implemented)
-poetry run pytest
+# Run all tests
+poetry run pytest tests/ -v
+
+# Run specific test file
+poetry run pytest tests/test_config.py -v
+
+# Run tests with coverage
+poetry run pytest tests/ --cov=src/deployment_builder
 ```
+
+### Test Coverage
+
+The project includes comprehensive test coverage:
+
+- **Configuration Tests** (`test_config.py`): 29 tests covering configuration object behavior, file loading, and edge cases
+- **Kind Integration Tests** (`test_kind_config_integration.py`): Tests for kind cluster creation and configuration
+- **Kubeconfig Integration Tests** (`test_kubeconfig_integration.py`): Tests for kubeconfig file management
+
+All tests use real objects without mocks, ensuring robust testing of the actual functionality.
+
+### Configuration Architecture
+
+The tool uses a structured configuration object system:
+
+- **`DeploymentConfig`**: Main configuration object containing all settings
+- **`GeneralConfig`**: General deployment settings (name, version, environment, etc.)
+- **`ClusterConfig`**: Individual cluster configuration (enable, count)
+- **Configuration Loading**: Supports both new structured format and legacy format
+- **Default Values**: Centralized default configuration with easy override
+- **Type Safety**: Uses Python dataclasses for type-safe configuration
+
+This architecture provides:
+- **Centralized Defaults**: All default values in one place
+- **Type Safety**: Compile-time type checking
+- **Easy Override**: Simple configuration file override
+- **Backward Compatibility**: Legacy format still supported
+- **Validation**: Built-in validation and error handling
 
 ## Contributing
 
