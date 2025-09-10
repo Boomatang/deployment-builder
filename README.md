@@ -888,9 +888,22 @@ poetry run pytest tests/ -v
 # Run specific test file
 poetry run pytest tests/test_config.py -v
 
+# Run CLI integration tests (tests CLI commands with example files)
+poetry run pytest tests/test_cli_integration.py -v
+
 # Run tests with coverage
 poetry run pytest tests/ --cov=src/deployment_builder
 ```
+
+### Manual Testing
+
+For manual testing with real cluster creation, use the hack script:
+
+```bash
+./hack/test_examples.fish
+```
+
+**Note**: The integration tests (`test_cli_integration.py`) provide comprehensive automated testing of CLI commands with all example configuration files using dry-run mode, which is much faster and safer than manual testing.
 
 ### Test Coverage
 
@@ -899,6 +912,7 @@ The project includes comprehensive test coverage:
 - **Configuration Tests** (`test_config.py`): 29 tests covering configuration object behavior, file loading, and edge cases
 - **Kind Integration Tests** (`test_kind_config_integration.py`): Tests for kind cluster creation and configuration
 - **Kubeconfig Integration Tests** (`test_kubeconfig_integration.py`): Tests for kubeconfig file management
+- **CLI Integration Tests** (`test_cli_integration.py`): 13 tests covering CLI commands with all example configuration files
 
 All tests use real objects without mocks, ensuring robust testing of the actual functionality.
 

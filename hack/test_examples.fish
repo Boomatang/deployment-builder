@@ -2,6 +2,9 @@
 
 # Test script for deployment-builder examples
 # This script tests all example configuration files by creating and then removing clusters
+#
+# NOTE: For automated testing, consider using the integration tests instead:
+#       poetry run pytest tests/test_cli_integration.py -v
 
 set -l examples_dir "examples"
 set -l config_files

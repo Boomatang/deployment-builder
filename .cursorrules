@@ -9,14 +9,18 @@
 - This is a Python CLI tool using Click and Poetry
 - Main CLI code is in `src/deployment_builder/cli.py`
 - Entry point is `src/deployment_builder/__main__.py`
-- Configuration files support JSON and YAML formats
+- Configuration management in `src/deployment_builder/config.py`
+- Kind integration in `src/deployment_builder/kind_integration.py`
+- Configuration files support TOML, JSON and YAML formats
 
 ## Development Workflow
 1. Make code changes
 2. Run `poetry run black src/ tests/` to format code
 3. Verify with `poetry run black --check src/ tests/`
-4. Test the CLI tool with `poetry run deploy --help`
-5. Commit changes
+4. Run tests: `poetry run pytest tests/ -v`
+5. Run integration tests: `poetry run pytest tests/test_cli_integration.py -v`
+6. Test the CLI tool with `poetry run deploy --help`
+7. Commit changes
 
 ## Code Style
 - Follow Black formatting (120 character line length)
@@ -27,9 +31,10 @@
 
 ## CLI Tool Usage
 - Main command: `poetry run deploy`
-- Commands: `create`, `remove`
+- Commands: `create`, `remove`, `defaults`
 - Options: `--config`, `--dry-run`, `--force`
 - Always test CLI commands after making changes
+- Use integration tests for comprehensive CLI testing
 
 ## Testing
 - **ALWAYS use pytest for testing** - Never create standalone test scripts
@@ -37,10 +42,27 @@
 - Use `@patch` decorators for mocking external dependencies
 - Test both success and failure scenarios
 - Run `poetry run pytest tests/ -v` to run all tests
+- Run `poetry run pytest tests/test_cli_integration.py -v` for CLI integration tests
 - Run `poetry run deploy --help` to verify CLI works
-- Test with sample configuration files
+- Test with sample configuration files using integration tests
 - Ensure error handling works correctly
 - Verify dry-run mode functions properly
+- Integration tests cover CLI commands with all example files
+
+## Configuration System
+- Uses `DeploymentConfig` dataclass for type-safe configuration management
+- Supports TOML, JSON, and YAML configuration files
+- Handles both structured and legacy configuration formats
+- Supports global services and cluster-specific services
+- Configuration objects hold all default values
+- Use `deploy defaults` to show current default values
+
+## Services System
+- Global services run on all clusters after creation
+- Cluster-specific services run only on specific cluster types
+- Services are executed within the same thread pool as cluster creation
+- Service configuration includes `kubeconfig.flag` and `cmd` fields
+- Services run immediately after cluster is ready and kubeconfig is extracted
 
 ## Dependencies
 - Production: click, pyyaml, tomli
