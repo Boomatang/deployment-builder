@@ -19,22 +19,5 @@
     "standard": {
       "count": 3
     }
-  },
-  "resources": {
-    "cpu": "2",
-    "memory": "4Gi",
-    "replicas": 3
-  },
-  "services": [
-    {
-      "name": "web",
-      "port": 8080,
-      "image": "nginx:latest"
-    },
-    {
-      "name": "api",
-      "port": 3000,
-      "image": "node:18-alpine"
-    }
-  ]
+  }
 }

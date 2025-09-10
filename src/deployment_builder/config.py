@@ -42,24 +42,6 @@ class DeploymentConfig:
         }
     )
 
-    # Kind cluster configuration options
-    networking: Optional[Dict[str, Any]] = None
-    feature_gates: Optional[Dict[str, Any]] = None
-    runtime_config: Optional[Dict[str, Any]] = None
-    nodes: Optional[Dict[str, Any]] = None
-
-    # Resources
-    resources: Optional[Dict[str, Any]] = None
-
-    # Services
-    services: Optional[list] = None
-
-    # Monitoring
-    monitoring: Optional[Dict[str, Any]] = None
-
-    # Metadata
-    metadata: Optional[Dict[str, Any]] = None
-
     def update_from_dict(self, config_data: Dict[str, Any]) -> None:
         """Update configuration from a dictionary (loaded from config file).
 
@@ -122,24 +104,6 @@ class DeploymentConfig:
                             self.clusters[cluster_type].enable = value > 0
                             self.clusters[cluster_type].count = value
 
-        # Update optional configuration sections
-        if "networking" in config_data:
-            self.networking = config_data["networking"]
-        if "feature_gates" in config_data:
-            self.feature_gates = config_data["feature_gates"]
-        if "runtime_config" in config_data:
-            self.runtime_config = config_data["runtime_config"]
-        if "nodes" in config_data:
-            self.nodes = config_data["nodes"]
-        if "resources" in config_data:
-            self.resources = config_data["resources"]
-        if "services" in config_data:
-            self.services = config_data["services"]
-        if "monitoring" in config_data:
-            self.monitoring = config_data["monitoring"]
-        if "metadata" in config_data:
-            self.metadata = config_data["metadata"]
-
     def get_cluster_names(self) -> list[str]:
         """Get list of cluster names based on current configuration.
 
@@ -200,24 +164,6 @@ class DeploymentConfig:
                 for cluster_type, cluster_config in self.clusters.items()
             },
         }
-
-        # Add optional sections if they exist
-        if self.networking is not None:
-            result["networking"] = self.networking
-        if self.feature_gates is not None:
-            result["feature_gates"] = self.feature_gates
-        if self.runtime_config is not None:
-            result["runtime_config"] = self.runtime_config
-        if self.nodes is not None:
-            result["nodes"] = self.nodes
-        if self.resources is not None:
-            result["resources"] = self.resources
-        if self.services is not None:
-            result["services"] = self.services
-        if self.monitoring is not None:
-            result["monitoring"] = self.monitoring
-        if self.metadata is not None:
-            result["metadata"] = self.metadata
 
         return result
 

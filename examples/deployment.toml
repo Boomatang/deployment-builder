@@ -7,11 +7,6 @@ prefix = "advanced-project"
 # Kubeconfig configuration
 kubeconfig_path = "kubeconfigs"
 
-[metadata]
-description = "Advanced deployment with multiple services and monitoring"
-team = "platform-engineering"
-contact = "platform@company.com"
-
 # Cluster configuration
 [clusters]
 [clusters.metrics]
@@ -25,42 +20,3 @@ count = 2
 
 [clusters.standard]
 count = 5
-
-[resources]
-cpu = "4"
-memory = "8Gi"
-replicas = 5
-storage = "20Gi"
-
-[monitoring]
-enabled = true
-metrics_port = 9090
-health_check_path = "/health"
-
-[[services]]
-name = "frontend"
-port = 80
-image = "nginx:1.24-alpine"
-replicas = 3
-resources = { cpu = "0.5", memory = "512Mi" }
-
-[[services]]
-name = "backend"
-port = 8080
-image = "python:3.11-slim"
-replicas = 2
-resources = { cpu = "1", memory = "1Gi" }
-env_vars = { DATABASE_URL = "postgresql://localhost:5432/mydb", DEBUG = "false" }
-
-[[services]]
-name = "database"
-port = 5432
-image = "postgres:15-alpine"
-replicas = 1
-resources = { cpu = "2", memory = "4Gi" }
-persistent_volume = true
-
-[networking]
-ingress_enabled = true
-tls_enabled = true
-domain = "myapp.example.com"

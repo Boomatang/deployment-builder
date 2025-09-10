@@ -23,26 +23,3 @@ count = 1
 
 [clusters.standard]
 count = 3
-
-# Kind cluster configuration options
-[networking]
-ipFamily = "ipv4"
-apiServerAddress = "127.0.0.1"
-
-[feature_gates]
-"CSIMigration" = true
-
-[resources]
-cpu = "2"
-memory = "4Gi"
-replicas = 3
-
-[[services]]
-name = "web"
-port = 8080
-image = "nginx:latest"
-
-[[services]]
-name = "api"
-port = 3000
-image = "node:18-alpine"
