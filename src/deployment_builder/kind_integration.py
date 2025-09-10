@@ -218,10 +218,7 @@ def get_cluster_names_from_config(config_data: dict) -> list[str]:
     clusters_config = config_data.get("clusters", {})
 
     # Handle new structured format: [clusters.metrics], [clusters.primary], etc.
-    # Check if all cluster values are dictionaries (new format)
-    if isinstance(clusters_config, dict) and all(
-        isinstance(v, dict) for v in clusters_config.values() if v is not None
-    ):
+    if isinstance(clusters_config, dict) and any(isinstance(v, dict) for v in clusters_config.values()):
         # New structured format
         logger.debug("Using new structured cluster configuration format")
 
@@ -247,7 +244,7 @@ def get_cluster_names_from_config(config_data: dict) -> list[str]:
                 cluster_names.append(f"{prefix}-secondary-{i}")
                 logger.info(f"Including secondary cluster {i}")
 
-        # Standard clusters
+        # Standalone clusters
         standalone_config = clusters_config.get("standalone", {})
         if isinstance(standalone_config, dict):
             standalone_count = standalone_config.get("count", 0)
@@ -257,53 +254,27 @@ def get_cluster_names_from_config(config_data: dict) -> list[str]:
 
     else:
         # Legacy format: metrics = true, primary = 2, etc.
-        # Also handle mixed format by treating each cluster type individually
         logger.debug("Using legacy cluster configuration format")
 
         # Metrics cluster (single)
-        metrics_value = clusters_config.get("metrics", False)
-        if isinstance(metrics_value, dict):
-            # New format within legacy detection
-            if metrics_value.get("enable", False):
-                cluster_names.append(f"{prefix}-metrics")
-                logger.info("Including metrics cluster")
-        elif metrics_value:
-            # Legacy format
+        if clusters_config.get("metrics", False):
             cluster_names.append(f"{prefix}-metrics")
             logger.info("Including metrics cluster")
 
         # Primary clusters
-        primary_value = clusters_config.get("primary", 0)
-        if isinstance(primary_value, dict):
-            # New format within legacy detection
-            primary_count = primary_value.get("count", 0)
-        else:
-            # Legacy format
-            primary_count = primary_value
+        primary_count = clusters_config.get("primary", 0)
         for i in range(1, primary_count + 1):
             cluster_names.append(f"{prefix}-primary-{i}")
             logger.info(f"Including primary cluster {i}")
 
         # Secondary clusters
-        secondary_value = clusters_config.get("secondary", 0)
-        if isinstance(secondary_value, dict):
-            # New format within legacy detection
-            secondary_count = secondary_value.get("count", 0)
-        else:
-            # Legacy format
-            secondary_count = secondary_value
+        secondary_count = clusters_config.get("secondary", 0)
         for i in range(1, secondary_count + 1):
             cluster_names.append(f"{prefix}-secondary-{i}")
             logger.info(f"Including secondary cluster {i}")
 
         # Standalone clusters
-        standalone_value = clusters_config.get("standalone", 0)
-        if isinstance(standalone_value, dict):
-            # New format within legacy detection
-            standalone_count = standalone_value.get("count", 0)
-        else:
-            # Legacy format
-            standalone_count = standalone_value
+        standalone_count = clusters_config.get("standalone", 0)
         for i in range(1, standalone_count + 1):
             cluster_names.append(f"{prefix}-standalone-{i}")
             logger.info(f"Including standalone cluster {i}")
@@ -317,29 +288,13 @@ def get_cluster_names_from_config(config_data: dict) -> list[str]:
     return cluster_names
 
 
-def get_cluster_names_from_config_object(config: "DeploymentConfig") -> list[str]:
-    """Extract cluster names from a DeploymentConfig object.
-
-    Args:
-        config: The DeploymentConfig object
-
-    Returns:
-        List of cluster names to create
-    """
-    logger = get_logger()
-    logger.debug("Using DeploymentConfig object for cluster name generation")
-
-    cluster_names = config.get_cluster_names()
-    logger.info(f"Generated {len(cluster_names)} cluster names: {cluster_names}")
-    return cluster_names
-
-
 def _create_single_cluster_parallel(
     cluster_name: str,
     log_output: bool = False,
     kubeconfig_dir: Optional[Path] = None,
     kind_config_dir: Optional[Path] = None,
     config_data: Optional[dict] = None,
+    services: Optional[dict] = None,
 ) -> Tuple[str, bool]:
     """Create a single cluster (for parallel execution).
 
@@ -349,6 +304,7 @@ def _create_single_cluster_parallel(
         kubeconfig_dir: Directory to save kubeconfig file
         kind_config_dir: Directory to save kind config file
         config_data: Configuration data for generating kind config
+        services: Dictionary of services to execute after cluster creation
 
     Returns:
         Tuple of (cluster_name, success)
@@ -376,6 +332,25 @@ def _create_single_cluster_parallel(
         kubeconfig_success = extract_kubeconfig(cluster_name, kubeconfig_dir)
         if not kubeconfig_success:
             logger.warning(f"Failed to extract kubeconfig for {cluster_name}, but cluster was created")
+
+        # Execute services if cluster creation was successful and services are configured
+        if success and services and kubeconfig_file:
+            logger.info(f"Executing {len(services)} services for cluster: {cluster_name}")
+            service_results = execute_services_for_cluster(cluster_name, services, kubeconfig_file, log_output)
+
+            # Log service results
+            successful_services = sum(1 for _, success, _, _ in service_results if success)
+            total_services = len(service_results)
+
+            if total_services > 0:
+                logger.info(
+                    f"✓ Executed {successful_services}/{total_services} services successfully for {cluster_name}"
+                )
+
+                # Log any failed services
+                for service_name, service_success, _, stderr in service_results:
+                    if not service_success:
+                        logger.error(f"✗ Service '{service_name}' failed on {cluster_name}: {stderr}")
 
     end_time = time.time()
     duration = end_time - start_time
@@ -409,6 +384,13 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
     logger.info(f"Kubeconfig directory: {kubeconfig_dir}")
     logger.info(f"Kind config directory: {kind_config_dir}")
 
+    # Extract services configuration
+    services = config_data.get("services", {})
+    if services:
+        logger.info(f"Services configured: {list(services.keys())}")
+    else:
+        logger.info("No services configured")
+
     # Calculate optimal number of workers
     optimal_workers = _calculate_optimal_workers(len(cluster_names), max_workers)
 
@@ -417,7 +399,7 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
         # Use sequential execution for small numbers
         for cluster_name in cluster_names:
             cluster_name, success = _create_single_cluster_parallel(
-                cluster_name, log_output, kubeconfig_dir, kind_config_dir, config_data
+                cluster_name, log_output, kubeconfig_dir, kind_config_dir, config_data, services
             )
             results[cluster_name] = success
     else:
@@ -435,6 +417,7 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
                     kubeconfig_dir,
                     kind_config_dir,
                     config_data,
+                    services,
                 ): cluster_name
                 for cluster_name in cluster_names
             }
@@ -762,3 +745,147 @@ def get_cluster_name_from_config(config_data: dict) -> str:
     """
     cluster_names = get_cluster_names_from_config(config_data)
     return cluster_names[0] if cluster_names else "default"
+
+
+def execute_service_command(
+    service_name: str,
+    service_config: dict,
+    cluster_name: str,
+    kubeconfig_file: Path,
+    log_output: bool = False,
+) -> Tuple[bool, str, str]:
+    """Execute a service command against a specific cluster.
+
+    Args:
+        service_name: Name of the service (for logging)
+        service_config: Service configuration containing cmd and kubeconfig_flag
+        cluster_name: Name of the cluster to run the command against
+        kubeconfig_file: Path to the kubeconfig file for this cluster
+        log_output: Whether to log the command output to the log file
+
+    Returns:
+        Tuple of (success, stdout, stderr)
+    """
+    logger = get_logger()
+
+    try:
+        cmd = service_config.get("cmd", "")
+        kubeconfig_flag = service_config.get("kubeconfig.flag", "--kubeconfig")
+
+        if not cmd:
+            logger.warning(f"Service '{service_name}' has no command defined, skipping")
+            return True, "", ""
+
+        # Build the command with kubeconfig flag
+        full_cmd = [cmd.split()[0]] + cmd.split()[1:] + [kubeconfig_flag, str(kubeconfig_file)]
+
+        logger.info(f"Executing service '{service_name}' on cluster '{cluster_name}': {cmd}")
+        logger.debug(f"Full command: {' '.join(full_cmd)}")
+
+        # Execute the command
+        result = subprocess.run(
+            full_cmd,
+            capture_output=True,
+            text=True,
+            timeout=300,  # 5 minute timeout
+        )
+
+        success = result.returncode == 0
+
+        if success:
+            logger.info(f"Service '{service_name}' completed successfully on cluster '{cluster_name}'")
+        else:
+            logger.error(
+                f"Service '{service_name}' failed on cluster '{cluster_name}' with return code {result.returncode}"
+            )
+            logger.error(f"Error output: {result.stderr}")
+
+        if log_output and result.stdout:
+            logger.debug(f"Service '{service_name}' stdout: {result.stdout}")
+        if log_output and result.stderr:
+            logger.debug(f"Service '{service_name}' stderr: {result.stderr}")
+
+        return success, result.stdout, result.stderr
+
+    except subprocess.TimeoutExpired:
+        logger.error(f"Service '{service_name}' timed out on cluster '{cluster_name}'")
+        return False, "", "Command timed out"
+    except Exception as e:
+        logger.error(f"Error executing service '{service_name}' on cluster '{cluster_name}': {e}")
+        return False, "", str(e)
+
+
+def execute_services_for_cluster(
+    cluster_name: str,
+    services: dict,
+    kubeconfig_file: Path,
+    log_output: bool = False,
+) -> List[Tuple[str, bool, str, str]]:
+    """Execute all services for a specific cluster.
+
+    Args:
+        cluster_name: Name of the cluster
+        services: Dictionary of service configurations
+        kubeconfig_file: Path to the kubeconfig file for this cluster
+        log_output: Whether to log the command output to the log file
+
+    Returns:
+        List of tuples (service_name, success, stdout, stderr)
+    """
+    logger = get_logger()
+    results = []
+
+    if not services:
+        logger.debug(f"No services configured for cluster '{cluster_name}'")
+        return results
+
+    logger.info(f"Executing {len(services)} services for cluster '{cluster_name}'")
+
+    for service_name, service_config in services.items():
+        logger.debug(f"Executing service '{service_name}' on cluster '{cluster_name}'")
+        success, stdout, stderr = execute_service_command(
+            service_name, service_config, cluster_name, kubeconfig_file, log_output
+        )
+        results.append((service_name, success, stdout, stderr))
+
+    return results
+
+
+def execute_services_for_all_clusters(
+    cluster_names: List[str],
+    services: dict,
+    kubeconfig_path: str,
+    log_output: bool = False,
+) -> Dict[str, List[Tuple[str, bool, str, str]]]:
+    """Execute services for all clusters.
+
+    Args:
+        cluster_names: List of cluster names
+        services: Dictionary of service configurations
+        kubeconfig_path: Path to the kubeconfig directory
+        log_output: Whether to log the command output to the log file
+
+    Returns:
+        Dictionary mapping cluster names to their service execution results
+    """
+    logger = get_logger()
+    all_results = {}
+
+    if not services:
+        logger.info("No services configured, skipping service execution")
+        return all_results
+
+    logger.info(f"Executing services for {len(cluster_names)} clusters")
+
+    for cluster_name in cluster_names:
+        kubeconfig_file = Path(kubeconfig_path) / f"{cluster_name}.kubeconfig"
+
+        if not kubeconfig_file.exists():
+            logger.warning(f"Kubeconfig file not found for cluster '{cluster_name}', skipping services")
+            all_results[cluster_name] = []
+            continue
+
+        cluster_results = execute_services_for_cluster(cluster_name, services, kubeconfig_file, log_output)
+        all_results[cluster_name] = cluster_results
+
+    return all_results

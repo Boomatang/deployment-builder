@@ -11,6 +11,7 @@ import pytest
 from deployment_builder.config import (
     ClusterConfig,
     GeneralConfig,
+    ServiceConfig,
     DeploymentConfig,
     create_default_config,
     load_config_from_file,
@@ -67,6 +68,22 @@ class TestGeneralConfig:
         assert general.max_workers == 8
 
 
+class TestServiceConfig:
+    """Test ServiceConfig dataclass."""
+
+    def test_default_values(self):
+        """Test that ServiceConfig has correct default values."""
+        config = ServiceConfig()
+        assert config.kubeconfig_flag == "--kubeconfig"
+        assert config.cmd == ""
+
+    def test_custom_values(self):
+        """Test that ServiceConfig accepts custom values."""
+        config = ServiceConfig(kubeconfig_flag="--kubeconfig-file", cmd="kubectl get pods -n kube-system")
+        assert config.kubeconfig_flag == "--kubeconfig-file"
+        assert config.cmd == "kubectl get pods -n kube-system"
+
+
 class TestDeploymentConfig:
     """Test DeploymentConfig dataclass."""
 
@@ -94,6 +111,40 @@ class TestDeploymentConfig:
             assert isinstance(cluster_config, ClusterConfig)
             assert cluster_config.enable is False
             assert cluster_config.count == 0
+
+        # Test services configuration
+        assert isinstance(config.services, dict)
+        assert len(config.services) == 0  # No services by default
+
+    def test_update_from_dict_with_services(self):
+        """Test updating configuration with services."""
+        config = create_default_config()
+        config_data = {
+            "general": {
+                "name": "test-deployment",
+            },
+            "services": {
+                "pods": {"kubeconfig.flag": "--kubeconfig", "cmd": "kubectl get pods -n kube-system"},
+                "nodes": {"kubeconfig.flag": "--kubeconfig-file", "cmd": "kubectl get nodes"},
+            },
+        }
+
+        config.update_from_dict(config_data)
+
+        # Test services configuration
+        assert len(config.services) == 2
+        assert "pods" in config.services
+        assert "nodes" in config.services
+
+        pods_service = config.services["pods"]
+        assert isinstance(pods_service, ServiceConfig)
+        assert pods_service.kubeconfig_flag == "--kubeconfig"
+        assert pods_service.cmd == "kubectl get pods -n kube-system"
+
+        nodes_service = config.services["nodes"]
+        assert isinstance(nodes_service, ServiceConfig)
+        assert nodes_service.kubeconfig_flag == "--kubeconfig-file"
+        assert nodes_service.cmd == "kubectl get nodes"
 
     def test_update_from_dict_new_format(self):
         """Test updating configuration from new structured format."""
@@ -326,6 +377,10 @@ class TestDeploymentConfig:
         config.clusters["metrics"].enable = True
         config.clusters["primary"].count = 2
 
+        # Add services
+        config.services["pods"] = ServiceConfig(kubeconfig_flag="--kubeconfig", cmd="kubectl get pods -n kube-system")
+        config.services["nodes"] = ServiceConfig(kubeconfig_flag="--kubeconfig-file", cmd="kubectl get nodes")
+
         result = config.to_dict()
 
         # Test general section
@@ -340,6 +395,15 @@ class TestDeploymentConfig:
         assert result["clusters"]["metrics"]["count"] == 0
         assert result["clusters"]["primary"]["enable"] is False
         assert result["clusters"]["primary"]["count"] == 2
+
+        # Test services section
+        assert "services" in result
+        assert "pods" in result["services"]
+        assert "nodes" in result["services"]
+        assert result["services"]["pods"]["kubeconfig.flag"] == "--kubeconfig"
+        assert result["services"]["pods"]["cmd"] == "kubectl get pods -n kube-system"
+        assert result["services"]["nodes"]["kubeconfig.flag"] == "--kubeconfig-file"
+        assert result["services"]["nodes"]["cmd"] == "kubectl get nodes"
 
 
 class TestConfigurationFileLoading:
@@ -432,6 +496,56 @@ clusters:
             assert config.general.max_workers == 10
             assert config.clusters["metrics"].enable is True
             assert config.clusters["primary"].count == 4
+
+        finally:
+            Path(temp_file).unlink()
+
+    def test_load_config_from_file_with_services(self):
+        """Test loading configuration from file with services."""
+        config_content = """[general]
+name = "services-deployment"
+version = "1.0.0"
+
+[clusters]
+[clusters.metrics]
+enable = true
+
+[clusters.primary]
+count = 1
+
+[services]
+[services.pods]
+"kubeconfig.flag" = "--kubeconfig"
+cmd = "kubectl get pods -n kube-system"
+
+[services.nodes]
+"kubeconfig.flag" = "--kubeconfig-file"
+cmd = "kubectl get nodes"
+"""
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(config_content)
+            temp_file = f.name
+
+        try:
+            config = load_config_from_file(temp_file)
+
+            assert config.general.name == "services-deployment"
+            assert config.clusters["metrics"].enable is True
+            assert config.clusters["primary"].count == 1
+
+            # Test services
+            assert len(config.services) == 2
+            assert "pods" in config.services
+            assert "nodes" in config.services
+
+            pods_service = config.services["pods"]
+            assert pods_service.kubeconfig_flag == "--kubeconfig"
+            assert pods_service.cmd == "kubectl get pods -n kube-system"
+
+            nodes_service = config.services["nodes"]
+            assert nodes_service.kubeconfig_flag == "--kubeconfig-file"
+            assert nodes_service.cmd == "kubectl get nodes"
 
         finally:
             Path(temp_file).unlink()

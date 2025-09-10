@@ -14,6 +14,14 @@ class ClusterConfig:
 
 
 @dataclass
+class ServiceConfig:
+    """Configuration for services to run against clusters."""
+
+    kubeconfig_flag: str = "--kubeconfig"
+    cmd: str = ""
+
+
+@dataclass
 class GeneralConfig:
     """Configuration for the general section."""
 
@@ -42,6 +50,9 @@ class DeploymentConfig:
             "standalone": ClusterConfig(enable=False, count=0),
         }
     )
+
+    # Services configuration
+    services: Dict[str, ServiceConfig] = field(default_factory=dict)
 
     def update_from_dict(self, config_data: Dict[str, Any]) -> None:
         """Update configuration from a dictionary (loaded from config file).
@@ -109,6 +120,16 @@ class DeploymentConfig:
                             self.clusters[cluster_type].enable = value > 0
                             self.clusters[cluster_type].count = value
 
+        # Update services configuration
+        if "services" in config_data:
+            services_data = config_data["services"]
+            if isinstance(services_data, dict):
+                for service_name, service_config in services_data.items():
+                    if isinstance(service_config, dict):
+                        kubeconfig_flag = service_config.get("kubeconfig.flag", "--kubeconfig")
+                        cmd = service_config.get("cmd", "")
+                        self.services[service_name] = ServiceConfig(kubeconfig_flag=kubeconfig_flag, cmd=cmd)
+
     def get_cluster_names(self) -> list[str]:
         """Get list of cluster names based on current configuration.
 
@@ -168,6 +189,10 @@ class DeploymentConfig:
             "clusters": {
                 cluster_type: {"enable": cluster_config.enable, "count": cluster_config.count}
                 for cluster_type, cluster_config in self.clusters.items()
+            },
+            "services": {
+                service_name: {"kubeconfig.flag": service_config.kubeconfig_flag, "cmd": service_config.cmd}
+                for service_name, service_config in self.services.items()
             },
         }
 

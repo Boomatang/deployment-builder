@@ -1,0 +1,22 @@
+[general]
+name = "my-deployment"
+prefix = "my-project"
+
+# Cluster configuration
+[clusters]
+[clusters.metrics]
+enable = true
+
+[clusters.primary]
+count = 1
+
+[clusters.secondary]
+count = 1
+
+[clusters.standalone]
+count = 0
+
+[services]
+[services.pods]
+kubeconfig.flag="--kubeconfig"
+cmd = "kubectl get pods -n kube-system"

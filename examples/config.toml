@@ -26,3 +26,12 @@ count = 1
 
 [clusters.standalone]
 count = 3
+
+[services]
+[services.pods]
+"kubeconfig.flag" = "--kubeconfig"
+cmd = "kubectl get pods -n kube-system"
+
+[services.nodes]
+"kubeconfig.flag" = "--kubeconfig"
+cmd = "kubectl get nodes"

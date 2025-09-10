@@ -20,5 +20,15 @@
     "standalone": {
       "count": 3
     }
+  },
+  "services": {
+    "pods": {
+      "kubeconfig.flag": "--kubeconfig",
+      "cmd": "kubectl get pods -n kube-system"
+    },
+    "nodes": {
+      "kubeconfig.flag": "--kubeconfig",
+      "cmd": "kubectl get nodes"
+    }
   }
 }

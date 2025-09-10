@@ -313,12 +313,10 @@ class TestKindConfigIntegration:
 
         cluster_names = get_cluster_names_from_config(config_data)
 
-        # Should fall back to legacy format since not all values are dicts
+        # Should use new format since some values are dicts
         # standalone: 0 means no standalone clusters should be created
         expected_names = [
             "test-project-metrics",
-            "test-project-primary-1",
-            "test-project-primary-2",
             "test-project-secondary-1",
         ]
         assert cluster_names == expected_names
