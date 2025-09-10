@@ -1,8 +1,9 @@
-name: advanced-deployment
-version: 2.1.0
-environment: staging
-prefix: advanced-project
-kubeconfig_path: kubeconfigs
+general:
+  name: advanced-deployment
+  version: 2.1.0
+  environment: staging
+  prefix: advanced-project
+  kubeconfig_path: kubeconfigs
 
 metadata:
   description: "Advanced deployment with multiple services and monitoring"
@@ -11,10 +12,14 @@ metadata:
 
 # Cluster configuration
 clusters:
-  metrics: true
-  primary: 3
-  secondary: 2
-  standard: 5
+  metrics:
+    enable: true
+  primary:
+    count: 3
+  secondary:
+    count: 2
+  standard:
+    count: 5
 
 resources:
   cpu: "4"

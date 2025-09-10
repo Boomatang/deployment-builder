@@ -13,7 +13,9 @@ from deployment_builder.kind_integration import (
     generate_kind_config,
     save_kind_config,
     remove_kind_config,
+    get_cluster_names_from_config,
 )
+from deployment_builder.cli import load_config
 
 
 class TestKindConfigIntegration:
@@ -225,3 +227,166 @@ class TestKindConfigIntegration:
             # Clean up
             if kind_config_file.exists():
                 kind_config_file.unlink()
+
+    def test_get_cluster_names_from_config_new_format(self):
+        """Test cluster name extraction with new structured format."""
+        config_data = {
+            "prefix": "test-project",
+            "clusters": {
+                "metrics": {"enable": True},
+                "primary": {"count": 2},
+                "secondary": {"count": 3},
+                "standard": {"count": 1},
+            },
+        }
+
+        cluster_names = get_cluster_names_from_config(config_data)
+
+        expected_names = [
+            "test-project-metrics",
+            "test-project-primary-1",
+            "test-project-primary-2",
+            "test-project-secondary-1",
+            "test-project-secondary-2",
+            "test-project-secondary-3",
+            "test-project-standard-1",
+        ]
+        assert cluster_names == expected_names
+
+    def test_get_cluster_names_from_config_new_format_partial(self):
+        """Test cluster name extraction with new format but only some clusters enabled."""
+        config_data = {
+            "prefix": "test-project",
+            "clusters": {
+                "metrics": {"enable": False},
+                "primary": {"count": 1},
+                "secondary": {"count": 0},
+                "standard": {"count": 2},
+            },
+        }
+
+        cluster_names = get_cluster_names_from_config(config_data)
+
+        expected_names = [
+            "test-project-primary-1",
+            "test-project-standard-1",
+            "test-project-standard-2",
+        ]
+        assert cluster_names == expected_names
+
+    def test_get_cluster_names_from_config_legacy_format(self):
+        """Test cluster name extraction with legacy format (backward compatibility)."""
+        config_data = {
+            "prefix": "test-project",
+            "clusters": {
+                "metrics": True,
+                "primary": 2,
+                "secondary": 1,
+                "standard": 3,
+            },
+        }
+
+        cluster_names = get_cluster_names_from_config(config_data)
+
+        expected_names = [
+            "test-project-metrics",
+            "test-project-primary-1",
+            "test-project-primary-2",
+            "test-project-secondary-1",
+            "test-project-standard-1",
+            "test-project-standard-2",
+            "test-project-standard-3",
+        ]
+        assert cluster_names == expected_names
+
+    def test_get_cluster_names_from_config_mixed_format(self):
+        """Test cluster name extraction with mixed format (some structured, some legacy)."""
+        config_data = {
+            "prefix": "test-project",
+            "clusters": {
+                "metrics": {"enable": True},  # New format
+                "primary": 2,  # Legacy format
+                "secondary": {"count": 1},  # New format
+                "standard": 0,  # Legacy format
+            },
+        }
+
+        cluster_names = get_cluster_names_from_config(config_data)
+
+        # Should fall back to legacy format since not all values are dicts
+        # standard: 0 means no standard clusters should be created
+        expected_names = [
+            "test-project-metrics",
+            "test-project-primary-1",
+            "test-project-primary-2",
+            "test-project-secondary-1",
+        ]
+        assert cluster_names == expected_names
+
+    def test_get_cluster_names_from_config_no_clusters(self):
+        """Test cluster name extraction when no clusters are defined."""
+        config_data = {"prefix": "test-project", "clusters": {}}
+
+        cluster_names = get_cluster_names_from_config(config_data)
+
+        expected_names = ["test-project-default"]
+        assert cluster_names == expected_names
+
+    def test_get_cluster_names_from_config_no_clusters_section(self):
+        """Test cluster name extraction when clusters section is missing."""
+        config_data = {"prefix": "test-project"}
+
+        cluster_names = get_cluster_names_from_config(config_data)
+
+        expected_names = ["test-project-default"]
+        assert cluster_names == expected_names
+
+    def test_load_config_with_general_section(self):
+        """Test configuration loading with [general] section."""
+        import tempfile
+        import tomli
+
+        # Create a temporary TOML file with [general] section
+        config_content = """[general]
+name = "test-deployment"
+version = "1.0.0"
+prefix = "test-project"
+kubeconfig_path = "test-kubeconfigs"
+kind_config_path = "test-kind-configs"
+
+[clusters]
+[clusters.metrics]
+enable = true
+
+[clusters.primary]
+count = 2
+"""
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(config_content)
+            temp_file = f.name
+
+        try:
+            # Load the configuration
+            config_data = load_config(temp_file)
+
+            # Verify that [general] section values are flattened to top level
+            assert config_data["name"] == "test-deployment"
+            assert config_data["version"] == "1.0.0"
+            assert config_data["prefix"] == "test-project"
+            assert config_data["kubeconfig_path"] == "test-kubeconfigs"
+            assert config_data["kind_config_path"] == "test-kind-configs"
+
+            # Verify that clusters section is preserved
+            assert "clusters" in config_data
+            assert config_data["clusters"]["metrics"]["enable"] is True
+            assert config_data["clusters"]["primary"]["count"] == 2
+
+            # Verify that [general] section is not present at top level
+            assert "general" not in config_data
+
+        finally:
+            # Clean up
+            import os
+
+            os.unlink(temp_file)

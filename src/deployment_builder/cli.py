@@ -89,6 +89,16 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
             logger.error(f"Unsupported configuration file format: {config_path.suffix}")
             raise ValueError(f"Unsupported configuration file format: {config_path.suffix}")
 
+        # Handle [general] section by flattening it to the top level
+        if "general" in config_data and isinstance(config_data["general"], dict):
+            logger.debug("Found [general] section, flattening configuration")
+            # Extract general section values to top level
+            general_config = config_data["general"]
+            # Remove general section from config_data
+            config_data = {k: v for k, v in config_data.items() if k != "general"}
+            # Merge general config into top level
+            config_data.update(general_config)
+
         log_config_loaded(config_data, str(config_path))
         return config_data
 

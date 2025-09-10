@@ -217,28 +217,96 @@ def get_cluster_names_from_config(config_data: dict) -> list[str]:
     cluster_names = []
     clusters_config = config_data.get("clusters", {})
 
-    # Metrics cluster (single)
-    if clusters_config.get("metrics", False):
-        cluster_names.append(f"{prefix}-metrics")
-        logger.info("Including metrics cluster")
+    # Handle new structured format: [clusters.metrics], [clusters.primary], etc.
+    # Check if all cluster values are dictionaries (new format)
+    if isinstance(clusters_config, dict) and all(
+        isinstance(v, dict) for v in clusters_config.values() if v is not None
+    ):
+        # New structured format
+        logger.debug("Using new structured cluster configuration format")
 
-    # Primary clusters
-    primary_count = clusters_config.get("primary", 0)
-    for i in range(1, primary_count + 1):
-        cluster_names.append(f"{prefix}-primary-{i}")
-        logger.info(f"Including primary cluster {i}")
+        # Metrics cluster (single)
+        metrics_config = clusters_config.get("metrics", {})
+        if isinstance(metrics_config, dict) and metrics_config.get("enable", False):
+            cluster_names.append(f"{prefix}-metrics")
+            logger.info("Including metrics cluster")
 
-    # Secondary clusters
-    secondary_count = clusters_config.get("secondary", 0)
-    for i in range(1, secondary_count + 1):
-        cluster_names.append(f"{prefix}-secondary-{i}")
-        logger.info(f"Including secondary cluster {i}")
+        # Primary clusters
+        primary_config = clusters_config.get("primary", {})
+        if isinstance(primary_config, dict):
+            primary_count = primary_config.get("count", 0)
+            for i in range(1, primary_count + 1):
+                cluster_names.append(f"{prefix}-primary-{i}")
+                logger.info(f"Including primary cluster {i}")
 
-    # Standard clusters
-    standard_count = clusters_config.get("standard", 0)
-    for i in range(1, standard_count + 1):
-        cluster_names.append(f"{prefix}-standard-{i}")
-        logger.info(f"Including standard cluster {i}")
+        # Secondary clusters
+        secondary_config = clusters_config.get("secondary", {})
+        if isinstance(secondary_config, dict):
+            secondary_count = secondary_config.get("count", 0)
+            for i in range(1, secondary_count + 1):
+                cluster_names.append(f"{prefix}-secondary-{i}")
+                logger.info(f"Including secondary cluster {i}")
+
+        # Standard clusters
+        standard_config = clusters_config.get("standard", {})
+        if isinstance(standard_config, dict):
+            standard_count = standard_config.get("count", 0)
+            for i in range(1, standard_count + 1):
+                cluster_names.append(f"{prefix}-standard-{i}")
+                logger.info(f"Including standard cluster {i}")
+
+    else:
+        # Legacy format: metrics = true, primary = 2, etc.
+        # Also handle mixed format by treating each cluster type individually
+        logger.debug("Using legacy cluster configuration format")
+
+        # Metrics cluster (single)
+        metrics_value = clusters_config.get("metrics", False)
+        if isinstance(metrics_value, dict):
+            # New format within legacy detection
+            if metrics_value.get("enable", False):
+                cluster_names.append(f"{prefix}-metrics")
+                logger.info("Including metrics cluster")
+        elif metrics_value:
+            # Legacy format
+            cluster_names.append(f"{prefix}-metrics")
+            logger.info("Including metrics cluster")
+
+        # Primary clusters
+        primary_value = clusters_config.get("primary", 0)
+        if isinstance(primary_value, dict):
+            # New format within legacy detection
+            primary_count = primary_value.get("count", 0)
+        else:
+            # Legacy format
+            primary_count = primary_value
+        for i in range(1, primary_count + 1):
+            cluster_names.append(f"{prefix}-primary-{i}")
+            logger.info(f"Including primary cluster {i}")
+
+        # Secondary clusters
+        secondary_value = clusters_config.get("secondary", 0)
+        if isinstance(secondary_value, dict):
+            # New format within legacy detection
+            secondary_count = secondary_value.get("count", 0)
+        else:
+            # Legacy format
+            secondary_count = secondary_value
+        for i in range(1, secondary_count + 1):
+            cluster_names.append(f"{prefix}-secondary-{i}")
+            logger.info(f"Including secondary cluster {i}")
+
+        # Standard clusters
+        standard_value = clusters_config.get("standard", 0)
+        if isinstance(standard_value, dict):
+            # New format within legacy detection
+            standard_count = standard_value.get("count", 0)
+        else:
+            # Legacy format
+            standard_count = standard_value
+        for i in range(1, standard_count + 1):
+            cluster_names.append(f"{prefix}-standard-{i}")
+            logger.info(f"Including standard cluster {i}")
 
     # If no clusters defined, create a default one
     if not cluster_names:

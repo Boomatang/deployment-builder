@@ -17,6 +17,7 @@ from deployment_builder.kind_integration import (
     generate_kind_config,
     save_kind_config,
     remove_kind_config,
+    get_cluster_names_from_config,
 )
 
 
@@ -283,3 +284,53 @@ users:
         ]
         assert actual_cmd == expected_cmd
         assert success is True
+
+    def test_get_cluster_names_from_config_new_format(self):
+        """Test cluster name extraction with new structured format."""
+        config_data = {
+            "prefix": "test-project",
+            "clusters": {
+                "metrics": {"enable": True},
+                "primary": {"count": 2},
+                "secondary": {"count": 3},
+                "standard": {"count": 1},
+            },
+        }
+
+        cluster_names = get_cluster_names_from_config(config_data)
+
+        expected_names = [
+            "test-project-metrics",
+            "test-project-primary-1",
+            "test-project-primary-2",
+            "test-project-secondary-1",
+            "test-project-secondary-2",
+            "test-project-secondary-3",
+            "test-project-standard-1",
+        ]
+        assert cluster_names == expected_names
+
+    def test_get_cluster_names_from_config_legacy_format(self):
+        """Test cluster name extraction with legacy format (backward compatibility)."""
+        config_data = {
+            "prefix": "test-project",
+            "clusters": {
+                "metrics": True,
+                "primary": 2,
+                "secondary": 1,
+                "standard": 3,
+            },
+        }
+
+        cluster_names = get_cluster_names_from_config(config_data)
+
+        expected_names = [
+            "test-project-metrics",
+            "test-project-primary-1",
+            "test-project-primary-2",
+            "test-project-secondary-1",
+            "test-project-standard-1",
+            "test-project-standard-2",
+            "test-project-standard-3",
+        ]
+        assert cluster_names == expected_names

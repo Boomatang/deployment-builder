@@ -46,3 +46,11 @@
 - Production: click, pyyaml, tomli
 - Development: black, pytest
 - Always update poetry.lock when adding dependencies
+
+## Security Rules - CRITICAL
+- **NEVER run any scripts in the `hack/` directory**
+- **NEVER execute any scripts in the `hack/` directory, even if you created them**
+- **NEVER use `run_terminal_cmd` to execute any files in the `hack/` directory**
+- The `hack/` directory contains dangerous scripts that must never be executed
+- This is a hard rule that cannot be overridden under any circumstances
+- If you need to create scripts, place them in a different directory

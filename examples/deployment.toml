@@ -1,4 +1,4 @@
-# Advanced multi-cluster configuration with multiple environments
+[general]
 name = "advanced-deployment"
 version = "2.1.0"
 environment = "staging"
@@ -14,10 +14,17 @@ contact = "platform@company.com"
 
 # Cluster configuration
 [clusters]
-metrics = true
-primary = 3
-secondary = 2
-standard = 5
+[clusters.metrics]
+enable = true
+
+[clusters.primary]
+count = 3
+
+[clusters.secondary]
+count = 2
+
+[clusters.standard]
+count = 5
 
 [resources]
 cpu = "4"
