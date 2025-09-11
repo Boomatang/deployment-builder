@@ -39,6 +39,19 @@ extend-exclude = '''
 )/
 '''
 
+[tool.pytest.ini_options]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "slow: Slow running tests",
+    "fast: Fast running tests",
+    "cli: CLI command tests",
+    "config: Configuration tests",
+    "kind: Kind integration tests",
+    "kubeconfig: Kubeconfig tests"
+]
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

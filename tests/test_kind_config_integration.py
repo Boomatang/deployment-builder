@@ -18,334 +18,357 @@ from deployment_builder.kind_integration import (
 from deployment_builder.cli import load_config
 
 
-class TestKindConfigIntegration:
-    """Test kind configuration management integration."""
+@pytest.mark.integration
+@pytest.mark.kind
+def test_get_kind_config_path_from_config():
+    """Test kind config path extraction from configuration."""
+    # Test with default path
+    config = {"prefix": "test"}
+    path = get_kind_config_path_from_config(config)
+    assert path == Path("kind-configs").resolve()
 
-    def test_get_kind_config_path_from_config(self):
-        """Test kind config path extraction from configuration."""
-        # Test with default path
-        config = {"prefix": "test"}
-        path = get_kind_config_path_from_config(config)
-        assert path == Path("kind-configs").resolve()
+    # Test with custom path
+    config = {"prefix": "test", "kind_config_path": "custom/kind-configs"}
+    path = get_kind_config_path_from_config(config)
+    assert path == Path("custom/kind-configs").resolve()
 
-        # Test with custom path
-        config = {"prefix": "test", "kind_config_path": "custom/kind-configs"}
-        path = get_kind_config_path_from_config(config)
-        assert path == Path("custom/kind-configs").resolve()
 
-    def test_generate_kind_config(self):
-        """Test kind configuration generation."""
-        cluster_name = "test-cluster"
-        config_data = {
-            "networking": {"ipFamily": "ipv4", "apiServerAddress": "127.0.0.1"},
-            "feature_gates": {"CSIMigration": True},
-            "runtime_config": {"api/alpha": "false"},
-        }
+@pytest.mark.integration
+@pytest.mark.kind
+def test_generate_kind_config():
+    """Test kind configuration generation."""
+    cluster_name = "test-cluster"
+    config_data = {
+        "networking": {"ipFamily": "ipv4", "apiServerAddress": "127.0.0.1"},
+        "feature_gates": {"CSIMigration": True},
+        "runtime_config": {"api/alpha": "false"},
+    }
 
-        kind_config = generate_kind_config(cluster_name, config_data)
+    kind_config = generate_kind_config(cluster_name, config_data)
 
-        # Check base configuration
-        assert kind_config["kind"] == "Cluster"
-        assert kind_config["apiVersion"] == "kind.x-k8s.io/v1alpha4"
-        assert kind_config["name"] == cluster_name
+    # Check base configuration
+    assert kind_config["kind"] == "Cluster"
+    assert kind_config["apiVersion"] == "kind.x-k8s.io/v1alpha4"
+    assert kind_config["name"] == cluster_name
 
-        # Check networking configuration
-        assert kind_config["networking"]["ipFamily"] == "ipv4"
-        assert kind_config["networking"]["apiServerAddress"] == "127.0.0.1"
+    # Check networking configuration
+    assert kind_config["networking"]["ipFamily"] == "ipv4"
+    assert kind_config["networking"]["apiServerAddress"] == "127.0.0.1"
 
-        # Check feature gates
-        assert kind_config["featureGates"]["CSIMigration"] is True
+    # Check feature gates
+    assert kind_config["featureGates"]["CSIMigration"] is True
 
-        # Check runtime config
-        assert kind_config["runtimeConfig"]["api/alpha"] == "false"
+    # Check runtime config
+    assert kind_config["runtimeConfig"]["api/alpha"] == "false"
 
-    def test_generate_kind_config_minimal(self):
-        """Test kind configuration generation with minimal config."""
-        cluster_name = "test-cluster"
-        config_data = {}
 
-        kind_config = generate_kind_config(cluster_name, config_data)
+@pytest.mark.integration
+@pytest.mark.kind
+def test_generate_kind_config_minimal():
+    """Test kind configuration generation with minimal config."""
+    cluster_name = "test-cluster"
+    config_data = {}
 
-        # Check base configuration only
-        assert kind_config["kind"] == "Cluster"
-        assert kind_config["apiVersion"] == "kind.x-k8s.io/v1alpha4"
-        assert kind_config["name"] == cluster_name
+    kind_config = generate_kind_config(cluster_name, config_data)
 
-        # Should not have optional fields
-        assert "networking" not in kind_config
-        assert "featureGates" not in kind_config
-        assert "runtimeConfig" not in kind_config
+    # Check base configuration only
+    assert kind_config["kind"] == "Cluster"
+    assert kind_config["apiVersion"] == "kind.x-k8s.io/v1alpha4"
+    assert kind_config["name"] == cluster_name
 
-    def test_save_kind_config_success(self):
-        """Test successful kind config file saving."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            config_dir = Path(temp_dir)
-            cluster_name = "test-cluster"
-            kind_config = {
-                "kind": "Cluster",
-                "apiVersion": "kind.x-k8s.io/v1alpha4",
-                "name": cluster_name,
-                "networking": {"ipFamily": "ipv4"},
-            }
+    # Should not have optional fields
+    assert "networking" not in kind_config
+    assert "featureGates" not in kind_config
+    assert "runtimeConfig" not in kind_config
 
-            success = save_kind_config(cluster_name, kind_config, config_dir)
 
-            assert success is True
-            config_file = config_dir / f"{cluster_name}-kind-config.yaml"
-            assert config_file.exists()
+@pytest.mark.integration
+@pytest.mark.kind
+def test_save_kind_config_success(tmp_path):
+    """Test successful kind config file saving."""
+    config_dir = tmp_path
+    cluster_name = "test-cluster"
+    kind_config = {
+        "kind": "Cluster",
+        "apiVersion": "kind.x-k8s.io/v1alpha4",
+        "name": cluster_name,
+        "networking": {"ipFamily": "ipv4"},
+    }
 
-            # Verify file contents
-            with open(config_file, "r") as f:
-                loaded_config = yaml.safe_load(f)
-            assert loaded_config == kind_config
+    success = save_kind_config(cluster_name, kind_config, config_dir)
 
-    def test_save_kind_config_failure(self):
-        """Test kind config saving failure."""
-        cluster_name = "test-cluster"
-        kind_config = {"kind": "Cluster"}
+    assert success is True
+    config_file = config_dir / f"{cluster_name}-kind-config.yaml"
+    assert config_file.exists()
 
-        # Try to save to a read-only directory (should fail)
-        read_only_dir = Path("/read-only-directory")
-        success = save_kind_config(cluster_name, kind_config, read_only_dir)
+    # Verify file contents
+    with open(config_file, "r") as f:
+        loaded_config = yaml.safe_load(f)
+    assert loaded_config == kind_config
 
-        assert success is False
 
-    def test_remove_kind_config_success(self):
-        """Test successful kind config removal."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            config_dir = Path(temp_dir)
-            cluster_name = "test-cluster"
-            config_file = config_dir / f"{cluster_name}-kind-config.yaml"
+@pytest.mark.integration
+@pytest.mark.kind
+def test_save_kind_config_failure():
+    """Test kind config saving failure."""
+    cluster_name = "test-cluster"
+    kind_config = {"kind": "Cluster"}
 
-            # Create a test config file
-            config_file.write_text("test config content")
-            assert config_file.exists()
+    # Try to save to a read-only directory (should fail)
+    read_only_dir = Path("/read-only-directory")
+    success = save_kind_config(cluster_name, kind_config, read_only_dir)
 
-            success = remove_kind_config(cluster_name, config_dir)
+    assert success is False
 
-            assert success is True
-            assert not config_file.exists()
 
-    def test_remove_kind_config_nonexistent(self):
-        """Test kind config removal when file doesn't exist."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            config_dir = Path(temp_dir)
-            cluster_name = "nonexistent-cluster"
+@pytest.mark.integration
+@pytest.mark.kind
+def test_remove_kind_config_success(tmp_path):
+    """Test successful kind config removal."""
+    config_dir = tmp_path
+    cluster_name = "test-cluster"
+    config_file = config_dir / f"{cluster_name}-kind-config.yaml"
 
-            success = remove_kind_config(cluster_name, config_dir)
+    # Create a test config file
+    config_file.write_text("test config content")
+    assert config_file.exists()
 
-            # Should still return True (not an error if file doesn't exist)
-            assert success is True
+    success = remove_kind_config(cluster_name, config_dir)
 
-    @patch("subprocess.run")
-    def test_run_kind_command_with_kind_config(self, mock_run):
-        """Test that run_kind_command adds --config flag for kind config."""
-        # Setup mock
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "Cluster created successfully"
-        mock_result.stderr = ""
-        mock_run.return_value = mock_result
+    assert success is True
+    assert not config_file.exists()
 
-        # Create test files
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".kubeconfig", delete=False) as f:
-            f.write("test kubeconfig content")
-            kubeconfig_file = Path(f.name)
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix="-kind-config.yaml", delete=False) as f:
-            f.write("test kind config content")
-            kind_config_file = Path(f.name)
+@pytest.mark.integration
+@pytest.mark.kind
+def test_remove_kind_config_nonexistent(tmp_path):
+    """Test kind config removal when file doesn't exist."""
+    config_dir = tmp_path
+    cluster_name = "nonexistent-cluster"
 
-        try:
-            # Test create command with both kubeconfig and kind config
-            success, stdout, stderr = run_kind_command(
-                "create",
-                "test-cluster",
-                log_output=False,
-                kubeconfig_file=kubeconfig_file,
-                kind_config_file=kind_config_file,
-            )
+    success = remove_kind_config(cluster_name, config_dir)
 
-            # Verify the command was called with the correct arguments
-            mock_run.assert_called_once()
-            call_args = mock_run.call_args
-            actual_cmd = call_args.args[0]
+    # Should still return True (not an error if file doesn't exist)
+    assert success is True
 
-            # Verify the command structure includes both flags
-            expected_cmd = [
-                "kind",
-                "create",
-                "cluster",
-                "--name",
-                "test-cluster",
-                "--kubeconfig",
-                str(kubeconfig_file),
-                "--config",
-                str(kind_config_file),
-            ]
-            assert actual_cmd == expected_cmd
-            assert success is True
 
-        finally:
-            # Clean up
-            if kubeconfig_file.exists():
-                kubeconfig_file.unlink()
-            if kind_config_file.exists():
-                kind_config_file.unlink()
+@pytest.mark.integration
+@pytest.mark.kind
+@patch("subprocess.run")
+def test_run_kind_command_with_kind_config(mock_run, tmp_path):
+    """Test that run_kind_command adds --config flag for kind config."""
+    # Setup mock
+    mock_result = MagicMock()
+    mock_result.returncode = 0
+    mock_result.stdout = "Cluster created successfully"
+    mock_result.stderr = ""
+    mock_run.return_value = mock_result
 
-    @patch("subprocess.run")
-    def test_run_kind_command_kind_config_create_only(self, mock_run):
-        """Test that --config flag is only added for create command."""
-        # Setup mock
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "Cluster deleted successfully"
-        mock_result.stderr = ""
-        mock_run.return_value = mock_result
+    # Create test files
+    kubeconfig_file = tmp_path / "test.kubeconfig"
+    kubeconfig_file.write_text("test kubeconfig content")
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix="-kind-config.yaml", delete=False) as f:
-            f.write("test kind config content")
-            kind_config_file = Path(f.name)
+    kind_config_file = tmp_path / "test-kind-config.yaml"
+    kind_config_file.write_text("test kind config content")
 
-        try:
-            # Test delete command with kind config (should not add --config flag)
-            success, stdout, stderr = run_kind_command(
-                "delete", "test-cluster", log_output=False, kind_config_file=kind_config_file
-            )
+    # Test create command with both kubeconfig and kind config
+    success, stdout, stderr = run_kind_command(
+        "create",
+        "test-cluster",
+        log_output=False,
+        kubeconfig_file=kubeconfig_file,
+        kind_config_file=kind_config_file,
+    )
 
-            # Verify the command was called without --config flag
-            mock_run.assert_called_once()
-            call_args = mock_run.call_args
-            actual_cmd = call_args.args[0]
+    # Verify the command was called with the correct arguments
+    mock_run.assert_called_once()
+    call_args = mock_run.call_args
+    actual_cmd = call_args.args[0]
 
-            # Verify the command structure doesn't include --config flag
-            expected_cmd = ["kind", "delete", "cluster", "--name", "test-cluster"]
-            assert actual_cmd == expected_cmd
-            assert success is True
+    # Verify the command structure includes both flags
+    expected_cmd = [
+        "kind",
+        "create",
+        "cluster",
+        "--name",
+        "test-cluster",
+        "--kubeconfig",
+        str(kubeconfig_file),
+        "--config",
+        str(kind_config_file),
+    ]
+    assert actual_cmd == expected_cmd
+    assert success is True
 
-        finally:
-            # Clean up
-            if kind_config_file.exists():
-                kind_config_file.unlink()
 
-    def test_get_cluster_names_from_config_new_format(self):
-        """Test cluster name extraction with new structured format."""
-        config_data = {
-            "prefix": "test-project",
-            "clusters": {
-                "metrics": {"enable": True},
-                "primary": {"count": 2},
-                "secondary": {"count": 3},
-                "standalone": {"count": 1},
-            },
-        }
+@pytest.mark.integration
+@pytest.mark.kind
+@patch("subprocess.run")
+def test_run_kind_command_kind_config_create_only(mock_run, tmp_path):
+    """Test that --config flag is only added for create command."""
+    # Setup mock
+    mock_result = MagicMock()
+    mock_result.returncode = 0
+    mock_result.stdout = "Cluster deleted successfully"
+    mock_result.stderr = ""
+    mock_run.return_value = mock_result
 
-        cluster_names = get_cluster_names_from_config(config_data)
+    kind_config_file = tmp_path / "test-kind-config.yaml"
+    kind_config_file.write_text("test kind config content")
 
-        expected_names = [
-            "test-project-metrics",
-            "test-project-primary-1",
-            "test-project-primary-2",
-            "test-project-secondary-1",
-            "test-project-secondary-2",
-            "test-project-secondary-3",
-            "test-project-standalone-1",
-        ]
-        assert cluster_names == expected_names
+    # Test delete command with kind config (should not add --config flag)
+    success, stdout, stderr = run_kind_command(
+        "delete", "test-cluster", log_output=False, kind_config_file=kind_config_file
+    )
 
-    def test_get_cluster_names_from_config_new_format_partial(self):
-        """Test cluster name extraction with new format but only some clusters enabled."""
-        config_data = {
-            "prefix": "test-project",
-            "clusters": {
-                "metrics": {"enable": False},
-                "primary": {"count": 1},
-                "secondary": {"count": 0},
-                "standalone": {"count": 2},
-            },
-        }
+    # Verify the command was called without --config flag
+    mock_run.assert_called_once()
+    call_args = mock_run.call_args
+    actual_cmd = call_args.args[0]
 
-        cluster_names = get_cluster_names_from_config(config_data)
+    # Verify the command structure doesn't include --config flag
+    expected_cmd = ["kind", "delete", "cluster", "--name", "test-cluster"]
+    assert actual_cmd == expected_cmd
+    assert success is True
 
-        expected_names = [
-            "test-project-primary-1",
-            "test-project-standalone-1",
-            "test-project-standalone-2",
-        ]
-        assert cluster_names == expected_names
 
-    def test_get_cluster_names_from_config_legacy_format(self):
-        """Test cluster name extraction with legacy format (backward compatibility)."""
-        config_data = {
-            "prefix": "test-project",
-            "clusters": {
-                "metrics": True,
-                "primary": 2,
-                "secondary": 1,
-                "standalone": 3,
-            },
-        }
+@pytest.mark.integration
+@pytest.mark.kind
+def test_get_cluster_names_from_config_new_format():
+    """Test cluster name extraction with new structured format."""
+    config_data = {
+        "prefix": "test-project",
+        "clusters": {
+            "metrics": {"enable": True},
+            "primary": {"count": 2},
+            "secondary": {"count": 3},
+            "standalone": {"count": 1},
+        },
+    }
 
-        cluster_names = get_cluster_names_from_config(config_data)
+    cluster_names = get_cluster_names_from_config(config_data)
 
-        expected_names = [
-            "test-project-metrics",
-            "test-project-primary-1",
-            "test-project-primary-2",
-            "test-project-secondary-1",
-            "test-project-standalone-1",
-            "test-project-standalone-2",
-            "test-project-standalone-3",
-        ]
-        assert cluster_names == expected_names
+    expected_names = [
+        "test-project-metrics",
+        "test-project-primary-1",
+        "test-project-primary-2",
+        "test-project-secondary-1",
+        "test-project-secondary-2",
+        "test-project-secondary-3",
+        "test-project-standalone-1",
+    ]
+    assert cluster_names == expected_names
 
-    def test_get_cluster_names_from_config_mixed_format(self):
-        """Test cluster name extraction with mixed format (some structured, some legacy)."""
-        config_data = {
-            "prefix": "test-project",
-            "clusters": {
-                "metrics": {"enable": True},  # New format
-                "primary": 2,  # Legacy format
-                "secondary": {"count": 1},  # New format
-                "standalone": 0,  # Legacy format
-            },
-        }
 
-        cluster_names = get_cluster_names_from_config(config_data)
+@pytest.mark.integration
+@pytest.mark.kind
+def test_get_cluster_names_from_config_new_format_partial():
+    """Test cluster name extraction with new format but only some clusters enabled."""
+    config_data = {
+        "prefix": "test-project",
+        "clusters": {
+            "metrics": {"enable": False},
+            "primary": {"count": 1},
+            "secondary": {"count": 0},
+            "standalone": {"count": 2},
+        },
+    }
 
-        # Should use new format since some values are dicts
-        # standalone: 0 means no standalone clusters should be created
-        expected_names = [
-            "test-project-metrics",
-            "test-project-secondary-1",
-        ]
-        assert cluster_names == expected_names
+    cluster_names = get_cluster_names_from_config(config_data)
 
-    def test_get_cluster_names_from_config_no_clusters(self):
-        """Test cluster name extraction when no clusters are defined."""
-        config_data = {"prefix": "test-project", "clusters": {}}
+    expected_names = [
+        "test-project-primary-1",
+        "test-project-standalone-1",
+        "test-project-standalone-2",
+    ]
+    assert cluster_names == expected_names
 
-        cluster_names = get_cluster_names_from_config(config_data)
 
-        expected_names = ["test-project-default"]
-        assert cluster_names == expected_names
+@pytest.mark.integration
+@pytest.mark.kind
+def test_get_cluster_names_from_config_legacy_format():
+    """Test cluster name extraction with legacy format (backward compatibility)."""
+    config_data = {
+        "prefix": "test-project",
+        "clusters": {
+            "metrics": True,
+            "primary": 2,
+            "secondary": 1,
+            "standalone": 3,
+        },
+    }
 
-    def test_get_cluster_names_from_config_no_clusters_section(self):
-        """Test cluster name extraction when clusters section is missing."""
-        config_data = {"prefix": "test-project"}
+    cluster_names = get_cluster_names_from_config(config_data)
 
-        cluster_names = get_cluster_names_from_config(config_data)
+    expected_names = [
+        "test-project-metrics",
+        "test-project-primary-1",
+        "test-project-primary-2",
+        "test-project-secondary-1",
+        "test-project-standalone-1",
+        "test-project-standalone-2",
+        "test-project-standalone-3",
+    ]
+    assert cluster_names == expected_names
 
-        expected_names = ["test-project-default"]
-        assert cluster_names == expected_names
 
-    def test_load_config_with_general_section(self):
-        """Test configuration loading with [general] section."""
-        import tempfile
-        import tomli
+@pytest.mark.integration
+@pytest.mark.kind
+def test_get_cluster_names_from_config_mixed_format():
+    """Test cluster name extraction with mixed format (some structured, some legacy)."""
+    config_data = {
+        "prefix": "test-project",
+        "clusters": {
+            "metrics": {"enable": True},  # New format
+            "primary": 2,  # Legacy format
+            "secondary": {"count": 1},  # New format
+            "standalone": 0,  # Legacy format
+        },
+    }
 
-        # Create a temporary TOML file with [general] section
-        config_content = """[general]
+    cluster_names = get_cluster_names_from_config(config_data)
+
+    # Should use new format since some values are dicts
+    # standalone: 0 means no standalone clusters should be created
+    expected_names = [
+        "test-project-metrics",
+        "test-project-secondary-1",
+    ]
+    assert cluster_names == expected_names
+
+
+@pytest.mark.integration
+@pytest.mark.kind
+def test_get_cluster_names_from_config_no_clusters():
+    """Test cluster name extraction when no clusters are defined."""
+    config_data = {"prefix": "test-project", "clusters": {}}
+
+    cluster_names = get_cluster_names_from_config(config_data)
+
+    expected_names = ["test-project-default"]
+    assert cluster_names == expected_names
+
+
+@pytest.mark.integration
+@pytest.mark.kind
+def test_get_cluster_names_from_config_no_clusters_section():
+    """Test cluster name extraction when clusters section is missing."""
+    config_data = {"prefix": "test-project"}
+
+    cluster_names = get_cluster_names_from_config(config_data)
+
+    expected_names = ["test-project-default"]
+    assert cluster_names == expected_names
+
+
+@pytest.mark.integration
+@pytest.mark.kind
+def test_load_config_with_general_section(tmp_path):
+    """Test configuration loading with [general] section."""
+    import tomli
+
+    # Create a temporary TOML file with [general] section
+    config_content = """[general]
 name = "test-deployment"
 version = "1.0.0"
 prefix = "test-project"
@@ -360,34 +383,26 @@ enable = true
 count = 2
 """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(config_content)
-            temp_file = f.name
+    config_file = tmp_path / "test.toml"
+    config_file.write_text(config_content)
 
-        try:
-            # Load the configuration using the new configuration object
-            from deployment_builder.config import load_config_from_file
+    # Load the configuration using the new configuration object
+    from deployment_builder.config import load_config_from_file
 
-            config_obj = load_config_from_file(temp_file)
+    config_obj = load_config_from_file(str(config_file))
 
-            # Verify that [general] section values are in the general section
-            assert config_obj.general.name == "test-deployment"
-            assert config_obj.general.version == "1.0.0"
-            assert config_obj.general.prefix == "test-project"
-            assert config_obj.general.kubeconfig_path == "test-kubeconfigs"
-            assert config_obj.general.kind_config_path == "test-kind-configs"
+    # Verify that [general] section values are in the general section
+    assert config_obj.general.name == "test-deployment"
+    assert config_obj.general.version == "1.0.0"
+    assert config_obj.general.prefix == "test-project"
+    assert config_obj.general.kubeconfig_path == "test-kubeconfigs"
+    assert config_obj.general.kind_config_path == "test-kind-configs"
 
-            # Verify that clusters section is preserved
-            assert config_obj.clusters["metrics"].enable is True
-            assert config_obj.clusters["primary"].count == 2
+    # Verify that clusters section is preserved
+    assert config_obj.clusters["metrics"].enable is True
+    assert config_obj.clusters["primary"].count == 2
 
-            # Verify that the general section is present in the dict representation
-            config_dict = config_obj.to_dict()
-            assert "general" in config_dict
-            assert config_dict["general"]["name"] == "test-deployment"
-
-        finally:
-            # Clean up
-            import os
-
-            os.unlink(temp_file)
+    # Verify that the general section is present in the dict representation
+    config_dict = config_obj.to_dict()
+    assert "general" in config_dict
+    assert config_dict["general"]["name"] == "test-deployment"

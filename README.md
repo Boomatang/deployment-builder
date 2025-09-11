@@ -842,9 +842,11 @@ deployment-builder/
 │       ├── kind_integration.py
 │       └── logging_config.py
 ├── tests/
-│   ├── test_config.py
-│   ├── test_kind_config_integration.py
-│   └── test_kubeconfig_integration.py
+│   ├── conftest.py                    # Shared pytest fixtures
+│   ├── test_config.py                 # Unit tests for configuration management
+│   ├── test_cli_integration.py        # Integration tests for CLI commands
+│   ├── test_kind_config_integration.py # Integration tests for kind cluster management
+│   └── test_kubeconfig_integration.py # Integration tests for kubeconfig management
 ├── examples/
 │   ├── config.toml
 │   ├── deployment.toml
@@ -881,18 +883,106 @@ poetry run black --check src/ tests/
 
 ### Running Tests
 
+The test suite has been refactored to follow pytest best practices with fixtures, parametrization, and proper test organization.
+
+#### Test Structure
+
+The tests are organized into the following categories:
+
+- **Unit Tests** (`@pytest.mark.unit`): Test individual components and functions
+- **Integration Tests** (`@pytest.mark.integration`): Test CLI commands and component interactions
+- **CLI Tests** (`@pytest.mark.cli`): Test command-line interface functionality
+- **Config Tests** (`@pytest.mark.config`): Test configuration management
+- **Kind Tests** (`@pytest.mark.kind`): Test kind cluster integration
+- **Kubeconfig Tests** (`@pytest.mark.kubeconfig`): Test kubeconfig management
+
+#### Running All Tests
+
 ```bash
 # Run all tests
 poetry run pytest tests/ -v
 
-# Run specific test file
-poetry run pytest tests/test_config.py -v
-
-# Run CLI integration tests (tests CLI commands with example files)
-poetry run pytest tests/test_cli_integration.py -v
-
 # Run tests with coverage
 poetry run pytest tests/ --cov=src/deployment_builder
+```
+
+#### Running Tests by Category
+
+```bash
+# Run only unit tests (configuration tests)
+poetry run pytest tests/ -m "unit" -v
+
+# Run only integration tests (CLI, kind, kubeconfig)
+poetry run pytest tests/ -m "integration" -v
+
+# Run only CLI tests
+poetry run pytest tests/ -m "cli" -v
+
+# Run only configuration tests
+poetry run pytest tests/ -m "config" -v
+
+# Run only kind integration tests
+poetry run pytest tests/ -m "kind" -v
+
+# Run only kubeconfig tests
+poetry run pytest tests/ -m "kubeconfig" -v
+```
+
+#### Running Specific Test Files
+
+```bash
+# Run configuration tests
+poetry run pytest tests/test_config.py -v
+
+# Run CLI integration tests
+poetry run pytest tests/test_cli_integration.py -v
+
+# Run kind integration tests
+poetry run pytest tests/test_kind_config_integration.py -v
+
+# Run kubeconfig integration tests
+poetry run pytest tests/test_kubeconfig_integration.py -v
+```
+
+#### Test Features
+
+The refactored test suite includes:
+
+- **91 total tests** (increased from 76 due to parametrization)
+- **36 unit tests** for configuration management
+- **55 integration tests** for CLI commands and component interactions
+- **Parametrized tests** using `@pytest.mark.parametrize` for testing multiple scenarios
+- **Shared fixtures** in `conftest.py` for common test setup
+- **Test markers** for easy categorization and selective running
+- **Enhanced assertions** with descriptive error messages
+- **Temporary file handling** using pytest's `tmp_path` fixture
+
+#### Test Fixtures
+
+The test suite includes several shared fixtures in `conftest.py`:
+
+- `examples_dir`: Path to the examples directory containing test configuration files
+- `example_files`: List of example configuration files for testing
+- `cli_runner`: Fixture for running CLI commands with proper error handling
+- `sample_config_data`: Sample configuration data for testing
+
+#### Example Test Usage
+
+```python
+# Using fixtures in tests
+def test_create_command_dry_run(example_file, examples_dir, cli_runner):
+    """Test create command with --dry-run for all example files."""
+    file_path = examples_dir / example_file
+    result = cli_runner(["create", "--config", str(file_path), "--dry-run"])
+    assert "DRY RUN:" in result.stdout
+
+# Using parametrization
+@pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
+def test_services_configuration_parsing(example_file, examples_dir, cli_runner):
+    """Test that services configuration is parsed correctly."""
+    file_path = examples_dir / example_file
+    result = cli_runner(["create", "--config", str(file_path), "--dry-run"])
+    assert "services" in result.stdout
 ```
 
 ### Manual Testing
@@ -907,14 +997,22 @@ For manual testing with real cluster creation, use the hack script:
 
 ### Test Coverage
 
-The project includes comprehensive test coverage:
+The project includes comprehensive test coverage with 91 total tests:
 
-- **Configuration Tests** (`test_config.py`): 29 tests covering configuration object behavior, file loading, and edge cases
-- **Kind Integration Tests** (`test_kind_config_integration.py`): Tests for kind cluster creation and configuration
-- **Kubeconfig Integration Tests** (`test_kubeconfig_integration.py`): Tests for kubeconfig file management
-- **CLI Integration Tests** (`test_cli_integration.py`): 13 tests covering CLI commands with all example configuration files
+- **Configuration Tests** (`test_config.py`): 36 unit tests covering configuration object behavior, file loading, and edge cases
+- **CLI Integration Tests** (`test_cli_integration.py`): 28 integration tests covering CLI commands with all example configuration files
+- **Kind Integration Tests** (`test_kind_config_integration.py`): 16 integration tests for kind cluster creation and configuration
+- **Kubeconfig Integration Tests** (`test_kubeconfig_integration.py`): 11 integration tests for kubeconfig file management
 
-All tests use real objects without mocks, ensuring robust testing of the actual functionality.
+#### Test Organization
+
+- **Unit Tests**: 36 tests focused on individual component testing
+- **Integration Tests**: 55 tests covering end-to-end functionality and component interactions
+- **Parametrized Tests**: Multiple test scenarios using `@pytest.mark.parametrize`
+- **Fixture-Based**: Shared test setup using pytest fixtures in `conftest.py`
+- **Marker-Based**: Tests categorized with markers for selective running
+
+All tests use real objects without mocks, ensuring robust testing of the actual functionality. The test suite follows pytest best practices with proper fixture usage, parametrization, and descriptive assertions.
 
 ### Configuration Architecture
 
