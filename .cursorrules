@@ -89,14 +89,15 @@ Every plan must include these sections:
 7. **Testing Strategy** - How the feature will be tested
 8. **Risk Assessment** - Potential risks and mitigation strategies
 9. **Success Criteria** - Clear definition of done
-10. **Timeline** - Realistic implementation timeline
-11. **Future Enhancements** - Optional future improvements
+10. **Future Enhancements** - Optional future improvements
+
+**Note**: Do NOT include specific timelines or week-based schedules in plans. Focus on phases and deliverables instead.
 
 ### Plan Quality Standards
 - **Be specific and detailed** - Include code examples, file structures, CLI commands
 - **Consider backward compatibility** - Unless explicitly stated otherwise
 - **Address edge cases** - Error handling, validation, failure scenarios
-- **Include realistic timelines** - Break down into phases with clear deliverables
+- **Break down into phases** - Clear phases with specific deliverables
 - **Document integration points** - How it affects existing functionality
 - **Plan for testing** - Unit tests, integration tests, CLI testing
 - **Consider performance implications** - Memory usage, execution time, scalability
@@ -116,6 +117,28 @@ Every plan must include these sections:
 - **Plan for configuration** - How new features integrate with config system
 - **Design for testing** - Make features testable from the start
 - **Consider error handling** - Plan for graceful failure and clear error messages
+
+### Plan Content Guidelines
+- **Use Markdown format** - All plans should be in Markdown (.md) files
+- **Include conceptual examples** - Show the general approach, not detailed implementation
+- **Reference existing files** - Link to relevant source files and configurations
+- **Consider CLI impact** - How changes affect the main `deploy` command
+- **Avoid CLI bloat** - Don't add new commands to `deploy` unless absolutely necessary
+- **Focus on development tools** - Use standalone scripts, poetry commands, or makefiles for development tasks
+- **Plan for documentation** - Consider how features will be documented
+- **Think about maintenance** - Plan for ongoing maintenance and updates
+
+### Established Project Patterns
+Based on existing plans and project structure:
+- **Development tools over CLI commands** - Use poetry scripts, makefiles, or standalone scripts instead of adding to `deploy` command
+- **Configuration-driven approach** - All features should integrate with the existing configuration system
+- **Parallel execution support** - Consider how new features work with parallel cluster operations
+- **Kind integration** - Features should work with kind cluster management
+- **Service system integration** - Consider how features integrate with the service execution system
+- **Multiple format support** - Support TOML, JSON, and YAML where applicable
+- **Comprehensive testing** - Include unit tests, integration tests, and CLI testing
+- **Documentation integration** - Plan for how features will be documented
+- **Backward compatibility** - Maintain compatibility with existing configurations
 
 ## Security Rules - CRITICAL
 - **NEVER run any scripts in the `hack/` directory**

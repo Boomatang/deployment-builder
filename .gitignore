@@ -49,3 +49,6 @@ kind-configs/
 # Temporary files
 *.tmp
 *.temp
+
+# AI Chats (for now)
+chats/
