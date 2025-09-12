@@ -10,6 +10,10 @@ from typing import Optional, Tuple, Dict, List
 import yaml
 
 from .logging_config import get_logger
+from .queue import ServiceQueue, ServiceItem, WorkerPool
+from .execution_planner import ExecutionPlanner
+from .load_balancer import create_load_balancer
+from .config import DeploymentConfig
 
 
 def run_kind_command(
@@ -925,3 +929,232 @@ def execute_services_for_all_clusters(
         all_results[cluster_name] = cluster_results
 
     return all_results
+
+
+def create_clusters_with_services(
+    config: DeploymentConfig,
+    dry_run: bool = False,
+    use_queue: bool = True,
+    max_workers: Optional[int] = None,
+    load_balancer_strategy: str = "round_robin",
+) -> Tuple[bool, List[str]]:
+    """Create clusters and execute services using the queue system.
+
+    Args:
+        config: Deployment configuration
+        dry_run: If True, only show what would be done without executing
+        use_queue: If True, use queue system for service execution
+        max_workers: Maximum number of workers for service execution
+        load_balancer_strategy: Load balancing strategy for service execution
+
+    Returns:
+        Tuple of (success, list of created cluster names)
+    """
+    logger = get_logger()
+
+    if dry_run:
+        logger.info("DRY RUN: Would create clusters and execute services")
+        cluster_names = config.get_cluster_names()
+        logger.info(f"Would create clusters: {cluster_names}")
+        return True, cluster_names
+
+    # Get cluster names from config
+    cluster_names = config.get_cluster_names()
+    if not cluster_names:
+        logger.warning("No clusters to create")
+        return True, []
+
+    logger.info(f"Creating {len(cluster_names)} clusters with queue-based service execution")
+
+    # Create clusters first (using existing parallel logic)
+    cluster_results = {}
+    kubeconfig_dir = Path(config.general.kubeconfig_path).resolve()
+    kind_config_dir = Path(config.general.kind_config_path).resolve()
+
+    # Convert config to dict for existing functions
+    config_data = config.to_dict()
+
+    # Create clusters using existing parallel logic
+    cluster_results = create_multiple_clusters(config_data, log_output=True, max_workers=config.general.max_workers)
+
+    # Check if any clusters were created successfully
+    successful_clusters = [name for name, success in cluster_results.items() if success]
+    if not successful_clusters:
+        logger.error("No clusters were created successfully")
+        return False, []
+
+    logger.info(f"Successfully created {len(successful_clusters)} clusters: {successful_clusters}")
+
+    # Execute services using queue system if requested
+    if use_queue and successful_clusters:
+        service_success = execute_services_from_queue(
+            config,
+            successful_clusters,
+            max_workers=max_workers or config.general.max_workers,
+            load_balancer_strategy=load_balancer_strategy,
+        )
+
+        if not service_success:
+            logger.warning("Some services failed to execute, but clusters were created successfully")
+
+    return True, successful_clusters
+
+
+def execute_services_from_queue(
+    config: DeploymentConfig,
+    cluster_names: List[str],
+    max_workers: int = 4,
+    load_balancer_strategy: str = "round_robin",
+) -> bool:
+    """Execute services using the queue system.
+
+    Args:
+        config: Deployment configuration
+        cluster_names: List of cluster names to execute services for
+        max_workers: Maximum number of workers for service execution
+        load_balancer_strategy: Load balancing strategy for service execution
+
+    Returns:
+        True if all services executed successfully, False otherwise
+    """
+    logger = get_logger()
+
+    # Create execution planner
+    planner = ExecutionPlanner(config)
+
+    # Create execution plan
+    try:
+        execution_plan = planner.create_execution_plan()
+        logger.info(f"Created execution plan with {len(execution_plan)} service items")
+
+        # Filter execution plan to only include the specified clusters
+        filtered_plan = [item for item in execution_plan if item.cluster_name in cluster_names]
+
+        if not filtered_plan:
+            logger.info("No services to execute for the specified clusters")
+            return True
+
+        logger.info(f"Executing {len(filtered_plan)} service items for {len(cluster_names)} clusters")
+
+    except Exception as e:
+        logger.error(f"Failed to create execution plan: {e}")
+        return False
+
+    # Create service queue
+    queue = ServiceQueue(max_workers=max_workers)
+
+    # Create load balancer
+    try:
+        load_balancer = create_load_balancer(load_balancer_strategy)
+        logger.info(f"Using load balancer: {load_balancer_strategy}")
+    except ValueError as e:
+        logger.error(f"Invalid load balancer strategy: {e}")
+        return False
+
+    # Add service items to queue
+    for item in filtered_plan:
+        queue.add_service_item(item)
+
+    # Create and start worker pool
+    worker_pool = WorkerPool(max_workers=max_workers, queue=queue)
+    queue.workers = worker_pool.workers  # Link workers to queue
+
+    try:
+        # Start workers
+        worker_pool.start_workers()
+        logger.info(f"Started {max_workers} workers for service execution")
+
+        # Wait for all services to complete
+        while not queue.is_empty():
+            time.sleep(0.1)  # Small delay to avoid busy waiting
+
+        # Get final status
+        status = queue.get_queue_status()
+        logger.info(
+            f"Service execution completed: {status['completed_count']} completed, {status['failed_count']} failed"
+        )
+
+        # Check if all services completed successfully
+        all_successful = status["failed_count"] == 0
+
+        if all_successful:
+            logger.info("All services executed successfully")
+        else:
+            logger.warning(f"{status['failed_count']} services failed to execute")
+
+        return all_successful
+
+    except Exception as e:
+        logger.error(f"Error during service execution: {e}")
+        return False
+
+    finally:
+        # Clean up workers
+        worker_pool.stop_workers()
+        queue.shutdown()
+
+
+def get_execution_plan(
+    config: DeploymentConfig,
+    cluster_names: Optional[List[str]] = None,
+    show_timeline: bool = False,
+    show_dependencies: bool = False,
+) -> Dict[str, any]:
+    """Get execution plan for services.
+
+    Args:
+        config: Deployment configuration
+        cluster_names: Optional list of cluster names to filter by
+        show_timeline: Whether to include timeline information
+        show_dependencies: Whether to include dependency information
+
+    Returns:
+        Dictionary containing execution plan information
+    """
+    logger = get_logger()
+
+    # Create execution planner
+    planner = ExecutionPlanner(config)
+
+    try:
+        # Create execution plan
+        execution_plan = planner.create_execution_plan()
+
+        # Filter by cluster names if specified
+        if cluster_names:
+            execution_plan = [item for item in execution_plan if item.cluster_name in cluster_names]
+
+        # Build result
+        result = {
+            "total_services": len(execution_plan),
+            "clusters": list(set(item.cluster_name for item in execution_plan)),
+            "cluster_types": list(set(item.cluster_type for item in execution_plan)),
+            "services": [
+                {
+                    "cluster_name": item.cluster_name,
+                    "cluster_type": item.cluster_type,
+                    "service_name": item.service_name,
+                    "priority": item.priority,
+                    "estimated_duration": item.estimated_duration,
+                    "dependencies": item.dependencies,
+                }
+                for item in execution_plan
+            ],
+        }
+
+        # Add timeline if requested
+        if show_timeline:
+            result["timeline"] = planner.get_execution_timeline()
+
+        # Add dependencies if requested
+        if show_dependencies:
+            result["dependencies"] = planner.calculate_dependencies()
+
+        # Add execution summary
+        result["summary"] = planner.get_execution_summary()
+
+        return result
+
+    except Exception as e:
+        logger.error(f"Failed to create execution plan: {e}")
+        return {"error": str(e), "total_services": 0, "clusters": [], "cluster_types": [], "services": []}
