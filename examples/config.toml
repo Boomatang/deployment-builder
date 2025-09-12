@@ -29,16 +29,24 @@ count = 3
 
 # Global services (run on all clusters)
 [services]
+[services.health-check]
+"kubeconfig.flag" = "--kubeconfig"
+cmd = "kubectl get nodes"
+priority = 1
+estimated_duration = 30.0
+
 [services.pods]
 "kubeconfig.flag" = "--kubeconfig"
 cmd = "kubectl get pods -n kube-system"
-
-[services.nodes]
-"kubeconfig.flag" = "--kubeconfig"
-cmd = "kubectl get nodes"
+priority = 2
+estimated_duration = 45.0
+dependencies = ["health-check"]
 
 # Cluster-specific services (run only on primary clusters)
 [clusters.primary.services]
 [clusters.primary.services.namespaces]
 "kubeconfig.flag" = "--kubeconfig"
 cmd = "kubectl get namespaces"
+priority = 3
+estimated_duration = 20.0
+dependencies = ["pods"]

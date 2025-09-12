@@ -8,6 +8,7 @@ This document provides best practices and guidelines for using dynamic cluster t
 - [Configuration Organization](#configuration-organization)
 - [Single vs Multiple Cluster Types](#single-vs-multiple-cluster-types)
 - [Service Configuration](#service-configuration)
+- [Service Queue System](#service-queue-system)
 - [Performance Considerations](#performance-considerations)
 - [Security Best Practices](#security-best-practices)
 - [Monitoring and Observability](#monitoring-and-observability)
@@ -235,6 +236,252 @@ api-logs = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl logs -n api --ta
 [clusters.database-primary.services]
 db-backup = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get pv" }
 db-metrics = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get pods -n database" }
+```
+
+## Service Queue System
+
+The Service Queue System provides advanced parallel execution capabilities with comprehensive monitoring and error handling. Follow these best practices to maximize performance and reliability.
+
+### Service Priority Design
+
+**Priority Guidelines:**
+- **Priority 1-3**: Critical infrastructure services (health checks, security scans)
+- **Priority 4-6**: Core application services (deployments, configurations)
+- **Priority 7-9**: Monitoring and verification services
+- **Priority 10+**: Optional or cleanup services
+
+**Example Priority Structure:**
+```toml
+[services]
+# Critical infrastructure (highest priority)
+[services.critical-health-check]
+priority = 1
+estimated_duration = 15.0
+
+[services.security-scan]
+priority = 2
+estimated_duration = 120.0
+dependencies = ["critical-health-check"]
+
+# Core application services
+[services.app-deploy]
+priority = 5
+estimated_duration = 60.0
+dependencies = ["security-scan"]
+
+# Monitoring services
+[services.app-verify]
+priority = 8
+estimated_duration = 30.0
+dependencies = ["app-deploy"]
+```
+
+### Service Dependencies
+
+**Dependency Best Practices:**
+1. **Minimize Dependencies**: Keep dependency chains short for better parallelism
+2. **Clear Dependencies**: Use descriptive service names in dependencies
+3. **Avoid Circular Dependencies**: The system will detect and prevent these
+4. **Logical Grouping**: Group related services with similar dependencies
+
+**Good Dependency Structure:**
+```toml
+# Infrastructure services (no dependencies)
+[services.health-check]
+priority = 1
+
+[services.security-scan]
+priority = 2
+dependencies = ["health-check"]
+
+# Application services (depend on infrastructure)
+[services.app-deploy]
+priority = 5
+dependencies = ["security-scan"]
+
+[services.app-config]
+priority = 6
+dependencies = ["security-scan"]
+
+# Verification services (depend on application)
+[services.app-verify]
+priority = 8
+dependencies = ["app-deploy", "app-config"]
+```
+
+### Duration Estimation
+
+**Accurate Estimates:**
+- **Test Commands**: Run commands manually to get accurate timing
+- **Add Buffer**: Add 10-20% buffer to estimates for safety
+- **Update Regularly**: Refine estimates based on actual execution times
+- **Document Assumptions**: Note any assumptions in comments
+
+**Example Duration Estimates:**
+```toml
+[services.quick-check]
+cmd = "kubectl get nodes"
+estimated_duration = 10.0  # Quick command
+
+[services.complex-deploy]
+cmd = "kubectl apply -f complex-app.yaml"
+estimated_duration = 120.0  # Complex deployment
+
+[services.data-migration]
+cmd = "kubectl exec -n database -- pg_dump"
+estimated_duration = 300.0  # Long-running operation
+```
+
+### Load Balancing Strategy
+
+**Strategy Selection:**
+- **Round Robin**: Use for uniform workloads and simple distribution
+- **Least Loaded**: Use for variable workloads and optimal resource utilization
+- **Priority Based**: Use for mixed priority workloads with critical services
+
+**Configuration:**
+```toml
+[general]
+load_balancing_strategy = "least_loaded"  # Best for most use cases
+max_workers = 8  # Adjust based on system resources
+```
+
+### Worker Configuration
+
+**Worker Count Guidelines:**
+- **Small Deployments** (1-5 clusters): 2-4 workers
+- **Medium Deployments** (6-20 clusters): 4-8 workers
+- **Large Deployments** (20+ clusters): 8-16 workers
+- **Resource Bound**: Monitor CPU and memory usage
+
+**System Resource Considerations:**
+```toml
+[general]
+# CPU-bound workloads
+max_workers = 4  # Number of CPU cores
+
+# I/O-bound workloads
+max_workers = 12  # 2-3x CPU cores
+
+# Memory-bound workloads
+max_workers = 2  # Conservative for memory constraints
+```
+
+### Error Handling Configuration
+
+**Retry Strategy:**
+- **Network Commands**: 3-5 retries with exponential backoff
+- **Configuration Commands**: 2-3 retries with short delays
+- **Long-running Commands**: 1-2 retries with longer delays
+
+**Circuit Breaker:**
+- **Automatic**: System automatically implements circuit breaker
+- **Recovery**: Failed clusters are retried after timeout
+- **Monitoring**: Monitor circuit breaker status in logs
+
+### Service Command Optimization
+
+**Command Best Practices:**
+1. **Use Specific Resources**: Target specific namespaces and resources
+2. **Avoid Wide Queries**: Don't use `--all-namespaces` unless necessary
+3. **Use Efficient Flags**: Use `--no-headers` for faster output
+4. **Test Commands**: Verify commands work before adding to configuration
+
+**Optimized Commands:**
+```toml
+# Good: Specific and efficient
+[services.pod-status]
+cmd = "kubectl get pods -n kube-system --no-headers"
+
+# Avoid: Too broad
+[services.all-pods]
+cmd = "kubectl get pods --all-namespaces"
+
+# Good: Targeted resource
+[services.app-deployments]
+cmd = "kubectl get deployments -l app=myapp -n production"
+
+# Avoid: Generic queries
+[services.all-deployments]
+cmd = "kubectl get deployments -A"
+```
+
+### Monitoring and Progress Tracking
+
+**Progress Monitoring:**
+- **Real-time Updates**: System provides live progress updates
+- **Worker Status**: Monitor individual worker utilization
+- **Queue Status**: Track queue size and service status
+- **Performance Metrics**: Monitor throughput and error rates
+
+**Logging Configuration:**
+```bash
+# Enable detailed logging for debugging
+poetry run deploy --log-level=debug create --config my-config.toml
+
+# Monitor progress in real-time
+tail -f logs/deployment_builder.log
+```
+
+### Execution Planning
+
+**Plan Before Execution:**
+```bash
+# Preview execution plan
+poetry run deploy plan --config my-config.toml
+
+# Show detailed timeline
+poetry run deploy plan --config my-config.toml --timeline
+
+# Show dependencies
+poetry run deploy plan --config my-config.toml --dependencies
+```
+
+**Plan Analysis:**
+- **Verify Dependencies**: Ensure dependency chain is correct
+- **Check Parallelism**: Identify services that can run in parallel
+- **Estimate Duration**: Verify total execution time estimates
+- **Resource Requirements**: Ensure adequate worker capacity
+
+### Performance Optimization
+
+**Queue System Optimization:**
+1. **Service Batching**: Group similar services together
+2. **Connection Pooling**: System automatically pools connections
+3. **Caching**: System caches service results with TTL
+4. **Resource Optimization**: System optimizes worker allocation
+
+**Configuration Optimization:**
+```toml
+[general]
+# Optimize for your workload
+max_workers = 8
+load_balancing_strategy = "least_loaded"
+
+# Use accurate estimates
+[services.optimized-service]
+estimated_duration = 30.0  # Accurate estimate helps planning
+priority = 5  # Appropriate priority
+```
+
+### Troubleshooting Service Queue Issues
+
+**Common Issues:**
+1. **High Error Rates**: Check service commands and dependencies
+2. **Slow Performance**: Adjust worker count and load balancing
+3. **Memory Issues**: Reduce worker count or optimize commands
+4. **Dependency Problems**: Verify service names and dependency chains
+
+**Debug Commands:**
+```bash
+# Check execution plan
+poetry run deploy plan --config my-config.toml --dependencies
+
+# Enable debug logging
+poetry run deploy --log-level=debug create --config my-config.toml
+
+# Dry run with verbose output
+poetry run deploy create --config my-config.toml --dry-run
 ```
 
 ## Performance Considerations

@@ -23,6 +23,12 @@ A command-line tool for managing kind Kubernetes clusters using configuration fi
 - **Global services** - Services that run on all clusters
 - **Cluster-specific services** - Services that run only on specific cluster types
 - **Dynamic cluster types** - Define any cluster types you need for your specific use case
+- **Service Queue System** - Advanced queue-based service execution with parallel processing
+- **Execution planning** - Preview service execution order and dependencies
+- **Load balancing** - Multiple strategies for distributing service load across workers
+- **Progress monitoring** - Real-time progress tracking and status updates
+- **Error recovery** - Automatic retry mechanisms and circuit breaker patterns
+- **Performance optimization** - Caching, batching, and resource optimization
 
 ## Installation
 
@@ -243,6 +249,132 @@ The tool automatically uses the `--kubeconfig` flag when running kind commands, 
 
 This ensures that kind commands always operate on the correct cluster context, even when managing multiple clusters simultaneously, and prevents kubeconfig file lock conflicts during parallel operations.
 
+## Service Queue System
+
+The deployment-builder includes an advanced Service Queue System that provides efficient parallel execution of services across multiple clusters with comprehensive monitoring and error handling.
+
+### Key Features
+
+- **Parallel Service Execution**: Services are executed in parallel across multiple workers
+- **Queue Management**: Centralized queue system for managing service execution order
+- **Load Balancing**: Multiple strategies for distributing service load efficiently
+- **Execution Planning**: Preview service execution order and dependencies
+- **Progress Monitoring**: Real-time progress tracking and status updates
+- **Error Recovery**: Automatic retry mechanisms and circuit breaker patterns
+- **Performance Optimization**: Caching, batching, and resource optimization
+
+### Queue System Components
+
+#### Service Queue
+- **Priority-based execution**: Services can be assigned priorities for execution order
+- **Retry mechanism**: Automatic retry with configurable attempts and delays
+- **Status tracking**: Real-time status updates (PENDING, RUNNING, COMPLETED, FAILED)
+- **Thread-safe operations**: Safe for concurrent access from multiple workers
+
+#### Worker Pool
+- **Parallel workers**: Multiple workers process services simultaneously
+- **Load balancing**: Services are distributed across available workers
+- **Worker monitoring**: Real-time worker status and utilization tracking
+- **Graceful shutdown**: Clean worker termination and resource cleanup
+
+#### Load Balancing Strategies
+- **Round Robin**: Even distribution across workers
+- **Least Loaded**: Assign services to workers with the least load
+- **Priority Based**: High-priority services get preference
+
+#### Execution Planning
+- **Dependency resolution**: Automatic resolution of service dependencies
+- **Timeline generation**: Estimated execution timeline with start/end times
+- **Parallel groups**: Services that can run in parallel are grouped together
+- **Optimization**: Execution order is optimized for maximum efficiency
+
+### Configuration
+
+The Service Queue System can be configured in your configuration file:
+
+```toml
+[general]
+name = "my-deployment"
+max_workers = 8  # Number of parallel workers
+
+[clusters]
+[clusters.worker]
+count = 3
+
+[clusters.database]
+count = 2
+
+# Global services (run on all clusters)
+[services]
+[services.health-check]
+"kubeconfig.flag" = "--kubeconfig"
+cmd = "kubectl get nodes"
+priority = 1
+estimated_duration = 30.0
+
+# Cluster-specific services
+[clusters.worker.services]
+[clusters.worker.services.monitoring]
+"kubeconfig.flag" = "--kubeconfig"
+cmd = "kubectl get pods -n monitoring"
+priority = 2
+estimated_duration = 60.0
+dependencies = ["health-check"]
+```
+
+### CLI Commands
+
+#### Create Command with Queue Options
+```bash
+# Create clusters with custom worker count
+poetry run deploy create --workers 8
+
+# Create clusters with specific load balancer
+poetry run deploy create --load-balancer least_loaded
+
+# Preview execution plan in dry-run mode
+poetry run deploy create --dry-run
+```
+
+#### Plan Command
+```bash
+# Show basic execution plan
+poetry run deploy plan
+
+# Show detailed timeline
+poetry run deploy plan --timeline
+
+# Show service dependencies
+poetry run deploy plan --dependencies
+
+# Filter by cluster types
+poetry run deploy plan --cluster-types worker,database
+```
+
+### Performance Benefits
+
+- **Faster Execution**: Parallel processing significantly reduces total execution time
+- **Better Resource Utilization**: Workers are efficiently utilized across all clusters
+- **Scalability**: System scales well with large numbers of clusters and services
+- **Reliability**: Comprehensive error handling and recovery mechanisms
+- **Visibility**: Clear execution planning and progress monitoring
+
+### Error Handling and Recovery
+
+- **Automatic Retry**: Failed services are automatically retried with exponential backoff
+- **Circuit Breaker**: Prevents cascading failures by temporarily stopping execution on failing clusters
+- **Error Classification**: Errors are classified by type and severity for appropriate handling
+- **Recovery Operations**: Health checks and recovery operations for failed services
+- **Error Statistics**: Comprehensive error tracking and reporting
+
+### Monitoring and Progress Tracking
+
+- **Real-time Progress**: Live progress updates during execution
+- **Worker Utilization**: Monitor worker status and utilization
+- **Queue Status**: Track queue size, completed, failed, and running services
+- **Execution Timeline**: Estimated completion times and progress percentages
+- **Performance Metrics**: Throughput, latency, and error rate monitoring
+
 ## Kind Configuration Management
 
 The tool automatically generates and manages kind cluster configuration files, allowing you to customize cluster settings according to the [kind configuration documentation](https://kind.sigs.k8s.io/docs/user/configuration/).
@@ -393,6 +525,12 @@ Options:
                      config files in current directory. Can also be set via
                      DEPLOYMENT_CONFIG environment variable.
   -n, --dry-run      Show what would be created without actually creating it.
+  -w, --workers INTEGER
+                     Number of workers for parallel service execution.
+                     Overrides config value.
+  --load-balancer [round_robin|least_loaded|priority_based]
+                     Load balancing strategy for service execution.
+                     Overrides config value.
   --help             Show this message and exit.
 ```
 
@@ -407,6 +545,22 @@ Options:
                      DEPLOYMENT_CONFIG environment variable.
   -n, --dry-run      Show what would be removed without actually removing it.
   -f, --force        Force removal without confirmation.
+  --help             Show this message and exit.
+```
+
+#### Plan Command
+
+```bash
+poetry run deploy plan [OPTIONS]
+
+Options:
+  -c, --config PATH  Path to configuration file. If not provided, looks for
+                     config files in current directory. Can also be set via
+                     DEPLOYMENT_CONFIG environment variable.
+  -t, --timeline     Show detailed execution timeline with start/end times.
+  -d, --dependencies Show service dependencies and relationships.
+  --cluster-types TEXT
+                     Filter by specific cluster types (comma-separated).
   --help             Show this message and exit.
 ```
 
@@ -875,21 +1029,49 @@ deployment-builder/
 │   └── deployment_builder/
 │       ├── __init__.py
 │       ├── __main__.py
-│       ├── cli.py
-│       ├── config.py
-│       ├── kind_integration.py
-│       └── logging_config.py
+│       ├── cli.py                     # CLI interface with plan command
+│       ├── config.py                  # Configuration management
+│       ├── kind_integration.py        # Kind cluster integration
+│       ├── logging_config.py          # Logging configuration
+│       ├── queue.py                   # Service queue system
+│       ├── load_balancer.py           # Load balancing strategies
+│       ├── execution_planner.py       # Execution planning
+│       ├── monitor.py                 # Progress monitoring
+│       ├── optimization.py            # Performance optimization
+│       ├── error_handler.py           # Error handling and recovery
+│       └── benchmark.py               # Performance benchmarking
 ├── tests/
 │   ├── conftest.py                    # Shared pytest fixtures
 │   ├── test_config.py                 # Unit tests for configuration management
 │   ├── test_cli_integration.py        # Integration tests for CLI commands
 │   ├── test_kind_config_integration.py # Integration tests for kind cluster management
-│   └── test_kubeconfig_integration.py # Integration tests for kubeconfig management
+│   ├── test_kubeconfig_integration.py # Integration tests for kubeconfig management
+│   ├── test_queue.py                  # Unit tests for queue system
+│   ├── test_load_balancer.py          # Unit tests for load balancing
+│   ├── test_execution_planner.py      # Unit tests for execution planning
+│   ├── test_monitor.py                # Unit tests for monitoring
+│   ├── test_optimization.py           # Unit tests for optimization
+│   ├── test_error_handler.py          # Unit tests for error handling
+│   └── test_benchmark.py              # Unit tests for benchmarking
 ├── examples/
 │   ├── config.toml
 │   ├── deployment.toml
 │   ├── config.json
-│   └── deployment.yaml
+│   ├── deployment.yaml
+│   ├── simple.toml
+│   ├── dynamic-clusters.toml
+│   ├── microservices.toml
+│   ├── edge-computing.toml
+│   ├── development.toml
+│   └── high-availability.toml
+├── docs/
+│   ├── BEST_PRACTICES.md              # Best practices for dynamic cluster types
+│   ├── PYTEST_BEST_PRACTICES.md       # Testing best practices
+│   └── VALIDATION_RULES.md            # Configuration validation rules
+├── Plans/
+│   ├── PLAN_SERVICE_QUEUE_SYSTEM.md   # Service queue system implementation plan
+│   ├── PLAN_DYNAMIC_CLUSTER_TYPES.md  # Dynamic cluster types plan
+│   └── PLAN_GAPS_ANALYSIS.md          # Gaps analysis plan
 ├── hack/
 │   └── test_examples.fish
 ├── pyproject.toml
@@ -1035,17 +1217,24 @@ For manual testing with real cluster creation, use the hack script:
 
 ### Test Coverage
 
-The project includes comprehensive test coverage with 91 total tests:
+The project includes comprehensive test coverage with 334 total tests:
 
-- **Configuration Tests** (`test_config.py`): 36 unit tests covering configuration object behavior, file loading, and edge cases
-- **CLI Integration Tests** (`test_cli_integration.py`): 28 integration tests covering CLI commands with all example configuration files
-- **Kind Integration Tests** (`test_kind_config_integration.py`): 16 integration tests for kind cluster creation and configuration
-- **Kubeconfig Integration Tests** (`test_kubeconfig_integration.py`): 11 integration tests for kubeconfig file management
+- **Configuration Tests** (`test_config.py`): 67 unit tests covering configuration object behavior, file loading, and edge cases
+- **CLI Integration Tests** (`test_cli_integration.py`): 88 integration tests covering CLI commands with all example configuration files
+- **Kind Integration Tests** (`test_kind_config_integration.py`): 12 integration tests for kind cluster creation and configuration
+- **Kubeconfig Integration Tests** (`test_kubeconfig_integration.py`): 8 integration tests for kubeconfig file management
+- **Service Queue Tests** (`test_queue.py`): 12 unit tests for queue system functionality
+- **Load Balancer Tests** (`test_load_balancer.py`): 12 unit tests for load balancing strategies
+- **Execution Planner Tests** (`test_execution_planner.py`): 15 unit tests for execution planning
+- **Monitor Tests** (`test_monitor.py`): 6 unit tests for progress monitoring
+- **Optimization Tests** (`test_optimization.py`): 25 unit tests for performance optimization
+- **Error Handler Tests** (`test_error_handler.py`): 31 unit tests for error handling and recovery
+- **Benchmark Tests** (`test_benchmark.py`): 36 unit tests for performance benchmarking
 
 #### Test Organization
 
-- **Unit Tests**: 36 tests focused on individual component testing
-- **Integration Tests**: 55 tests covering end-to-end functionality and component interactions
+- **Unit Tests**: 208 tests focused on individual component testing
+- **Integration Tests**: 126 tests covering end-to-end functionality and component interactions
 - **Parametrized Tests**: Multiple test scenarios using `@pytest.mark.parametrize`
 - **Fixture-Based**: Shared test setup using pytest fixtures in `conftest.py`
 - **Marker-Based**: Tests categorized with markers for selective running
