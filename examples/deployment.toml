@@ -30,7 +30,7 @@ count = 5
 "kubeconfig.flag" = "--kubeconfig"
 cmd = "kubectl get pods -n kube-system"
 
-[services.services]
+[services.k8s-services]
 "kubeconfig.flag" = "--kubeconfig"
 cmd = "kubectl get services -A"
 

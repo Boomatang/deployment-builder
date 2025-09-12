@@ -1,0 +1,88 @@
+[general]
+name = "development-environment"
+version = "1.0.0"
+environment = "development"
+prefix = "dev"
+kubeconfig_path = "kubeconfigs"
+kind_config_path = "kind-configs"
+max_workers = 4
+
+[clusters]
+# Development web application
+[clusters.web-app]
+enable = true
+
+# Development API server
+[clusters.api-server]
+enable = true
+
+# Development database
+[clusters.database]
+enable = true
+
+# Development cache
+[clusters.redis]
+enable = true
+
+# Testing clusters (multiple instances for parallel testing)
+[clusters.test-runner]
+count = 3
+
+# Development tools
+[clusters.jenkins]
+enable = true
+
+[clusters.sonarqube]
+enable = true
+
+[clusters.nexus]
+enable = true
+
+# Development monitoring
+[clusters.prometheus]
+enable = true
+
+[clusters.grafana]
+enable = true
+
+# Development logging
+[clusters.elasticsearch]
+enable = true
+
+[clusters.kibana]
+enable = true
+
+# Global services (run on all clusters)
+[services]
+dev-health = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get nodes" }
+dev-logs = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get pods --all-namespaces" }
+
+# Web application services
+[clusters.web-app.services]
+frontend-deploy = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get deployments -n web" }
+nginx-config = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get configmaps -n web" }
+
+# API server services
+[clusters.api-server.services]
+api-deploy = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get deployments -n api" }
+api-logs = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl logs -n api --tail=100" }
+
+# Database services
+[clusters.database.services]
+db-status = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get pods -n database" }
+db-backup = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get pv" }
+
+# Test runner services
+[clusters.test-runner.services]
+test-execution = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get jobs -n testing" }
+test-results = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get pods -n testing" }
+
+# Jenkins services
+[clusters.jenkins.services]
+jenkins-status = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get pods -n jenkins" }
+build-logs = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl logs -n jenkins --tail=50" }
+
+# Monitoring services
+[clusters.prometheus.services]
+metrics-status = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get pods -n monitoring" }
+alert-rules = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get configmaps -n monitoring" }

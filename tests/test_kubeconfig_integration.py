@@ -305,23 +305,23 @@ def test_get_cluster_names_from_config_new_format():
     config_data = {
         "prefix": "test-project",
         "clusters": {
-            "metrics": {"enable": True},
-            "primary": {"count": 2},
-            "secondary": {"count": 3},
-            "standalone": {"count": 1},
+            "metrics": {"enable": True, "count": 0},  # count=0, so not created
+            "primary": {"enable": True, "count": 2},
+            "secondary": {"enable": True, "count": 3},
+            "standalone": {"enable": True, "count": 1},
         },
     }
 
     cluster_names = get_cluster_names_from_config(config_data)
 
     expected_names = [
-        "test-project-metrics",
+        # metrics has count=0, so not created
         "test-project-primary-1",
         "test-project-primary-2",
         "test-project-secondary-1",
         "test-project-secondary-2",
         "test-project-secondary-3",
-        "test-project-standalone-1",
+        "test-project-standalone",  # count=1, so no suffix
     ]
     assert cluster_names == expected_names
 

@@ -1,0 +1,83 @@
+[general]
+name = "microservices-architecture"
+version = "2.1.0"
+environment = "production"
+prefix = "microservices"
+kubeconfig_path = "kubeconfigs"
+kind_config_path = "kind-configs"
+max_workers = 8
+
+[clusters]
+# API Gateway (single cluster)
+[clusters.api-gateway]
+enable = true
+
+# Frontend services (multiple instances for load balancing)
+[clusters.frontend]
+count = 2
+
+# Backend services (multiple instances for scalability)
+[clusters.backend]
+count = 4
+
+# Database clusters (primary and replica)
+[clusters.database-primary]
+enable = true
+
+[clusters.database-replica]
+count = 2
+
+# Cache layer (Redis cluster)
+[clusters.redis]
+count = 3
+
+# Message queue (single instance)
+[clusters.rabbitmq]
+enable = true
+
+# Monitoring and observability
+[clusters.prometheus]
+enable = true
+
+[clusters.grafana]
+enable = true
+
+[clusters.jaeger]
+enable = true
+
+# Log aggregation
+[clusters.elasticsearch]
+count = 2
+
+[clusters.kibana]
+enable = true
+
+# Global services (run on all clusters)
+[services]
+health-check = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get nodes" }
+network-policy = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get networkpolicies" }
+
+# Cluster-specific services
+[clusters.api-gateway.services]
+nginx-config = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get configmaps -n nginx" }
+ssl-cert = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get secrets -n nginx" }
+
+[clusters.frontend.services]
+nginx-reload = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl rollout restart deployment/frontend" }
+
+[clusters.backend.services]
+app-deploy = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get deployments -n backend" }
+service-check = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get services -n backend" }
+
+[clusters.database-primary.services]
+db-backup = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get pv" }
+db-metrics = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get pods -n database" }
+
+[clusters.redis.services]
+redis-cluster = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get pods -n redis" }
+
+[clusters.prometheus.services]
+metrics-collect = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get pods -n monitoring" }
+
+[clusters.elasticsearch.services]
+log-index = { "kubeconfig.flag" = "--kubeconfig", cmd = "kubectl get pods -n logging" }

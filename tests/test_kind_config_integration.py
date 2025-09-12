@@ -239,23 +239,23 @@ def test_get_cluster_names_from_config_new_format():
     config_data = {
         "prefix": "test-project",
         "clusters": {
-            "metrics": {"enable": True},
-            "primary": {"count": 2},
-            "secondary": {"count": 3},
-            "standalone": {"count": 1},
+            "metrics": {"enable": True, "count": 0},  # count=0, so not created
+            "primary": {"enable": True, "count": 2},
+            "secondary": {"enable": True, "count": 3},
+            "standalone": {"enable": True, "count": 1},
         },
     }
 
     cluster_names = get_cluster_names_from_config(config_data)
 
     expected_names = [
-        "test-project-metrics",
+        # metrics has count=0, so not created
         "test-project-primary-1",
         "test-project-primary-2",
         "test-project-secondary-1",
         "test-project-secondary-2",
         "test-project-secondary-3",
-        "test-project-standalone-1",
+        "test-project-standalone",  # count=1, so no suffix
     ]
     assert cluster_names == expected_names
 
@@ -267,17 +267,17 @@ def test_get_cluster_names_from_config_new_format_partial():
     config_data = {
         "prefix": "test-project",
         "clusters": {
-            "metrics": {"enable": False},
-            "primary": {"count": 1},
-            "secondary": {"count": 0},
-            "standalone": {"count": 2},
+            "metrics": {"enable": False, "count": 0},  # enable=False, so not created
+            "primary": {"enable": True, "count": 1},
+            "secondary": {"enable": True, "count": 0},  # count=0, so not created
+            "standalone": {"enable": True, "count": 2},
         },
     }
 
     cluster_names = get_cluster_names_from_config(config_data)
 
     expected_names = [
-        "test-project-primary-1",
+        "test-project-primary",  # count=1, so no suffix
         "test-project-standalone-1",
         "test-project-standalone-2",
     ]
@@ -319,10 +319,10 @@ def test_get_cluster_names_from_config_mixed_format():
     config_data = {
         "prefix": "test-project",
         "clusters": {
-            "metrics": {"enable": True},  # New format
+            "metrics": {"enable": True, "count": 0},  # New format, count=0 so not created
             "primary": 2,  # Legacy format
-            "secondary": {"count": 1},  # New format
-            "standalone": 0,  # Legacy format
+            "secondary": {"enable": True, "count": 1},  # New format
+            "standalone": 0,  # Legacy format, count=0 so not created
         },
     }
 
@@ -331,8 +331,8 @@ def test_get_cluster_names_from_config_mixed_format():
     # Should use new format since some values are dicts
     # standalone: 0 means no standalone clusters should be created
     expected_names = [
-        "test-project-metrics",
-        "test-project-secondary-1",
+        # metrics has count=0, so not created
+        "test-project-secondary",  # count=1, so no suffix
     ]
     assert cluster_names == expected_names
 
@@ -406,3 +406,122 @@ count = 2
     config_dict = config_obj.to_dict()
     assert "general" in config_dict
     assert config_dict["general"]["name"] == "test-deployment"
+
+
+@pytest.mark.integration
+@pytest.mark.kind
+def test_get_cluster_names_from_config_dynamic_types():
+    """Test cluster name extraction with dynamic cluster types."""
+    config_data = {
+        "prefix": "dynamic-test",
+        "clusters": {
+            "gateway": {"enable": True, "count": 0},
+            "api-server": {"enable": True, "count": 2},
+            "database-cluster": {"enable": False, "count": 3},
+            "cache_node": {"enable": True, "count": 1},
+        },
+    }
+
+    cluster_names = get_cluster_names_from_config(config_data)
+
+    expected_names = [
+        # gateway has count=0, so not created
+        "dynamic-test-api-server-1",
+        "dynamic-test-api-server-2",
+        # database-cluster has enable=False, so not created
+        "dynamic-test-cache_node",  # count=1, so no suffix
+    ]
+    assert cluster_names == expected_names
+
+
+@pytest.mark.integration
+@pytest.mark.kind
+def test_get_cluster_names_from_config_dynamic_types_mixed():
+    """Test cluster name extraction with mixed dynamic cluster types."""
+    config_data = {
+        "prefix": "mixed-dynamic",
+        "clusters": {
+            "frontend": {"enable": True, "count": 0},  # Single cluster
+            "backend": {"enable": False, "count": 2},  # Multiple, disabled
+            "worker": {"enable": True, "count": 3},  # Multiple, enabled
+            "monitoring": {"enable": True, "count": 0},  # Single cluster
+        },
+    }
+
+    cluster_names = get_cluster_names_from_config(config_data)
+
+    expected_names = [
+        # frontend has count=0, so not created
+        # backend has enable=False, so not created
+        "mixed-dynamic-worker-1",
+        "mixed-dynamic-worker-2",
+        "mixed-dynamic-worker-3",
+        # monitoring has count=0, so not created
+    ]
+    assert cluster_names == expected_names
+
+
+@pytest.mark.integration
+@pytest.mark.kind
+def test_get_cluster_names_from_config_dynamic_types_performance():
+    """Test cluster name extraction with many dynamic cluster types."""
+    config_data = {"prefix": "performance-test", "clusters": {}}
+
+    # Create 20 different cluster types
+    for i in range(20):
+        cluster_type = f"worker-{i}"
+        config_data["clusters"][cluster_type] = {"enable": True, "count": 1}
+
+    cluster_names = get_cluster_names_from_config(config_data)
+
+    # Should have 20 cluster names
+    assert len(cluster_names) == 20
+    assert all(name.startswith("performance-test-worker-") for name in cluster_names)
+
+    # Check specific names
+    expected_names = [f"performance-test-worker-{i}" for i in range(20)]  # count=1, so no suffix
+    assert cluster_names == expected_names
+
+
+@pytest.mark.integration
+@pytest.mark.kind
+def test_get_cluster_names_from_config_dynamic_types_special_characters():
+    """Test cluster name extraction with special characters in cluster types."""
+    config_data = {
+        "prefix": "special-chars",
+        "clusters": {
+            "api-server": {"enable": True, "count": 0},
+            "database_node": {"enable": True, "count": 2},
+            "cache-cluster": {"enable": True, "count": 1},
+        },
+    }
+
+    cluster_names = get_cluster_names_from_config(config_data)
+
+    expected_names = [
+        # api-server has count=0, so not created
+        "special-chars-database_node-1",
+        "special-chars-database_node-2",
+        "special-chars-cache-cluster",  # count=1, so no suffix
+    ]
+    assert cluster_names == expected_names
+
+
+@pytest.mark.integration
+@pytest.mark.kind
+def test_get_cluster_names_from_config_dynamic_types_validation():
+    """Test cluster name extraction with invalid cluster types (should fail)."""
+    from deployment_builder.config import create_default_config
+
+    config_data = {
+        "general": {"name": "invalid-test"},
+        "clusters": {
+            "valid-cluster": {"enable": True, "count": 0},
+            "invalid!cluster": {"enable": True, "count": 0},  # Invalid name
+        },
+    }
+
+    # This should fail during validation when updating the config
+    config = create_default_config()
+    with pytest.raises(ValueError, match="Invalid cluster type name"):
+        config.update_from_dict(config_data)

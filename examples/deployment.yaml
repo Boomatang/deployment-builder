@@ -31,7 +31,7 @@ services:
   pods:
     kubeconfig.flag: "--kubeconfig"
     cmd: "kubectl get pods -n kube-system"
-  services:
+  k8s-services:
     kubeconfig.flag: "--kubeconfig"
     cmd: "kubectl get services -A"
   ingress:

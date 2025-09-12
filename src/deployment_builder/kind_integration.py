@@ -219,70 +219,49 @@ def get_cluster_names_from_config(config_data: dict) -> list[str]:
 
     # Handle new structured format: [clusters.metrics], [clusters.primary], etc.
     if isinstance(clusters_config, dict) and any(isinstance(v, dict) for v in clusters_config.values()):
-        # New structured format
+        # New structured format - process any cluster types dynamically
         logger.debug("Using new structured cluster configuration format")
 
-        # Metrics cluster (single)
-        metrics_config = clusters_config.get("metrics", {})
-        if isinstance(metrics_config, dict) and metrics_config.get("enable", False):
-            cluster_names.append(f"{prefix}-metrics")
-            logger.info("Including metrics cluster")
+        for cluster_type, cluster_config in clusters_config.items():
+            if isinstance(cluster_config, dict):
+                enable = cluster_config.get("enable", False)
+                count = cluster_config.get("count", 0)
 
-        # Primary clusters
-        primary_config = clusters_config.get("primary", {})
-        if isinstance(primary_config, dict):
-            primary_count = primary_config.get("count", 0)
-            for i in range(1, primary_count + 1):
-                cluster_names.append(f"{prefix}-primary-{i}")
-                logger.info(f"Including primary cluster {i}")
-
-        # Secondary clusters
-        secondary_config = clusters_config.get("secondary", {})
-        if isinstance(secondary_config, dict):
-            secondary_count = secondary_config.get("count", 0)
-            for i in range(1, secondary_count + 1):
-                cluster_names.append(f"{prefix}-secondary-{i}")
-                logger.info(f"Including secondary cluster {i}")
-
-        # Standalone clusters
-        standalone_config = clusters_config.get("standalone", {})
-        if isinstance(standalone_config, dict):
-            standalone_count = standalone_config.get("count", 0)
-            for i in range(1, standalone_count + 1):
-                cluster_names.append(f"{prefix}-standalone-{i}")
-                logger.info(f"Including standalone cluster {i}")
+                # Create clusters if enabled and count > 0
+                if enable and count > 0:
+                    if count == 1:
+                        # Single cluster (count: 1)
+                        cluster_names.append(f"{prefix}-{cluster_type}")
+                        logger.info(f"Including {cluster_type} cluster")
+                    else:
+                        # Multiple clusters (count > 1)
+                        for i in range(1, count + 1):
+                            cluster_names.append(f"{prefix}-{cluster_type}-{i}")
+                            logger.info(f"Including {cluster_type} cluster {i}")
 
     else:
         # Legacy format: metrics = true, primary = 2, etc.
         logger.debug("Using legacy cluster configuration format")
 
-        # Metrics cluster (single)
-        if clusters_config.get("metrics", False):
-            cluster_names.append(f"{prefix}-metrics")
-            logger.info("Including metrics cluster")
+        # Support any cluster type in legacy format for backward compatibility
+        for cluster_type, value in clusters_config.items():
+            if isinstance(value, bool):
+                if value:
+                    cluster_names.append(f"{prefix}-{cluster_type}")
+                    logger.info(f"Including {cluster_type} cluster")
+            elif isinstance(value, int) and value > 0:
+                for i in range(1, value + 1):
+                    cluster_names.append(f"{prefix}-{cluster_type}-{i}")
+                    logger.info(f"Including {cluster_type} cluster {i}")
 
-        # Primary clusters
-        primary_count = clusters_config.get("primary", 0)
-        for i in range(1, primary_count + 1):
-            cluster_names.append(f"{prefix}-primary-{i}")
-            logger.info(f"Including primary cluster {i}")
-
-        # Secondary clusters
-        secondary_count = clusters_config.get("secondary", 0)
-        for i in range(1, secondary_count + 1):
-            cluster_names.append(f"{prefix}-secondary-{i}")
-            logger.info(f"Including secondary cluster {i}")
-
-        # Standalone clusters
-        standalone_count = clusters_config.get("standalone", 0)
-        for i in range(1, standalone_count + 1):
-            cluster_names.append(f"{prefix}-standalone-{i}")
-            logger.info(f"Including standalone cluster {i}")
-
-    # If no clusters defined, create a default one
+    # If no clusters defined at all, create a default one
+    # If clusters are defined but all have count=0, return empty list
     if not cluster_names:
-        cluster_names.append(f"{prefix}-default")
-        logger.info("No cluster configuration found, creating default cluster")
+        if not clusters_config:
+            cluster_names.append(f"{prefix}-default")
+            logger.info("No cluster configuration found, creating default cluster")
+        else:
+            logger.info("No clusters to create")
 
     logger.info(f"Generated {len(cluster_names)} cluster names: {cluster_names}")
     return cluster_names
@@ -779,10 +758,15 @@ def _get_cluster_type_from_name(cluster_name: str) -> Optional[str]:
     # Extract cluster type from cluster name pattern: prefix-type-number
     parts = cluster_name.split("-")
     if len(parts) >= 2:
-        # Look for known cluster types
-        for part in parts[1:]:  # Skip prefix
-            if part in ["metrics", "primary", "secondary", "standalone"]:
-                return part
+        # Look for cluster type in the middle parts (skip prefix, skip number if present)
+        # Pattern: prefix-type or prefix-type-number
+        if len(parts) == 2:
+            # Single cluster: prefix-type
+            return parts[1]
+        elif len(parts) >= 3:
+            # Multiple clusters: prefix-type-number
+            # The cluster type is the second-to-last part
+            return parts[-2]
     return None
 
 

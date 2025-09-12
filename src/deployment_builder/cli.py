@@ -108,7 +108,22 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
 )
 @click.version_option()
 def cli(log_level: str):
-    """Deployment Builder - A CLI tool for managing kind Kubernetes clusters."""
+    """Deployment Builder - A CLI tool for managing kind Kubernetes clusters with dynamic cluster types.
+
+    This tool supports creating and managing multiple kind clusters based on configuration files.
+    You can define any cluster types you need for your specific use case, with support for both
+    single clusters (enable: true/false) and multiple clusters (count: number).
+
+    Examples:
+        # Create clusters from configuration
+        deploy create --config my-config.toml
+
+        # Preview what would be created
+        deploy create --dry-run
+
+        # Show default configuration values
+        deploy defaults
+    """
     # Set up logging with the specified level
     setup_logging(log_level=log_level)
 
@@ -128,7 +143,27 @@ def cli(log_level: str):
     help="Show what would be created without actually creating it.",
 )
 def create(config: Optional[Path], dry_run: bool):
-    """Create kind cluster based on configuration file."""
+    """Create kind clusters based on configuration file.
+
+    This command creates multiple kind clusters according to your configuration file.
+    You can define any cluster types you need with dynamic cluster type support.
+
+    Configuration supports:
+    - Single clusters: [clusters.my-cluster] with enable = true
+    - Multiple clusters: [clusters.my-cluster] with count = 3
+    - Global services: [services] section for all clusters
+    - Cluster-specific services: [clusters.my-cluster.services] section
+
+    Examples:
+        # Create clusters from config file
+        deploy create --config my-config.toml
+
+        # Preview what would be created
+        deploy create --dry-run
+
+        # Use environment variable for config
+        DEPLOYMENT_CONFIG=my-config.yaml deploy create
+    """
     import time
 
     # Start timing
@@ -242,7 +277,21 @@ def create(config: Optional[Path], dry_run: bool):
 )
 @click.option("--force", "-f", is_flag=True, help="Force removal without confirmation.")
 def remove(config: Optional[Path], dry_run: bool, force: bool):
-    """Remove kind cluster based on configuration file."""
+    """Remove kind clusters based on configuration file.
+
+    This command removes multiple kind clusters according to your configuration file.
+    It will remove all clusters defined in your configuration, including dynamic cluster types.
+
+    Examples:
+        # Remove clusters from config file
+        deploy remove --config my-config.toml
+
+        # Preview what would be removed
+        deploy remove --dry-run
+
+        # Force removal without confirmation
+        deploy remove --force
+    """
     import time
 
     # Start timing
@@ -352,7 +401,19 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
 
 @cli.command()
 def defaults():
-    """Show the default configuration values used by the tool."""
+    """Show the default configuration values used by the tool.
+
+    This command displays all default configuration values in a dot-separated format.
+    Note that cluster types are defined dynamically in your configuration file - there
+    are no default cluster types. You define exactly the cluster types you need.
+
+    Examples:
+        # Show all default values
+        deploy defaults
+
+        # Show defaults with debug logging
+        deploy --log-level=debug defaults
+    """
     import time
 
     # Start timing

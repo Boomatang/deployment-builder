@@ -22,6 +22,7 @@ A command-line tool for managing kind Kubernetes clusters using configuration fi
 - **Service execution** - Run commands against clusters after creation
 - **Global services** - Services that run on all clusters
 - **Cluster-specific services** - Services that run only on specific cluster types
+- **Dynamic cluster types** - Define any cluster types you need for your specific use case
 
 ## Installation
 
@@ -56,25 +57,29 @@ This tool integrates with [kind](https://kind.sigs.k8s.io/) to create and manage
 
 ### Multi-Cluster Configuration
 
-The tool supports creating multiple clusters based on configuration:
+The tool supports creating multiple clusters based on configuration with **dynamic cluster types**. You can define any cluster types you need for your specific use case.
 
-#### Cluster Types
+#### Dynamic Cluster Types
 
-1. **Metrics Cluster** (`metrics: true/false`)
-   - Single centralized metrics cluster
-   - Name: `{prefix}-metrics`
+The tool supports two types of cluster configurations:
 
-2. **Primary Clusters** (`primary: <number>`)
-   - Main application clusters
-   - Names: `{prefix}-primary-1`, `{prefix}-primary-2`, etc.
+1. **Single Cluster Types** (`enable: true, count: 1`)
+   - Single cluster instances
+   - Name: `{prefix}-{cluster_type}`
+   - Example: `my-project-gateway`, `my-project-metrics`
 
-3. **Secondary Clusters** (`secondary: <number>`)
-   - Backup or secondary clusters
-   - Names: `{prefix}-secondary-1`, `{prefix}-secondary-2`, etc.
+2. **Multiple Cluster Types** (`count: <number>`)
+   - Multiple cluster instances
+   - Names: `{prefix}-{cluster_type}-1`, `{prefix}-{cluster_type}-2`, etc.
+   - Example: `my-project-worker-1`, `my-project-worker-2`, `my-project-worker-3`
 
-4. **Standalone Clusters** (`standalone: <number>`)
-   - General purpose clusters
-   - Names: `{prefix}-standalone-1`, `{prefix}-standalone-2`, etc.
+#### Cluster Type Rules
+
+- **Names**: Must be alphanumeric with hyphens and underscores only
+- **Length**: 1-50 characters
+- **Uniqueness**: Each cluster type name must be unique
+- **Flexibility**: No limit on the number of cluster types you can define
+- **Naming**: Use descriptive names that reflect your architecture (e.g., `gateway`, `worker`, `database`, `cache`)
 
 #### Configuration Structure
 
@@ -89,24 +94,32 @@ kind_config_path = "kind-configs"
 max_workers = 4
 
 [clusters]
-[clusters.metrics]
+# Single cluster types (enable: true, count: 1)
+[clusters.gateway]
 enable = true
-
-[clusters.primary]
-count = 2
-
-[clusters.secondary]
 count = 1
 
-[clusters.standalone]
+[clusters.metrics]
+enable = true
+count = 1
+
+# Multiple cluster types (count: number)
+[clusters.worker]
 count = 3
+
+[clusters.database]
+count = 2
+
+[clusters.cache]
+count = 1
 ```
 
 This creates 7 clusters:
-- `my-project-metrics`
-- `my-project-primary-1`, `my-project-primary-2`
-- `my-project-secondary-1`
-- `my-project-standalone-1`, `my-project-standalone-2`, `my-project-standalone-3`
+- `my-project-gateway` (single cluster)
+- `my-project-metrics` (single cluster)
+- `my-project-worker-1`, `my-project-worker-2`, `my-project-worker-3` (multiple clusters)
+- `my-project-database-1`, `my-project-database-2` (multiple clusters)
+- `my-project-cache` (single cluster)
 
 The prefix is automatically sanitized to be valid for kind (lowercase, alphanumeric, hyphens only).
 
@@ -434,17 +447,24 @@ kind_config_path = "kind-configs"
 max_workers = 4
 
 [clusters]
-[clusters.metrics]
+# Single cluster types (enable: true, count: 1)
+[clusters.gateway]
 enable = true
-
-[clusters.primary]
-count = 2
-
-[clusters.secondary]
 count = 1
 
-[clusters.standalone]
+[clusters.metrics]
+enable = true
+count = 1
+
+# Multiple cluster types (count: number)
+[clusters.worker]
 count = 3
+
+[clusters.database]
+count = 2
+
+[clusters.cache]
+count = 1
 
 # Global services (run on all clusters)
 [services]
@@ -504,18 +524,21 @@ Both formats create 7 clusters:
 - **`max_workers`**: Number of parallel workers (default: 4)
 
 #### Clusters Section (`[clusters]`)
-- **`[clusters.metrics]`**: Metrics cluster configuration
-  - `enable`: Enable metrics cluster (boolean)
-  - `count`: Number of metrics clusters (integer, usually 0 or 1)
-- **`[clusters.primary]`**: Primary cluster configuration
-  - `enable`: Enable primary clusters (boolean)
-  - `count`: Number of primary clusters (integer)
-- **`[clusters.secondary]`**: Secondary cluster configuration
-  - `enable`: Enable secondary clusters (boolean)
-  - `count`: Number of secondary clusters (integer)
-- **`[clusters.standalone]`**: Standalone cluster configuration
-  - `enable`: Enable standalone clusters (boolean)
-  - `count`: Number of standalone clusters (integer)
+The clusters section supports **dynamic cluster types**. You can define any cluster types you need:
+
+- **`[clusters.{cluster_type}]`**: Cluster type configuration
+  - `enable`: Enable the cluster type (boolean) - for single clusters
+  - `count`: Number of clusters to create (integer) - for multiple clusters
+  - **Cluster Type Rules**:
+    - Names must be alphanumeric with hyphens and underscores only
+    - Length: 1-50 characters
+    - Each cluster type name must be unique
+    - No limit on the number of cluster types
+
+**Examples:**
+- `[clusters.gateway]` with `enable = true` → creates `{prefix}-gateway`
+- `[clusters.worker]` with `count = 3` → creates `{prefix}-worker-1`, `{prefix}-worker-2`, `{prefix}-worker-3`
+- `[clusters.database]` with `count = 1` → creates `{prefix}-database`
 
 #### Services Section (`[services]`)
 - **Global Services**: Services that run on all clusters
@@ -586,17 +609,20 @@ count = 3
     "max_workers": 4
   },
   "clusters": {
+    "gateway": {
+      "enable": true
+    },
     "metrics": {
       "enable": true
     },
-    "primary": {
+    "worker": {
+      "count": 3
+    },
+    "database": {
       "count": 2
     },
-    "secondary": {
+    "cache": {
       "count": 1
-    },
-    "standalone": {
-      "count": 3
     }
   }
 }
@@ -615,26 +641,44 @@ general:
   max_workers: 4
 
 clusters:
+  gateway:
+    enable: true
   metrics:
     enable: true
-  primary:
-    count: 2
-  secondary:
-    count: 1
-  standalone:
+  worker:
     count: 3
+  database:
+    count: 2
+  cache:
+    count: 1
 ```
 
 ## Example Configurations
 
-The `examples/` directory contains sample configuration files in all supported formats:
+The `examples/` directory contains sample configuration files in all supported formats and various use cases:
 
+### Basic Examples
 - `examples/config.toml` - Basic TOML configuration (new structured format)
 - `examples/deployment.toml` - Advanced TOML configuration (new structured format)
 - `examples/config.json` - Basic JSON configuration (new structured format)
 - `examples/deployment.yaml` - Advanced YAML configuration (new structured format)
 
+### Use Case Examples
+- `examples/simple.toml` - Simple 3-cluster setup for beginners
+- `examples/dynamic-clusters.toml` - Dynamic cluster types demonstration
+- `examples/microservices.toml` - Microservices architecture with multiple services
+- `examples/edge-computing.toml` - Edge computing platform with regional clusters
+- `examples/development.toml` - Development environment with testing clusters
+- `examples/high-availability.toml` - High-availability system with redundancy
+
 All example files use the new structured configuration format with `[general]` and `[clusters.*]` sections. You can copy any of these files to your project directory and customize them for your needs.
+
+## Documentation
+
+Additional documentation is available in the `docs/` directory:
+
+- **[Best Practices](docs/BEST_PRACTICES.md)** - Guidelines for using dynamic cluster types effectively
+- **[Validation Rules](docs/VALIDATION_RULES.md)** - Complete validation rules and error messages
 
 ## Examples
 
@@ -659,14 +703,6 @@ The `defaults` command shows all default configuration values in a dot-separated
 $ poetry run deploy defaults
 Default Configuration Values:
 ==================================================
-clusters.metrics.count = 0
-clusters.metrics.enable = False
-clusters.primary.count = 0
-clusters.primary.enable = False
-clusters.secondary.count = 0
-clusters.secondary.enable = False
-clusters.standalone.count = 0
-clusters.standalone.enable = False
 general.environment = development
 general.kind_config_path = kind-configs
 general.kubeconfig_path = kubeconfigs
@@ -675,6 +711,8 @@ general.name = default-deployment
 general.prefix = default
 general.version = 1.0.0
 ```
+
+**Note**: The `defaults` command shows only the general configuration values. Cluster types are defined dynamically in your configuration file - there are no default cluster types. You define exactly the cluster types you need for your specific use case.
 
 ### Using Custom Configuration
 
