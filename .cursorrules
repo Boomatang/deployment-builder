@@ -46,6 +46,8 @@
 
 ## Testing
 - **ALWAYS use pytest for testing** - Never create standalone test scripts
+- **Follow pytest best practices** - See [PYTEST_BEST_PRACTICES.md](docs/PYTEST_BEST_PRACTICES.md) for comprehensive guidelines
+- **Prefer function-based tests** - Use classes only when shared setup/teardown is needed
 - Add tests to `tests/` directory following the existing test structure
 - Use `@patch` decorators for mocking external dependencies
 - Test both success and failure scenarios
