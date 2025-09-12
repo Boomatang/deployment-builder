@@ -15,10 +15,11 @@
 
 ## Current Project Status
 - **Dynamic cluster types**: ✅ Fully implemented with comprehensive validation
-- **Test coverage**: 144 total tests (56 unit + 88 integration)
-- **Documentation**: Complete with best practices and validation rules
-- **Example configurations**: 6 comprehensive examples for different use cases
-- **Performance**: Efficient processing of many cluster types
+- **Service Queue System**: ✅ Fully implemented with parallel processing, load balancing, execution planning, monitoring, error handling, and performance optimization
+- **Test coverage**: 334 total tests (208 unit + 126 integration)
+- **Documentation**: Complete with best practices, validation rules, and Service Queue System documentation
+- **Example configurations**: 7 comprehensive examples for different use cases including Service Queue System demo
+- **Performance**: Efficient processing of many cluster types with advanced queue system
 - **Backward compatibility**: Legacy format still supported
 
 ## Development Workflow
@@ -39,10 +40,11 @@
 
 ## CLI Tool Usage
 - Main command: `poetry run deploy`
-- Commands: `create`, `remove`, `defaults`
-- Options: `--config`, `--dry-run`, `--force`
+- Commands: `create`, `remove`, `defaults`, `plan`
+- Options: `--config`, `--dry-run`, `--force`, `--workers`, `--load-balancer`, `--timeline`, `--dependencies`, `--cluster-types`
 - Always test CLI commands after making changes
 - Use integration tests for comprehensive CLI testing
+- **NEVER use `python3` command** - Always use `poetry run python` instead
 
 ## Testing
 - **ALWAYS use pytest for testing** - Never create standalone test scripts
@@ -51,7 +53,7 @@
 - Add tests to `tests/` directory following the existing test structure
 - Use `@patch` decorators for mocking external dependencies
 - Test both success and failure scenarios
-- Run `poetry run pytest tests/ -v` to run all tests (144 total tests)
+- Run `poetry run pytest tests/ -v` to run all tests (334 total tests)
 - Run `poetry run pytest tests/test_cli_integration.py -v` for CLI integration tests
 - Run `poetry run deploy --help` to verify CLI works
 - Test with sample configuration files using integration tests
@@ -59,8 +61,10 @@
 - Verify dry-run mode functions properly
 - Integration tests cover CLI commands with all example files
 - **Dynamic cluster types testing**: Comprehensive testing for custom cluster types
+- **Service Queue System testing**: Comprehensive testing for queue, load balancing, execution planning, monitoring, error handling, and optimization
 - **Edge case testing**: Test invalid names, counts, and configurations
 - **Performance testing**: Test with many cluster types and large configurations
+- **Test debugging**: If tests get stuck in loops, check for deadlocks, threading issues, or infinite loops
 
 ## Configuration System
 - Uses `DeploymentConfig` dataclass for type-safe configuration management
@@ -79,6 +83,16 @@
 - Service configuration includes `kubeconfig.flag` and `cmd` fields
 - Services run immediately after cluster is ready and kubeconfig is extracted
 
+## Service Queue System
+- **Core modules**: `queue.py`, `load_balancer.py`, `execution_planner.py`, `monitor.py`, `optimization.py`, `error_handler.py`, `benchmark.py`
+- **Queue management**: Priority-based service execution with retry logic
+- **Load balancing**: Round-robin, least-loaded, and priority-based strategies
+- **Execution planning**: Dependency resolution and timeline generation
+- **Progress monitoring**: Real-time status tracking and worker utilization
+- **Error handling**: Circuit breaker pattern, retry mechanisms, error classification
+- **Performance optimization**: Connection pooling, caching, batching, resource optimization
+- **Testing patterns**: Use `threading.Event()` for async test synchronization, avoid deadlocks in batch processing
+
 ## Dynamic Cluster Types
 - **Cluster type naming**: Alphanumeric characters, hyphens, and underscores only
 - **Name validation**: 1-50 characters, no reserved words
@@ -95,6 +109,14 @@
 - Always update poetry.lock when adding dependencies
 
 ## Planning and Documentation
+
+### Plan Execution Process - CRITICAL
+- **When working on a plan with phases, ALWAYS complete ALL phases** - Do not stop after one phase
+- **Work on one phase at a time** - Complete each phase fully before moving to the next
+- **Update plan document after each phase** - Mark phases as completed with implementation status
+- **Commit changes after each phase** - Commit completed phases before starting the next
+- **Continue until ALL phases are complete** - Do not ask for permission to continue to next phases
+- **If user says "you are to do all the phase in the plan" - This means complete ALL phases without asking**
 
 ### Plan Creation Process
 - **All future feature plans MUST be created in the `Plans/` directory**
@@ -167,6 +189,14 @@ Based on existing plans and project structure:
 - **Backward compatibility** - Maintain compatibility with existing configurations
 - **Validation-first approach** - Comprehensive validation with clear error messages
 - **Example-driven development** - Provide comprehensive example configurations
+
+## Common Debugging Patterns
+- **Test stuck in loops**: Check for deadlocks, threading issues, or infinite loops in async operations
+- **Mock object errors**: Use `isinstance(r, MagicMock)` checks and `getattr(r, 'attribute', default)` for safe attribute access
+- **Floating-point precision**: Use approximate equality (`abs(value - expected) < 0.001`) for floating-point assertions
+- **Threading issues**: Use `threading.Event()` for test synchronization, avoid calling functions inside locks
+- **Import errors**: Handle missing optional dependencies gracefully with try-except blocks
+- **Constructor errors**: Verify parameter order and types for class constructors
 
 ## Security Rules - CRITICAL
 - **NEVER run any scripts in the `hack/` directory**
