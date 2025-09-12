@@ -106,19 +106,12 @@ def test_circuit_breaker_state_custom():
     assert state.recovery_timeout == 120.0
 
 
-@pytest.fixture
-def error_handler_setup():
-    """Create test setup with queue and error handler."""
-    queue = ServiceQueue(max_workers=2)
-    error_handler = ErrorHandler(queue)
-    return queue, error_handler
+# Using error_handler fixture from conftest.py
 
 
-def test_error_handler_creation(error_handler_setup):
+def test_error_handler_creation(error_handler, fresh_queue):
     """Test creating error handler."""
-    queue, error_handler = error_handler_setup
-
-    assert error_handler.queue == queue
+    assert error_handler.queue == fresh_queue
     assert error_handler.error_history == []
     assert error_handler.circuit_breakers == {}
     assert len(error_handler.retry_strategies) == 6
@@ -126,9 +119,8 @@ def test_error_handler_creation(error_handler_setup):
     assert error_handler._recovery_callbacks == []
 
 
-def test_classify_error(error_handler_setup):
+def test_classify_error(error_handler):
     """Test error classification."""
-    queue, error_handler = error_handler_setup
 
     # Test network error
     error = ConnectionError("Network unreachable")
@@ -161,9 +153,8 @@ def test_classify_error(error_handler_setup):
     assert error_type == ErrorType.UNKNOWN
 
 
-def test_determine_severity(error_handler_setup):
+def test_determine_severity(error_handler):
     """Test severity determination."""
-    queue, error_handler = error_handler_setup
 
     # Test configuration error (should be HIGH)
     error = ValueError("Invalid config")
@@ -186,9 +177,8 @@ def test_determine_severity(error_handler_setup):
     assert severity == ErrorSeverity.MEDIUM
 
 
-def test_is_recoverable(error_handler_setup):
+def test_is_recoverable(error_handler):
     """Test recoverability determination."""
-    queue, error_handler = error_handler_setup
 
     # Test configuration error (should not be recoverable)
     error = ValueError("Invalid config")
@@ -206,9 +196,8 @@ def test_is_recoverable(error_handler_setup):
     assert is_recoverable is True
 
 
-def test_should_retry(error_handler_setup):
+def test_should_retry(error_handler):
     """Test retry decision logic."""
-    queue, error_handler = error_handler_setup
 
     # Create service item
     service_config = ServiceConfig(cmd="echo test", kubeconfig_flag="--kubeconfig")
@@ -237,9 +226,8 @@ def test_should_retry(error_handler_setup):
     assert should_retry is False
 
 
-def test_calculate_backoff_delay(error_handler_setup):
+def test_calculate_backoff_delay(error_handler):
     """Test backoff delay calculation."""
-    queue, error_handler = error_handler_setup
 
     service_config = ServiceConfig(cmd="echo test", kubeconfig_flag="--kubeconfig")
     item = ServiceItem(
@@ -260,9 +248,8 @@ def test_calculate_backoff_delay(error_handler_setup):
     assert delay >= 3.6  # 2^2 * 1.0 with jitter tolerance
 
 
-def test_is_circuit_open(error_handler_setup):
+def test_is_circuit_open(error_handler):
     """Test circuit breaker state checking."""
-    queue, error_handler = error_handler_setup
 
     # Test closed circuit
     error_handler.circuit_breakers["test-cluster"] = CircuitBreakerState(state="CLOSED")
@@ -280,9 +267,8 @@ def test_is_circuit_open(error_handler_setup):
     assert is_open is False
 
 
-def test_update_circuit_breaker(error_handler_setup):
+def test_update_circuit_breaker(error_handler):
     """Test circuit breaker state updates."""
-    queue, error_handler = error_handler_setup
 
     # Test successful operation
     error_handler._update_circuit_breaker("test-cluster", success=True)
@@ -303,9 +289,8 @@ def test_update_circuit_breaker(error_handler_setup):
     assert state.state == "OPEN"
 
 
-def test_handle_service_error(error_handler_setup):
+def test_handle_service_error(error_handler):
     """Test handling service errors."""
-    queue, error_handler = error_handler_setup
 
     service_config = ServiceConfig(cmd="echo test", kubeconfig_flag="--kubeconfig")
     item = ServiceItem(
@@ -330,9 +315,8 @@ def test_handle_service_error(error_handler_setup):
         mock_retry.assert_called_once_with(item)
 
 
-def test_retry_failed_service(error_handler_setup):
+def test_retry_failed_service(error_handler):
     """Test retrying failed services."""
-    queue, error_handler = error_handler_setup
 
     service_config = ServiceConfig(cmd="echo test", kubeconfig_flag="--kubeconfig")
     item = ServiceItem(
@@ -344,7 +328,7 @@ def test_retry_failed_service(error_handler_setup):
     )
 
     # Test successful retry
-    with patch.object(queue, "add_service_item") as mock_add:
+    with patch.object(error_handler.queue, "add_service_item") as mock_add:
         result = error_handler.retry_failed_service(item)
 
         assert result is True
@@ -361,9 +345,8 @@ def test_retry_failed_service(error_handler_setup):
         assert result is False
 
 
-def test_escalate_error(error_handler_setup):
+def test_escalate_error(error_handler):
     """Test error escalation."""
-    queue, error_handler = error_handler_setup
 
     service_config = ServiceConfig(cmd="echo test", kubeconfig_flag="--kubeconfig")
     item = ServiceItem(
@@ -394,9 +377,8 @@ def test_escalate_error(error_handler_setup):
     assert callback_called[0][1].severity == ErrorSeverity.CRITICAL
 
 
-def test_get_error_statistics(error_handler_setup):
+def test_get_error_statistics(error_handler):
     """Test getting error statistics."""
-    queue, error_handler = error_handler_setup
 
     # Add some test errors
     service_config = ServiceConfig(cmd="echo test", kubeconfig_flag="--kubeconfig")
@@ -419,9 +401,8 @@ def test_get_error_statistics(error_handler_setup):
     assert "circuit_breakers" in stats
 
 
-def test_reset_circuit_breaker(error_handler_setup):
+def test_reset_circuit_breaker(error_handler):
     """Test resetting circuit breaker."""
-    queue, error_handler = error_handler_setup
 
     # Set up circuit breaker in OPEN state
     error_handler.circuit_breakers["test-cluster"] = CircuitBreakerState(state="OPEN", failure_count=5)
@@ -435,29 +416,20 @@ def test_reset_circuit_breaker(error_handler_setup):
     assert state.last_failure_time is None
 
 
-@pytest.fixture
-def recovery_manager_setup():
-    """Create test setup with error handler and recovery manager."""
-    queue = ServiceQueue(max_workers=2)
-    error_handler = ErrorHandler(queue)
-    recovery_manager = RecoveryManager(error_handler)
-    return queue, error_handler, recovery_manager
+# Using recovery_manager fixture from conftest.py
 
 
-def test_recovery_manager_creation(recovery_manager_setup):
+def test_recovery_manager_creation(recovery_manager):
     """Test creating recovery manager."""
-    queue, error_handler, recovery_manager = recovery_manager_setup
-
-    assert recovery_manager.error_handler == error_handler
+    assert recovery_manager.error_handler is not None
     assert recovery_manager.health_checks == {}
     assert recovery_manager.recovery_operations == {}
     assert recovery_manager._recovery_thread is None
     assert recovery_manager._stop_event.is_set() is False
 
 
-def test_add_health_check(recovery_manager_setup):
+def test_add_health_check(recovery_manager):
     """Test adding health check."""
-    queue, error_handler, recovery_manager = recovery_manager_setup
 
     def health_check():
         return True
@@ -468,9 +440,8 @@ def test_add_health_check(recovery_manager_setup):
     assert recovery_manager.health_checks["test_check"] == health_check
 
 
-def test_add_recovery_operation(recovery_manager_setup):
+def test_add_recovery_operation(recovery_manager):
     """Test adding recovery operation."""
-    queue, error_handler, recovery_manager = recovery_manager_setup
 
     def recovery_op():
         return True
@@ -481,9 +452,8 @@ def test_add_recovery_operation(recovery_manager_setup):
     assert recovery_manager.recovery_operations["test_recovery"] == recovery_op
 
 
-def test_start_stop_recovery_monitoring(recovery_manager_setup):
+def test_start_stop_recovery_monitoring(recovery_manager):
     """Test starting and stopping recovery monitoring."""
-    queue, error_handler, recovery_manager = recovery_manager_setup
 
     # Start monitoring
     recovery_manager.start_recovery_monitoring()
@@ -495,9 +465,8 @@ def test_start_stop_recovery_monitoring(recovery_manager_setup):
     assert recovery_manager._stop_event.is_set()
 
 
-def test_run_health_checks(recovery_manager_setup):
+def test_run_health_checks(recovery_manager):
     """Test running health checks."""
-    queue, error_handler, recovery_manager = recovery_manager_setup
 
     # Add health checks
     check_results = []
@@ -520,9 +489,8 @@ def test_run_health_checks(recovery_manager_setup):
     assert "unhealthy" in check_results
 
 
-def test_attempt_recoveries(recovery_manager_setup):
+def test_attempt_recoveries(recovery_manager):
     """Test attempting recovery operations."""
-    queue, error_handler, recovery_manager = recovery_manager_setup
 
     # Add recovery operations
     recovery_results = []

@@ -127,31 +127,20 @@ def test_load_test_config_custom():
     assert config.timeout == 60.0
 
 
-@pytest.fixture
-def benchmark_setup():
-    """Create test setup with temporary directory."""
-    temp_dir = tempfile.mkdtemp()
-    benchmark = PerformanceBenchmark(temp_dir)
-    return benchmark, temp_dir
+# Using performance_benchmark and temp_benchmark_dir fixtures from conftest.py
 
 
-def test_benchmark_creation(benchmark_setup):
+def test_benchmark_creation(performance_benchmark, temp_benchmark_dir):
     """Test creating performance benchmark."""
-    benchmark, temp_dir = benchmark_setup
-
-    assert benchmark.output_dir == Path(temp_dir)
-    assert benchmark.results == []
-    assert benchmark._lock is not None
-
-    # Cleanup
-    shutil.rmtree(temp_dir)
+    assert performance_benchmark.output_dir == Path(temp_benchmark_dir)
+    assert performance_benchmark.results == []
+    assert performance_benchmark._lock is not None
 
 
-def test_create_test_services(benchmark_setup):
+def test_create_test_services(performance_benchmark):
     """Test creating test services."""
-    benchmark, temp_dir = benchmark_setup
 
-    services = benchmark._create_test_services(5, 1.0)
+    services = performance_benchmark._create_test_services(5, 1.0)
 
     assert len(services) == 5
     for i, service in enumerate(services):
@@ -160,15 +149,10 @@ def test_create_test_services(benchmark_setup):
         assert service.cluster_type == "test"
         assert service.estimated_duration == 1.0
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
-
-
-def test_create_test_service_with_failure(benchmark_setup):
+def test_create_test_service_with_failure(performance_benchmark):
     """Test creating test service with failure."""
-    benchmark, temp_dir = benchmark_setup
 
-    service = benchmark._create_test_service("test_service", 1.0, True)
+    service = performance_benchmark._create_test_service("test_service", 1.0, True)
 
     assert service.service_name == "test_service"
     assert service.cluster_name == "test-cluster-test_service"
@@ -176,15 +160,10 @@ def test_create_test_service_with_failure(benchmark_setup):
     assert service.estimated_duration == 1.0
     assert service.service_config.cmd == "false"  # Should fail
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
-
-
-def test_create_test_service_without_failure(benchmark_setup):
+def test_create_test_service_without_failure(performance_benchmark):
     """Test creating test service without failure."""
-    benchmark, temp_dir = benchmark_setup
 
-    service = benchmark._create_test_service("test_service", 1.0, False)
+    service = performance_benchmark._create_test_service("test_service", 1.0, False)
 
     assert service.service_name == "test_service"
     assert service.cluster_name == "test-cluster-test_service"
@@ -192,26 +171,17 @@ def test_create_test_service_without_failure(benchmark_setup):
     assert service.estimated_duration == 1.0
     assert "sleep 1.0" in service.service_config.cmd  # Should succeed
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
-
-
-def test_get_memory_usage(benchmark_setup):
+def test_get_memory_usage(performance_benchmark):
     """Test getting memory usage."""
-    benchmark, temp_dir = benchmark_setup
 
-    memory = benchmark._get_memory_usage()
+    memory = performance_benchmark._get_memory_usage()
 
     assert isinstance(memory, float)
     assert memory >= 0
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
 
-
-def test_result_to_dict(benchmark_setup):
+def test_result_to_dict(performance_benchmark):
     """Test converting result to dictionary."""
-    benchmark, temp_dir = benchmark_setup
 
     result = BenchmarkResult(
         test_name="test",
@@ -232,20 +202,16 @@ def test_result_to_dict(benchmark_setup):
         metadata={"test": "value"},
     )
 
-    result_dict = benchmark._result_to_dict(result)
+    result_dict = performance_benchmark._result_to_dict(result)
 
     assert isinstance(result_dict, dict)
     assert result_dict["test_name"] == "test"
     assert result_dict["duration"] == 1.0
     assert result_dict["metadata"] == '{"test": "value"}'
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
 
-
-def test_save_results(benchmark_setup):
+def test_save_results(performance_benchmark, temp_benchmark_dir):
     """Test saving results to files."""
-    benchmark, temp_dir = benchmark_setup
 
     result = BenchmarkResult(
         test_name="test",
@@ -265,22 +231,18 @@ def test_save_results(benchmark_setup):
         error_rate=0.0,
     )
 
-    benchmark._save_results([result])
+    performance_benchmark._save_results([result])
 
     # Check that files were created
-    json_files = list(Path(temp_dir).glob("benchmark_results_*.json"))
-    csv_files = list(Path(temp_dir).glob("benchmark_results_*.csv"))
+    json_files = list(Path(temp_benchmark_dir).glob("benchmark_results_*.json"))
+    csv_files = list(Path(temp_benchmark_dir).glob("benchmark_results_*.csv"))
 
     assert len(json_files) == 1
     assert len(csv_files) == 1
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
 
-
-def test_generate_report(benchmark_setup):
+def test_generate_report(performance_benchmark, temp_benchmark_dir):
     """Test generating benchmark report."""
-    benchmark, temp_dir = benchmark_setup
 
     result = BenchmarkResult(
         test_name="test_benchmark",
@@ -300,7 +262,7 @@ def test_generate_report(benchmark_setup):
         error_rate=0.05,
     )
 
-    report = benchmark.generate_report([result])
+    report = performance_benchmark.generate_report([result])
 
     assert isinstance(report, str)
     assert "SERVICE QUEUE SYSTEM PERFORMANCE BENCHMARK REPORT" in report
@@ -309,15 +271,10 @@ def test_generate_report(benchmark_setup):
     assert "100" in report
     assert "5" in report
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
-
-
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
-def test_benchmark_queue_throughput(mock_queue_class, mock_worker_pool_class, benchmark_setup):
+def test_benchmark_queue_throughput(mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test queue throughput benchmark."""
-    benchmark, temp_dir = benchmark_setup
 
     # Mock queue and worker pool
     mock_queue = MagicMock()
@@ -331,7 +288,7 @@ def test_benchmark_queue_throughput(mock_queue_class, mock_worker_pool_class, be
     mock_queue.wait_for_completion.return_value = None
 
     config = LoadTestConfig(num_services=10, num_workers=2)
-    result = benchmark._benchmark_queue_throughput(config)
+    result = performance_benchmark._benchmark_queue_throughput(config)
 
     assert result.test_name == "queue_throughput"
     assert result.success_count == 10
@@ -339,15 +296,11 @@ def test_benchmark_queue_throughput(mock_queue_class, mock_worker_pool_class, be
     assert result.total_operations == 11
     assert result.throughput > 0
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
-
 
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
-def test_benchmark_worker_efficiency(mock_queue_class, mock_worker_pool_class, benchmark_setup):
+def test_benchmark_worker_efficiency(mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test worker efficiency benchmark."""
-    benchmark, temp_dir = benchmark_setup
 
     # Mock queue and worker pool
     mock_queue = MagicMock()
@@ -367,7 +320,7 @@ def test_benchmark_worker_efficiency(mock_queue_class, mock_worker_pool_class, b
     ]
 
     config = LoadTestConfig(num_services=10, num_workers=2)
-    result = benchmark._benchmark_worker_efficiency(config)
+    result = performance_benchmark._benchmark_worker_efficiency(config)
 
     assert result.test_name == "worker_efficiency"
     assert result.success_count == 10
@@ -375,15 +328,11 @@ def test_benchmark_worker_efficiency(mock_queue_class, mock_worker_pool_class, b
     assert result.total_operations == 10
     assert "utilization" in result.metadata
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
-
 
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
-def test_benchmark_load_balancing(mock_queue_class, mock_worker_pool_class, benchmark_setup):
+def test_benchmark_load_balancing(mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test load balancing benchmark."""
-    benchmark, temp_dir = benchmark_setup
 
     # Mock queue and worker pool
     mock_queue = MagicMock()
@@ -400,7 +349,7 @@ def test_benchmark_load_balancing(mock_queue_class, mock_worker_pool_class, benc
     mock_worker_pool.get_worker_status.return_value = [{"completed_count": 5}, {"completed_count": 5}]
 
     config = LoadTestConfig(num_services=10, num_workers=2)
-    result = benchmark._benchmark_load_balancing(config)
+    result = performance_benchmark._benchmark_load_balancing(config)
 
     assert result.test_name == "load_balancing"
     assert result.success_count == 10
@@ -409,16 +358,12 @@ def test_benchmark_load_balancing(mock_queue_class, mock_worker_pool_class, benc
     assert "load_balancer" in result.metadata
     assert "balance" in result.metadata
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
-
 
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
 @patch("deployment_builder.benchmark.ErrorHandler")
-def test_benchmark_error_handling(mock_error_handler_class, mock_queue_class, mock_worker_pool_class, benchmark_setup):
+def test_benchmark_error_handling(mock_error_handler_class, mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test error handling benchmark."""
-    benchmark, temp_dir = benchmark_setup
 
     # Mock queue and worker pool
     mock_queue = MagicMock()
@@ -437,7 +382,7 @@ def test_benchmark_error_handling(mock_error_handler_class, mock_queue_class, mo
     mock_error_handler.get_error_statistics.return_value = {"error_rates": {"total": 0.1}}
 
     config = LoadTestConfig(num_services=10, num_workers=2, failure_rate=0.2)
-    result = benchmark._benchmark_error_handling(config)
+    result = performance_benchmark._benchmark_error_handling(config)
 
     assert result.test_name == "error_handling"
     assert result.success_count == 8
@@ -445,15 +390,11 @@ def test_benchmark_error_handling(mock_error_handler_class, mock_queue_class, mo
     assert result.total_operations == 10
     assert "recovery_rate" in result.metadata
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
-
 
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
-def test_benchmark_memory_usage(mock_queue_class, mock_worker_pool_class, benchmark_setup):
+def test_benchmark_memory_usage(mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test memory usage benchmark."""
-    benchmark, temp_dir = benchmark_setup
 
     # psutil is handled gracefully in the benchmark code
 
@@ -469,7 +410,7 @@ def test_benchmark_memory_usage(mock_queue_class, mock_worker_pool_class, benchm
     mock_queue.wait_for_completion.return_value = None
 
     config = LoadTestConfig(num_services=10, num_workers=2)
-    result = benchmark._benchmark_memory_usage(config)
+    result = performance_benchmark._benchmark_memory_usage(config)
 
     assert result.test_name == "memory_usage"
     assert result.success_count == 10
@@ -478,15 +419,11 @@ def test_benchmark_memory_usage(mock_queue_class, mock_worker_pool_class, benchm
     assert "initial_memory" in result.metadata
     assert "max_memory" in result.metadata
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
-
 
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
-def test_benchmark_concurrent_operations(mock_queue_class, mock_worker_pool_class, benchmark_setup):
+def test_benchmark_concurrent_operations(mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test concurrent operations benchmark."""
-    benchmark, temp_dir = benchmark_setup
 
     # Mock queue and worker pool
     mock_queue = MagicMock()
@@ -500,7 +437,7 @@ def test_benchmark_concurrent_operations(mock_queue_class, mock_worker_pool_clas
     mock_queue.wait_for_completion.return_value = None
 
     config = LoadTestConfig(num_services=10, num_workers=2)
-    result = benchmark._benchmark_concurrent_operations(config)
+    result = performance_benchmark._benchmark_concurrent_operations(config)
 
     assert result.test_name == "concurrent_operations"
     assert result.success_count == 10
@@ -508,15 +445,11 @@ def test_benchmark_concurrent_operations(mock_queue_class, mock_worker_pool_clas
     assert result.total_operations == 10
     assert "concurrent_adds" in result.metadata
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
-
 
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
-def test_benchmark_scalability(mock_queue_class, mock_worker_pool_class, benchmark_setup):
+def test_benchmark_scalability(mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test scalability benchmark."""
-    benchmark, temp_dir = benchmark_setup
 
     # Mock queue and worker pool
     mock_queue = MagicMock()
@@ -530,23 +463,19 @@ def test_benchmark_scalability(mock_queue_class, mock_worker_pool_class, benchma
     mock_queue.wait_for_completion.return_value = None
 
     config = LoadTestConfig(num_services=10, num_workers=2)
-    result = benchmark._benchmark_scalability(config)
+    result = performance_benchmark._benchmark_scalability(config)
 
     assert result.test_name == "scalability"
     assert result.total_operations == 10
     assert "scalability" in result.metadata
     assert "results" in result.metadata
 
-    # Cleanup
-    shutil.rmtree(temp_dir)
-
 
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
 @patch("deployment_builder.benchmark.ErrorHandler")
-def test_benchmark_recovery_time(mock_error_handler_class, mock_queue_class, mock_worker_pool_class, benchmark_setup):
+def test_benchmark_recovery_time(mock_error_handler_class, mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test recovery time benchmark."""
-    benchmark, temp_dir = benchmark_setup
 
     # Mock queue and worker pool
     mock_queue = MagicMock()
@@ -567,7 +496,7 @@ def test_benchmark_recovery_time(mock_error_handler_class, mock_queue_class, moc
     }
 
     config = LoadTestConfig(num_services=10, num_workers=2)
-    result = benchmark._benchmark_recovery_time(config)
+    result = performance_benchmark._benchmark_recovery_time(config)
 
     assert result.test_name == "recovery_time"
     assert result.success_count == 8
@@ -575,9 +504,6 @@ def test_benchmark_recovery_time(mock_error_handler_class, mock_queue_class, moc
     assert result.total_operations == 10
     assert "recovery_time" in result.metadata
     assert "circuit_breakers" in result.metadata
-
-    # Cleanup
-    shutil.rmtree(temp_dir)
 
 
 def test_validator_creation():
