@@ -26,6 +26,8 @@ from .kind_integration import (
     check_kind_available,
     get_cluster_name_from_config,
     get_cluster_names_from_config,
+    create_clusters_with_services,
+    get_execution_plan,
 )
 
 
@@ -142,7 +144,18 @@ def cli(log_level: str):
     is_flag=True,
     help="Show what would be created without actually creating it.",
 )
-def create(config: Optional[Path], dry_run: bool):
+@click.option(
+    "--workers",
+    "-w",
+    type=int,
+    help="Number of workers for parallel service execution. Overrides config value.",
+)
+@click.option(
+    "--load-balancer",
+    type=click.Choice(["round_robin", "least_loaded", "priority_based"], case_sensitive=False),
+    help="Load balancing strategy for service execution. Overrides config value.",
+)
+def create(config: Optional[Path], dry_run: bool, workers: Optional[int], load_balancer: Optional[str]):
     """Create kind clusters based on configuration file.
 
     This command creates multiple kind clusters according to your configuration file.
@@ -190,6 +203,27 @@ def create(config: Optional[Path], dry_run: bool):
             click.echo("DRY RUN: Would create kind clusters with the following configuration:")
             click.echo(json.dumps(config_obj.to_dict(), indent=2))
             click.echo(f"Clusters to create: {', '.join(cluster_names)}")
+
+            # Show execution plan if services are configured
+            if (
+                any(len(cluster_config.services) > 0 for cluster_config in config_obj.clusters.values())
+                or len(config_obj.services) > 0
+            ):
+                click.echo("\nExecution Plan:")
+                click.echo("=" * 50)
+                plan_result = get_execution_plan(config_obj, show_timeline=True, show_dependencies=True)
+                if "error" not in plan_result:
+                    click.echo(f"Total services: {plan_result['total_services']}")
+                    click.echo(f"Clusters: {', '.join(plan_result['clusters'])}")
+                    click.echo(f"Cluster types: {', '.join(plan_result['cluster_types'])}")
+                    if plan_result["summary"]:
+                        summary = plan_result["summary"]
+                        click.echo(f"Estimated duration: {summary['estimated_duration']:.1f} seconds")
+                        click.echo(f"Parallel groups: {summary['parallel_groups']}")
+                        click.echo(f"Max workers: {summary['max_workers']}")
+                else:
+                    click.echo(f"Error generating execution plan: {plan_result['error']}")
+
             log_command_end("create", success=True, message="Dry run completed")
             # Log timing report for dry run
             duration_str = log_timing_report(start_time, "create", success=True, cluster_count=len(cluster_names))
@@ -202,38 +236,35 @@ def create(config: Optional[Path], dry_run: bool):
                 log_command_end("create", success=False, message="kind CLI not available")
                 raise click.Abort()
 
-            logger.info("Starting kind cluster creation")
-            click.echo(f"Creating {len(cluster_names)} kind clusters in parallel...")
+            logger.info("Starting kind cluster creation with queue-based service execution")
+            click.echo(f"Creating {len(cluster_names)} kind clusters with parallel service execution...")
 
-            # Determine if we should log kind output (debug level)
-            log_kind_output = logger.level <= 10  # DEBUG level
-
-            # Create the clusters
-            results = create_multiple_clusters(
-                config_obj.to_dict(), log_output=log_kind_output, max_workers=config_obj.general.max_workers
+            # Use queue-based cluster creation
+            success, created_clusters = create_clusters_with_services(
+                config_obj,
+                dry_run=False,
+                use_queue=True,
+                max_workers=workers,
+                load_balancer_strategy=load_balancer or "round_robin",
             )
 
-            # Report results
-            successful = [name for name, success in results.items() if success]
-            failed = [name for name, success in results.items() if not success]
-
-            if successful:
-                click.echo(f"✓ Successfully created {len(successful)} clusters: {', '.join(successful)}")
-
-            if failed:
-                click.echo(f"✗ Failed to create {len(failed)} clusters: {', '.join(failed)}", err=True)
-
-            if failed:
-                log_command_end("create", success=False, message=f"Failed to create {len(failed)} clusters")
+            if success and created_clusters:
+                click.echo(f"✓ Successfully created {len(created_clusters)} clusters: {', '.join(created_clusters)}")
+                log_command_end(
+                    "create", success=True, message=f"All {len(created_clusters)} clusters created successfully"
+                )
+                # Log timing report
+                duration_str = log_timing_report(
+                    start_time, "create", success=True, cluster_count=len(created_clusters)
+                )
+                click.echo(f"⏱️  Total execution time: {duration_str}")
+            else:
+                click.echo("✗ Failed to create clusters", err=True)
+                log_command_end("create", success=False, message="Failed to create clusters")
                 # Log timing report
                 duration_str = log_timing_report(start_time, "create", success=False, cluster_count=len(cluster_names))
                 click.echo(f"⏱️  Total execution time: {duration_str}")
                 raise click.Abort()
-            else:
-                log_command_end("create", success=True, message=f"All {len(successful)} clusters created successfully")
-                # Log timing report
-                duration_str = log_timing_report(start_time, "create", success=True, cluster_count=len(successful))
-                click.echo(f"⏱️  Total execution time: {duration_str}")
 
     except FileNotFoundError as e:
         log_error(e, "create command - file not found")
@@ -395,6 +426,168 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
         log_command_end("remove", success=False, message=f"Unexpected error: {e}")
         # Log timing report for error
         duration_str = log_timing_report(start_time, "remove", success=False)
+        click.echo(f"⏱️  Total execution time: {duration_str}")
+        raise click.Abort()
+
+
+@cli.command()
+@click.option(
+    "--config",
+    "-c",
+    type=click.Path(exists=True, path_type=Path),
+    envvar="DEPLOYMENT_CONFIG",
+    help="Path to configuration file. If not provided, looks for config files in current directory. Can also be set via DEPLOYMENT_CONFIG environment variable.",
+)
+@click.option(
+    "--timeline",
+    "-t",
+    is_flag=True,
+    help="Show detailed execution timeline with start/end times.",
+)
+@click.option(
+    "--dependencies",
+    "-d",
+    is_flag=True,
+    help="Show service dependencies and relationships.",
+)
+@click.option(
+    "--cluster-types",
+    help="Filter by specific cluster types (comma-separated).",
+)
+def plan(config: Optional[Path], timeline: bool, dependencies: bool, cluster_types: Optional[str]):
+    """Show execution plan for services without creating clusters.
+
+    This command analyzes your configuration and shows how services would be executed
+    using the queue system, including execution order, dependencies, and timeline.
+
+    Examples:
+        # Show basic execution plan
+        deploy plan --config my-config.toml
+
+        # Show detailed timeline
+        deploy plan --config my-config.toml --timeline
+
+        # Show dependencies
+        deploy plan --config my-config.toml --dependencies
+
+        # Filter by cluster types
+        deploy plan --config my-config.toml --cluster-types worker,database
+    """
+    import time
+
+    # Start timing
+    start_time = time.time()
+
+    # Get logger instance
+    logger = get_logger()
+
+    # Log command start
+    log_command_start("plan", str(config) if config else None, timeline=timeline, dependencies=dependencies)
+
+    try:
+        from .config import load_config_from_file
+
+        # Load configuration using the new configuration object
+        config_obj = load_config_from_file(str(config) if config else None)
+
+        # Parse cluster types filter
+        cluster_type_filter = None
+        if cluster_types:
+            cluster_type_filter = [ct.strip() for ct in cluster_types.split(",")]
+            logger.info(f"Filtering by cluster types: {cluster_type_filter}")
+
+        # Get execution plan
+        logger.info("Generating execution plan")
+        plan_result = get_execution_plan(
+            config_obj, cluster_names=None, show_timeline=timeline, show_dependencies=dependencies  # Show all clusters
+        )
+
+        if "error" in plan_result:
+            click.echo(f"Error generating execution plan: {plan_result['error']}", err=True)
+            log_command_end("plan", success=False, message=f"Error: {plan_result['error']}")
+            raise click.Abort()
+
+        # Filter by cluster types if specified
+        if cluster_type_filter:
+            filtered_services = [
+                service for service in plan_result["services"] if service["cluster_type"] in cluster_type_filter
+            ]
+            plan_result["services"] = filtered_services
+            plan_result["total_services"] = len(filtered_services)
+            plan_result["clusters"] = list(set(service["cluster_name"] for service in filtered_services))
+            plan_result["cluster_types"] = list(set(service["cluster_type"] for service in filtered_services))
+
+        # Display execution plan
+        click.echo("Execution Plan")
+        click.echo("=" * 50)
+        click.echo(f"Total services: {plan_result['total_services']}")
+        click.echo(f"Clusters: {', '.join(plan_result['clusters'])}")
+        click.echo(f"Cluster types: {', '.join(plan_result['cluster_types'])}")
+
+        if plan_result["summary"]:
+            summary = plan_result["summary"]
+            click.echo(f"Estimated duration: {summary['estimated_duration']:.1f} seconds")
+            click.echo(f"Parallel groups: {summary['parallel_groups']}")
+            click.echo(f"Max workers: {summary['max_workers']}")
+
+        # Show services
+        if plan_result["services"]:
+            click.echo("\nServices:")
+            click.echo("-" * 30)
+            for service in plan_result["services"]:
+                deps_str = f" (depends on: {', '.join(service['dependencies'])})" if service["dependencies"] else ""
+                click.echo(
+                    f"  {service['cluster_name']}: {service['service_name']} (priority: {service['priority']}, duration: {service['estimated_duration']:.1f}s){deps_str}"
+                )
+
+        # Show timeline if requested
+        if timeline and "timeline" in plan_result:
+            click.echo("\nExecution Timeline:")
+            click.echo("-" * 30)
+            for item in plan_result["timeline"]:
+                click.echo(f"  {item['service_name']} on {item['cluster_name']}:")
+                click.echo(f"    Start: {item['estimated_start']}")
+                click.echo(f"    End: {item['estimated_end']}")
+                click.echo(f"    Duration: {item['estimated_duration']:.1f}s")
+                click.echo()
+
+        # Show dependencies if requested
+        if dependencies and "dependencies" in plan_result:
+            click.echo("\nService Dependencies:")
+            click.echo("-" * 30)
+            for service_key, deps in plan_result["dependencies"].items():
+                if deps:
+                    click.echo(f"  {service_key} depends on: {', '.join(deps)}")
+                else:
+                    click.echo(f"  {service_key} has no dependencies")
+
+        logger.info("Successfully displayed execution plan")
+        log_command_end("plan", success=True)
+        duration_str = log_timing_report(start_time, "plan", success=True)
+        click.echo(f"\n⏱️  Total execution time: {duration_str}")
+
+    except FileNotFoundError as e:
+        log_error(e, "plan command - file not found")
+        click.echo(f"Error: {e}", err=True)
+        log_command_end("plan", success=False, message=f"File not found: {e}")
+        # Log timing report for error
+        duration_str = log_timing_report(start_time, "plan", success=False)
+        click.echo(f"⏱️  Total execution time: {duration_str}")
+        raise click.Abort()
+    except ValueError as e:
+        log_error(e, "plan command - invalid value")
+        click.echo(f"Error: {e}", err=True)
+        log_command_end("plan", success=False, message=f"Invalid value: {e}")
+        # Log timing report for error
+        duration_str = log_timing_report(start_time, "plan", success=False)
+        click.echo(f"⏱️  Total execution time: {duration_str}")
+        raise click.Abort()
+    except Exception as e:
+        log_error(e, "plan command - unexpected error")
+        click.echo(f"Unexpected error: {e}", err=True)
+        log_command_end("plan", success=False, message=f"Unexpected error: {e}")
+        # Log timing report for error
+        duration_str = log_timing_report(start_time, "plan", success=False)
         click.echo(f"⏱️  Total execution time: {duration_str}")
         raise click.Abort()
 
