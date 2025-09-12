@@ -74,20 +74,16 @@ def test_worker_stats_creation():
     assert stats.last_activity is None
 
 
-@pytest.fixture
-def test_setup():
-    """Create test setup with queue and workers."""
-    queue = ServiceQueue(max_workers=2)
-    workers = [ServiceWorker(worker_id=i + 1, queue=queue) for i in range(2)]
-    return queue, workers
+# Using fresh_queue and mock_workers fixtures from conftest.py
 
 
-def test_progress_monitor_creation(test_setup):
+def test_progress_monitor_creation(fresh_queue, mock_workers):
     """Test creating progress monitor."""
-    queue, workers = test_setup
-    monitor = ProgressMonitor(queue, workers)
+    # Convert mock workers to ServiceWorker instances
+    workers = [ServiceWorker(worker_id=i + 1, queue=fresh_queue) for i in range(2)]
+    monitor = ProgressMonitor(fresh_queue, workers)
 
-    assert monitor.queue == queue
+    assert monitor.queue == fresh_queue
     assert monitor.workers == workers
     assert monitor.monitoring is False
     assert monitor.monitor_thread is None
@@ -96,10 +92,11 @@ def test_progress_monitor_creation(test_setup):
     assert 2 in monitor.worker_stats
 
 
-def test_start_stop_monitoring(test_setup):
+def test_start_stop_monitoring(fresh_queue, mock_workers):
     """Test starting and stopping monitoring."""
-    queue, workers = test_setup
-    monitor = ProgressMonitor(queue, workers)
+    # Convert mock workers to ServiceWorker instances
+    workers = [ServiceWorker(worker_id=i + 1, queue=fresh_queue) for i in range(2)]
+    monitor = ProgressMonitor(fresh_queue, workers)
 
     # Start monitoring
     monitor.start_monitoring()
@@ -113,13 +110,14 @@ def test_start_stop_monitoring(test_setup):
     assert monitor.stats.end_time is not None
 
 
-def test_get_progress_summary(test_setup):
+def test_get_progress_summary(fresh_queue, mock_workers):
     """Test getting progress summary."""
-    queue, workers = test_setup
-    monitor = ProgressMonitor(queue, workers)
+    # Convert mock workers to ServiceWorker instances
+    workers = [ServiceWorker(worker_id=i + 1, queue=fresh_queue) for i in range(2)]
+    monitor = ProgressMonitor(fresh_queue, workers)
 
     # Mock queue status
-    with patch.object(queue, "get_queue_status") as mock_status:
+    with patch.object(fresh_queue, "get_queue_status") as mock_status:
         mock_status.return_value = {
             "total_count": 10,
             "completed_count": 3,
@@ -141,10 +139,11 @@ def test_get_progress_summary(test_setup):
         assert summary["is_complete"] is False
 
 
-def test_get_worker_utilization(test_setup):
+def test_get_worker_utilization(fresh_queue, mock_workers):
     """Test getting worker utilization."""
-    queue, workers = test_setup
-    monitor = ProgressMonitor(queue, workers)
+    # Convert mock workers to ServiceWorker instances
+    workers = [ServiceWorker(worker_id=i + 1, queue=fresh_queue) for i in range(2)]
+    monitor = ProgressMonitor(fresh_queue, workers)
 
     # Mock workers
     workers[0].is_running = True
@@ -160,10 +159,11 @@ def test_get_worker_utilization(test_setup):
     assert utilization["idle_workers"] == 1
 
 
-def test_get_estimated_completion(test_setup):
+def test_get_estimated_completion(fresh_queue, mock_workers):
     """Test getting estimated completion time."""
-    queue, workers = test_setup
-    monitor = ProgressMonitor(queue, workers)
+    # Convert mock workers to ServiceWorker instances
+    workers = [ServiceWorker(worker_id=i + 1, queue=fresh_queue) for i in range(2)]
+    monitor = ProgressMonitor(fresh_queue, workers)
 
     # Set up stats for estimation
     monitor.stats.total_services = 10
@@ -175,13 +175,14 @@ def test_get_estimated_completion(test_setup):
     assert completion > datetime.now()
 
 
-def test_get_detailed_status(test_setup):
+def test_get_detailed_status(fresh_queue, mock_workers):
     """Test getting detailed status."""
-    queue, workers = test_setup
-    monitor = ProgressMonitor(queue, workers)
+    # Convert mock workers to ServiceWorker instances
+    workers = [ServiceWorker(worker_id=i + 1, queue=fresh_queue) for i in range(2)]
+    monitor = ProgressMonitor(fresh_queue, workers)
 
     # Mock queue status
-    with patch.object(queue, "get_queue_status") as mock_status:
+    with patch.object(fresh_queue, "get_queue_status") as mock_status:
         mock_status.return_value = {
             "total_items": 5,
             "completed_items": 2,
