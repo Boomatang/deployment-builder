@@ -23,21 +23,7 @@ from deployment_builder.kind_integration import (
 
 @pytest.mark.integration
 @pytest.mark.kubeconfig
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 def test_get_kubeconfig_path_from_config():
     """Test kubeconfig path extraction from configuration."""
     # Test with default path
@@ -54,23 +40,7 @@ def test_get_kubeconfig_path_from_config():
 @pytest.mark.integration
 @pytest.mark.kubeconfig
 @patch("subprocess.run")
-@pytest.mark.integration
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.integration
-@pytest.mark.config
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 def test_extract_kubeconfig_success(mock_run, tmp_path):
     """Test successful kubeconfig extraction."""
     kubeconfig_dir = tmp_path
@@ -112,23 +82,7 @@ users:
 @pytest.mark.integration
 @pytest.mark.kubeconfig
 @patch("subprocess.run")
-@pytest.mark.integration
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.integration
-@pytest.mark.config
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 def test_extract_kubeconfig_failure(mock_run, tmp_path):
     """Test kubeconfig extraction failure."""
     kubeconfig_dir = tmp_path
@@ -145,21 +99,7 @@ def test_extract_kubeconfig_failure(mock_run, tmp_path):
 
 @pytest.mark.integration
 @pytest.mark.kubeconfig
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 def test_remove_kubeconfig_success(tmp_path):
     """Test successful kubeconfig removal."""
     kubeconfig_dir = tmp_path
@@ -178,21 +118,7 @@ def test_remove_kubeconfig_success(tmp_path):
 
 @pytest.mark.integration
 @pytest.mark.kubeconfig
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 def test_remove_kubeconfig_nonexistent(tmp_path):
     """Test kubeconfig removal when file doesn't exist."""
     kubeconfig_dir = tmp_path
@@ -207,23 +133,7 @@ def test_remove_kubeconfig_nonexistent(tmp_path):
 @pytest.mark.integration
 @pytest.mark.kubeconfig
 @patch("subprocess.run")
-@pytest.mark.integration
-@pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 def test_run_kind_command_with_kubeconfig(mock_run, tmp_path):
     """Test that run_kind_command adds --kubeconfig flag."""
     # Setup mock
@@ -257,23 +167,7 @@ def test_run_kind_command_with_kubeconfig(mock_run, tmp_path):
 @pytest.mark.integration
 @pytest.mark.kubeconfig
 @patch("subprocess.run")
-@pytest.mark.integration
-@pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 def test_run_kind_command_without_kubeconfig(mock_run):
     """Test that run_kind_command works without kubeconfig file."""
     # Setup mock
@@ -301,23 +195,7 @@ def test_run_kind_command_without_kubeconfig(mock_run):
 @pytest.mark.integration
 @pytest.mark.kubeconfig
 @patch("subprocess.run")
-@pytest.mark.integration
-@pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 def test_run_kind_command_with_nonexistent_kubeconfig(mock_run):
     """Test that run_kind_command adds --kubeconfig flag even for nonexistent files."""
     # Setup mock
@@ -359,23 +237,7 @@ def test_run_kind_command_with_nonexistent_kubeconfig(mock_run):
 @pytest.mark.integration
 @pytest.mark.kubeconfig
 @patch("subprocess.run")
-@pytest.mark.integration
-@pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 def test_run_kind_command_kubeconfig_flag_integration(mock_run):
     """Test that --kubeconfig flag is properly added to both create and delete commands."""
     # Setup mock
@@ -447,21 +309,7 @@ def test_run_kind_command_kubeconfig_flag_integration(mock_run):
 
 @pytest.mark.integration
 @pytest.mark.kubeconfig
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 def test_get_cluster_names_from_config_new_format():
     """Test cluster name extraction with new structured format."""
     config_data = {
@@ -490,21 +338,7 @@ def test_get_cluster_names_from_config_new_format():
 
 @pytest.mark.integration
 @pytest.mark.kubeconfig
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kubeconfig
-@pytest.mark.integration
 def test_get_cluster_names_from_config_legacy_format():
     """Test cluster name extraction with legacy format (backward compatibility)."""
     config_data = {

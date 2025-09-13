@@ -20,21 +20,7 @@ from deployment_builder.cli import load_config
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_get_kind_config_path_from_config():
     """Test kind config path extraction from configuration."""
     # Test with default path
@@ -50,21 +36,7 @@ def test_get_kind_config_path_from_config():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_generate_kind_config():
     """Test kind configuration generation."""
     cluster_name = "test-cluster"
@@ -94,21 +66,7 @@ def test_generate_kind_config():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_generate_kind_config_minimal():
     """Test kind configuration generation with minimal config."""
     cluster_name = "test-cluster"
@@ -129,21 +87,7 @@ def test_generate_kind_config_minimal():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_save_kind_config_success(tmp_path):
     """Test successful kind config file saving."""
     config_dir = tmp_path
@@ -169,21 +113,7 @@ def test_save_kind_config_success(tmp_path):
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_save_kind_config_failure():
     """Test kind config saving failure."""
     cluster_name = "test-cluster"
@@ -198,21 +128,7 @@ def test_save_kind_config_failure():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_remove_kind_config_success(tmp_path):
     """Test successful kind config removal."""
     config_dir = tmp_path
@@ -231,21 +147,7 @@ def test_remove_kind_config_success(tmp_path):
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_remove_kind_config_nonexistent(tmp_path):
     """Test kind config removal when file doesn't exist."""
     config_dir = tmp_path
@@ -260,23 +162,7 @@ def test_remove_kind_config_nonexistent(tmp_path):
 @pytest.mark.integration
 @pytest.mark.kind
 @patch("subprocess.run")
-@pytest.mark.integration
-@pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kind
-@pytest.mark.integration
 def test_run_kind_command_with_kind_config(mock_run, tmp_path):
     """Test that run_kind_command adds --config flag for kind config."""
     # Setup mock
@@ -326,23 +212,7 @@ def test_run_kind_command_with_kind_config(mock_run, tmp_path):
 @pytest.mark.integration
 @pytest.mark.kind
 @patch("subprocess.run")
-@pytest.mark.integration
-@pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.cli
-@patch("subprocess.run")
-@pytest.mark.kind
-@pytest.mark.integration
 def test_run_kind_command_kind_config_create_only(mock_run, tmp_path):
     """Test that --config flag is only added for create command."""
     # Setup mock
@@ -373,21 +243,7 @@ def test_run_kind_command_kind_config_create_only(mock_run, tmp_path):
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_get_cluster_names_from_config_new_format():
     """Test cluster name extraction with new structured format."""
     config_data = {
@@ -416,21 +272,7 @@ def test_get_cluster_names_from_config_new_format():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_get_cluster_names_from_config_new_format_partial():
     """Test cluster name extraction with new format but only some clusters enabled."""
     config_data = {
@@ -455,21 +297,7 @@ def test_get_cluster_names_from_config_new_format_partial():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_get_cluster_names_from_config_legacy_format():
     """Test cluster name extraction with legacy format (backward compatibility)."""
     config_data = {
@@ -498,21 +326,7 @@ def test_get_cluster_names_from_config_legacy_format():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_get_cluster_names_from_config_mixed_format():
     """Test cluster name extraction with mixed format (some structured, some legacy)."""
     config_data = {
@@ -538,21 +352,7 @@ def test_get_cluster_names_from_config_mixed_format():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_get_cluster_names_from_config_no_clusters():
     """Test cluster name extraction when no clusters are defined."""
     config_data = {"prefix": "test-project", "clusters": {}}
@@ -565,21 +365,7 @@ def test_get_cluster_names_from_config_no_clusters():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_get_cluster_names_from_config_no_clusters_section():
     """Test cluster name extraction when clusters section is missing."""
     config_data = {"prefix": "test-project"}
@@ -592,21 +378,7 @@ def test_get_cluster_names_from_config_no_clusters_section():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_load_config_with_general_section(tmp_path):
     """Test configuration loading with [general] section."""
     import tomli
@@ -654,21 +426,7 @@ count = 2
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_get_cluster_names_from_config_dynamic_types():
     """Test cluster name extraction with dynamic cluster types."""
     config_data = {
@@ -695,21 +453,7 @@ def test_get_cluster_names_from_config_dynamic_types():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_get_cluster_names_from_config_dynamic_types_mixed():
     """Test cluster name extraction with mixed dynamic cluster types."""
     config_data = {
@@ -737,21 +481,7 @@ def test_get_cluster_names_from_config_dynamic_types_mixed():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_get_cluster_names_from_config_dynamic_types_performance():
     """Test cluster name extraction with many dynamic cluster types."""
     config_data = {"prefix": "performance-test", "clusters": {}}
@@ -774,21 +504,7 @@ def test_get_cluster_names_from_config_dynamic_types_performance():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_get_cluster_names_from_config_dynamic_types_special_characters():
     """Test cluster name extraction with special characters in cluster types."""
     config_data = {
@@ -813,21 +529,7 @@ def test_get_cluster_names_from_config_dynamic_types_special_characters():
 
 @pytest.mark.integration
 @pytest.mark.kind
-@pytest.mark.kind
-@pytest.mark.integration
 @pytest.mark.config
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
-@pytest.mark.config
-@pytest.mark.kind
-@pytest.mark.integration
 def test_get_cluster_names_from_config_dynamic_types_validation():
     """Test cluster name extraction with invalid cluster types (should fail)."""
     from deployment_builder.config import create_default_config
