@@ -25,6 +25,17 @@ from deployment_builder.error_handler import (
 from deployment_builder.queue import ServiceQueue, ServiceItem, ServiceStatus, ServiceConfig
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_error_severity_values():
     """Test error severity enum values."""
     assert ErrorSeverity.LOW.value == "low"
@@ -33,6 +44,17 @@ def test_error_severity_values():
     assert ErrorSeverity.CRITICAL.value == "critical"
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_error_type_values():
     """Test error type enum values."""
     assert ErrorType.NETWORK.value == "network"
@@ -43,6 +65,17 @@ def test_error_type_values():
     assert ErrorType.UNKNOWN.value == "unknown"
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_error_context_creation():
     """Test creating error context."""
     context = ErrorContext(
@@ -66,6 +99,17 @@ def test_error_context_creation():
     assert context.metadata == {}
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_error_context_defaults():
     """Test error context with default values."""
     context = ErrorContext(
@@ -83,6 +127,17 @@ def test_error_context_defaults():
     assert context.metadata == {}
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_circuit_breaker_state_creation():
     """Test creating circuit breaker state."""
     state = CircuitBreakerState()
@@ -96,6 +151,17 @@ def test_circuit_breaker_state_creation():
     assert state.consecutive_successes == 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_circuit_breaker_state_custom():
     """Test circuit breaker state with custom values."""
     state = CircuitBreakerState(failure_count=3, state="OPEN", failure_threshold=10, recovery_timeout=120.0)
@@ -109,6 +175,17 @@ def test_circuit_breaker_state_custom():
 # Using error_handler fixture from conftest.py
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_error_handler_creation(error_handler, fresh_queue):
     """Test creating error handler."""
     assert error_handler.queue == fresh_queue
@@ -119,6 +196,17 @@ def test_error_handler_creation(error_handler, fresh_queue):
     assert error_handler._recovery_callbacks == []
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_classify_error(error_handler):
     """Test error classification."""
 
@@ -153,6 +241,17 @@ def test_classify_error(error_handler):
     assert error_type == ErrorType.UNKNOWN
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_determine_severity(error_handler):
     """Test severity determination."""
 
@@ -177,6 +276,17 @@ def test_determine_severity(error_handler):
     assert severity == ErrorSeverity.MEDIUM
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_is_recoverable(error_handler):
     """Test recoverability determination."""
 
@@ -196,6 +306,17 @@ def test_is_recoverable(error_handler):
     assert is_recoverable is True
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_should_retry(error_handler):
     """Test retry decision logic."""
 
@@ -226,6 +347,17 @@ def test_should_retry(error_handler):
     assert should_retry is False
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_calculate_backoff_delay(error_handler):
     """Test backoff delay calculation."""
 
@@ -248,6 +380,17 @@ def test_calculate_backoff_delay(error_handler):
     assert delay >= 3.6  # 2^2 * 1.0 with jitter tolerance
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_is_circuit_open(error_handler):
     """Test circuit breaker state checking."""
 
@@ -267,6 +410,17 @@ def test_is_circuit_open(error_handler):
     assert is_open is False
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_update_circuit_breaker(error_handler):
     """Test circuit breaker state updates."""
 
@@ -289,6 +443,17 @@ def test_update_circuit_breaker(error_handler):
     assert state.state == "OPEN"
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_handle_service_error(error_handler):
     """Test handling service errors."""
 
@@ -315,6 +480,17 @@ def test_handle_service_error(error_handler):
         mock_retry.assert_called_once_with(item)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_retry_failed_service(error_handler):
     """Test retrying failed services."""
 
@@ -345,6 +521,17 @@ def test_retry_failed_service(error_handler):
         assert result is False
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_escalate_error(error_handler):
     """Test error escalation."""
 
@@ -377,6 +564,17 @@ def test_escalate_error(error_handler):
     assert callback_called[0][1].severity == ErrorSeverity.CRITICAL
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_error_statistics(error_handler):
     """Test getting error statistics."""
 
@@ -401,6 +599,17 @@ def test_get_error_statistics(error_handler):
     assert "circuit_breakers" in stats
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_reset_circuit_breaker(error_handler):
     """Test resetting circuit breaker."""
 
@@ -419,6 +628,17 @@ def test_reset_circuit_breaker(error_handler):
 # Using recovery_manager fixture from conftest.py
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_recovery_manager_creation(recovery_manager):
     """Test creating recovery manager."""
     assert recovery_manager.error_handler is not None
@@ -428,6 +648,17 @@ def test_recovery_manager_creation(recovery_manager):
     assert recovery_manager._stop_event.is_set() is False
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_add_health_check(recovery_manager):
     """Test adding health check."""
 
@@ -440,6 +671,17 @@ def test_add_health_check(recovery_manager):
     assert recovery_manager.health_checks["test_check"] == health_check
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_add_recovery_operation(recovery_manager):
     """Test adding recovery operation."""
 
@@ -452,6 +694,17 @@ def test_add_recovery_operation(recovery_manager):
     assert recovery_manager.recovery_operations["test_recovery"] == recovery_op
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_start_stop_recovery_monitoring(recovery_manager):
     """Test starting and stopping recovery monitoring."""
 
@@ -465,6 +718,17 @@ def test_start_stop_recovery_monitoring(recovery_manager):
     assert recovery_manager._stop_event.is_set()
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_run_health_checks(recovery_manager):
     """Test running health checks."""
 
@@ -489,6 +753,17 @@ def test_run_health_checks(recovery_manager):
     assert "unhealthy" in check_results
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_attempt_recoveries(recovery_manager):
     """Test attempting recovery operations."""
 
@@ -513,6 +788,17 @@ def test_attempt_recoveries(recovery_manager):
     assert "failure" in recovery_results
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_error_handler():
     """Test getting global error handler."""
     queue = ServiceQueue(max_workers=2)
@@ -522,6 +808,17 @@ def test_get_error_handler():
     assert error_handler.queue == queue
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_recovery_manager():
     """Test getting global recovery manager."""
     queue = ServiceQueue(max_workers=2)
@@ -532,12 +829,34 @@ def test_get_recovery_manager():
     assert recovery_manager.error_handler == error_handler
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_cleanup_error_handling():
     """Test cleanup of error handling resources."""
     # This should not raise any exceptions
     cleanup_error_handling()
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_full_error_handling_workflow():
     """Test full error handling workflow."""
     queue = ServiceQueue(max_workers=2)
@@ -587,6 +906,17 @@ def test_full_error_handling_workflow():
     recovery_manager.stop_recovery_monitoring()
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_circuit_breaker_integration():
     """Test circuit breaker integration with error handling."""
     queue = ServiceQueue(max_workers=2)
@@ -617,6 +947,17 @@ def test_circuit_breaker_integration():
     assert state.state == "CLOSED"
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_error_escalation_with_callbacks():
     """Test error escalation with recovery callbacks."""
     queue = ServiceQueue(max_workers=2)

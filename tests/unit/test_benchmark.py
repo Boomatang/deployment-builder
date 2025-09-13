@@ -26,6 +26,17 @@ from deployment_builder.queue import ServiceQueue, ServiceItem, ServiceStatus, S
 from deployment_builder.config import DeploymentConfig
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_benchmark_result_creation():
     """Test creating benchmark result."""
     result = BenchmarkResult(
@@ -65,6 +76,17 @@ def test_benchmark_result_creation():
     assert result.metadata == {}
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_benchmark_result_defaults():
     """Test benchmark result with default values."""
     result = BenchmarkResult(
@@ -89,6 +111,17 @@ def test_benchmark_result_defaults():
     assert result.metadata == {}
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_load_test_config_creation():
     """Test creating load test config."""
     config = LoadTestConfig()
@@ -106,6 +139,17 @@ def test_load_test_config_creation():
     assert config.ramp_down_duration == 10.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_load_test_config_custom():
     """Test load test config with custom values."""
     config = LoadTestConfig(
@@ -130,6 +174,17 @@ def test_load_test_config_custom():
 # Using performance_benchmark and temp_benchmark_dir fixtures from conftest.py
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_benchmark_creation(performance_benchmark, temp_benchmark_dir):
     """Test creating performance benchmark."""
     assert performance_benchmark.output_dir == Path(temp_benchmark_dir)
@@ -137,6 +192,17 @@ def test_benchmark_creation(performance_benchmark, temp_benchmark_dir):
     assert performance_benchmark._lock is not None
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_create_test_services(performance_benchmark):
     """Test creating test services."""
 
@@ -149,6 +215,17 @@ def test_create_test_services(performance_benchmark):
         assert service.cluster_type == "test"
         assert service.estimated_duration == 1.0
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_create_test_service_with_failure(performance_benchmark):
     """Test creating test service with failure."""
 
@@ -160,6 +237,17 @@ def test_create_test_service_with_failure(performance_benchmark):
     assert service.estimated_duration == 1.0
     assert service.service_config.cmd == "false"  # Should fail
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_create_test_service_without_failure(performance_benchmark):
     """Test creating test service without failure."""
 
@@ -171,6 +259,17 @@ def test_create_test_service_without_failure(performance_benchmark):
     assert service.estimated_duration == 1.0
     assert "sleep 1.0" in service.service_config.cmd  # Should succeed
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_get_memory_usage(performance_benchmark):
     """Test getting memory usage."""
 
@@ -180,6 +279,17 @@ def test_get_memory_usage(performance_benchmark):
     assert memory >= 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_result_to_dict(performance_benchmark):
     """Test converting result to dictionary."""
 
@@ -210,6 +320,17 @@ def test_result_to_dict(performance_benchmark):
     assert result_dict["metadata"] == '{"test": "value"}'
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_save_results(performance_benchmark, temp_benchmark_dir):
     """Test saving results to files."""
 
@@ -241,6 +362,17 @@ def test_save_results(performance_benchmark, temp_benchmark_dir):
     assert len(csv_files) == 1
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_generate_report(performance_benchmark, temp_benchmark_dir):
     """Test generating benchmark report."""
 
@@ -273,6 +405,23 @@ def test_generate_report(performance_benchmark, temp_benchmark_dir):
 
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
 def test_benchmark_queue_throughput(mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test queue throughput benchmark."""
 
@@ -299,6 +448,23 @@ def test_benchmark_queue_throughput(mock_queue_class, mock_worker_pool_class, pe
 
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
 def test_benchmark_worker_efficiency(mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test worker efficiency benchmark."""
 
@@ -331,6 +497,23 @@ def test_benchmark_worker_efficiency(mock_queue_class, mock_worker_pool_class, p
 
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
 def test_benchmark_load_balancing(mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test load balancing benchmark."""
 
@@ -362,6 +545,26 @@ def test_benchmark_load_balancing(mock_queue_class, mock_worker_pool_class, perf
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
 @patch("deployment_builder.benchmark.ErrorHandler")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ErrorHandler")
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ErrorHandler")
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ErrorHandler")
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
 def test_benchmark_error_handling(mock_error_handler_class, mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test error handling benchmark."""
 
@@ -393,6 +596,23 @@ def test_benchmark_error_handling(mock_error_handler_class, mock_queue_class, mo
 
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
 def test_benchmark_memory_usage(mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test memory usage benchmark."""
 
@@ -422,6 +642,23 @@ def test_benchmark_memory_usage(mock_queue_class, mock_worker_pool_class, perfor
 
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
 def test_benchmark_concurrent_operations(mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test concurrent operations benchmark."""
 
@@ -448,6 +685,23 @@ def test_benchmark_concurrent_operations(mock_queue_class, mock_worker_pool_clas
 
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
 def test_benchmark_scalability(mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test scalability benchmark."""
 
@@ -474,6 +728,26 @@ def test_benchmark_scalability(mock_queue_class, mock_worker_pool_class, perform
 @patch("deployment_builder.benchmark.WorkerPool")
 @patch("deployment_builder.benchmark.ServiceQueue")
 @patch("deployment_builder.benchmark.ErrorHandler")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ErrorHandler")
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ErrorHandler")
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.ErrorHandler")
+@patch("deployment_builder.benchmark.ServiceQueue")
+@patch("deployment_builder.benchmark.WorkerPool")
 def test_benchmark_recovery_time(mock_error_handler_class, mock_queue_class, mock_worker_pool_class, performance_benchmark):
     """Test recovery time benchmark."""
 
@@ -506,6 +780,17 @@ def test_benchmark_recovery_time(mock_error_handler_class, mock_queue_class, moc
     assert "circuit_breakers" in result.metadata
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_validator_creation():
     """Test creating system validator."""
     validator = SystemValidator()
@@ -513,6 +798,17 @@ def test_validator_creation():
     assert validator.validation_results == []
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_validate_queue_functionality():
     """Test queue functionality validation."""
     validator = SystemValidator()
@@ -525,6 +821,17 @@ def test_validate_queue_functionality():
     assert "operations_tested" in result["details"]
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_validate_worker_management():
     """Test worker management validation."""
     validator = SystemValidator()
@@ -537,6 +844,17 @@ def test_validate_worker_management():
     assert result["details"]["workers_created"] == 2
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_validate_load_balancing():
     """Test load balancing validation."""
     validator = SystemValidator()
@@ -549,6 +867,17 @@ def test_validate_load_balancing():
     assert "strategies_tested" in result["details"]
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_validate_execution_planning():
     """Test execution planning validation."""
     validator = SystemValidator()
@@ -561,6 +890,17 @@ def test_validate_execution_planning():
     assert result["details"]["services_planned"] == 5
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_validate_monitoring():
     """Test monitoring validation."""
     validator = SystemValidator()
@@ -573,6 +913,17 @@ def test_validate_monitoring():
     assert result["details"]["monitoring_started"] is True
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_validate_error_handling():
     """Test error handling validation."""
     validator = SystemValidator()
@@ -585,6 +936,17 @@ def test_validate_error_handling():
     assert result["details"]["errors_handled"] == 1
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_validate_optimization():
     """Test optimization validation."""
     validator = SystemValidator()
@@ -597,6 +959,17 @@ def test_validate_optimization():
     assert result["details"]["components_tested"] == 5
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_validate_integration():
     """Test integration validation."""
     validator = SystemValidator()
@@ -609,6 +982,17 @@ def test_validate_integration():
     assert result["details"]["end_to_end_test"] is True
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_generate_validation_report():
     """Test generating validation report."""
     validator = SystemValidator()
@@ -630,6 +1014,17 @@ def test_generate_validation_report():
     assert "Success Rate: 50.0%" in report
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_get_benchmark():
     """Test getting global benchmark instance."""
     benchmark = get_benchmark("test_output")
@@ -638,6 +1033,17 @@ def test_get_benchmark():
     assert benchmark.output_dir == Path("test_output")
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_get_validator():
     """Test getting global validator instance."""
     validator = get_validator()
@@ -648,6 +1054,26 @@ def test_get_validator():
 @patch("deployment_builder.benchmark.Path")
 @patch("deployment_builder.benchmark.get_validator")
 @patch("deployment_builder.benchmark.get_benchmark")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.get_benchmark")
+@patch("deployment_builder.benchmark.get_validator")
+@patch("deployment_builder.benchmark.Path")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.get_benchmark")
+@patch("deployment_builder.benchmark.get_validator")
+@patch("deployment_builder.benchmark.Path")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("deployment_builder.benchmark.get_benchmark")
+@patch("deployment_builder.benchmark.get_validator")
+@patch("deployment_builder.benchmark.Path")
 def test_run_full_validation(mock_get_benchmark, mock_get_validator, mock_path):
     """Test running full validation."""
     # Mock validator
@@ -675,6 +1101,17 @@ def test_run_full_validation(mock_get_benchmark, mock_get_validator, mock_path):
     assert "timestamp" in result
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_benchmark_suite_integration():
     """Test full benchmark suite integration."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -692,6 +1129,17 @@ def test_benchmark_suite_integration():
             assert result.throughput >= 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_validation_suite_integration():
     """Test full validation suite integration."""
     validator = SystemValidator()
@@ -707,6 +1155,17 @@ def test_validation_suite_integration():
         assert "details" in result
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_full_validation_integration():
     """Test full validation and benchmarking integration."""
     with tempfile.TemporaryDirectory() as temp_dir:

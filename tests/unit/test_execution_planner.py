@@ -13,6 +13,17 @@ from deployment_builder.config import DeploymentConfig, ServiceConfig, ClusterCo
 from deployment_builder.queue import ServiceItem, ServiceStatus
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_dependency_graph_creation():
     """Test basic dependency graph creation."""
     graph = DependencyGraph()
@@ -21,6 +32,17 @@ def test_dependency_graph_creation():
     assert len(graph.all_services) == 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_add_dependency():
     """Test adding dependencies."""
     graph = DependencyGraph()
@@ -32,6 +54,17 @@ def test_add_dependency():
     assert "service1" in graph.reverse_graph["service2"]
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_add_service():
     """Test adding service with no dependencies."""
     graph = DependencyGraph()
@@ -41,6 +74,17 @@ def test_add_service():
     assert len(graph.graph["service1"]) == 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_resolve_dependencies_simple():
     """Test resolving simple dependencies."""
     graph = DependencyGraph()
@@ -54,6 +98,17 @@ def test_resolve_dependencies_simple():
     assert order == ["service3", "service2", "service1"]
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_resolve_dependencies_complex():
     """Test resolving complex dependencies."""
     graph = DependencyGraph()
@@ -76,6 +131,17 @@ def test_resolve_dependencies_complex():
     assert service3_index < service1_index
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_detect_cycles():
     """Test cycle detection."""
     graph = DependencyGraph()
@@ -95,6 +161,17 @@ def test_detect_cycles():
     assert cycle_found
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_resolve_dependencies_with_cycle():
     """Test that resolving dependencies with cycles raises error."""
     graph = DependencyGraph()
@@ -105,6 +182,17 @@ def test_resolve_dependencies_with_cycle():
         graph.resolve_dependencies()
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_ready_services():
     """Test getting ready services."""
     graph = DependencyGraph()
@@ -127,6 +215,17 @@ def test_get_ready_services():
     assert set(ready) == {"service1", "service4"}
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_dependencies():
     """Test getting dependencies of a service."""
     graph = DependencyGraph()
@@ -137,6 +236,17 @@ def test_get_dependencies():
     assert deps == {"service2", "service3"}
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_dependents():
     """Test getting dependents of a service."""
     graph = DependencyGraph()
@@ -170,6 +280,17 @@ def test_config():
     return config
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_execution_planner_creation(test_config):
     """Test execution planner creation."""
     planner = ExecutionPlanner(test_config)
@@ -180,6 +301,17 @@ def test_execution_planner_creation(test_config):
     assert len(planner.timeline) == 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_create_execution_plan(test_config):
     """Test creating execution plan."""
     planner = ExecutionPlanner(test_config)
@@ -195,6 +327,17 @@ def test_create_execution_plan(test_config):
         assert isinstance(item, ServiceItem)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_extract_cluster_type(test_config):
     """Test cluster type extraction."""
     planner = ExecutionPlanner(test_config)
@@ -214,6 +357,17 @@ def test_extract_cluster_type(test_config):
     assert cluster_type == "project-database-cluster"
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_calculate_dependencies(test_config):
     """Test dependency calculation."""
     planner = ExecutionPlanner(test_config)
@@ -243,6 +397,17 @@ def test_calculate_dependencies(test_config):
     assert dependencies["test-worker-1:service2"] == []
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_estimate_total_duration(test_config):
     """Test total duration estimation."""
     planner = ExecutionPlanner(test_config)
@@ -273,6 +438,17 @@ def test_estimate_total_duration(test_config):
     assert duration <= 90.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_get_execution_timeline(test_config):
     """Test execution timeline generation."""
     planner = ExecutionPlanner(test_config)
@@ -298,6 +474,17 @@ def test_get_execution_timeline(test_config):
     assert timeline[0]["estimated_duration"] == 60.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_get_parallel_groups(test_config):
     """Test parallel group generation."""
     planner = ExecutionPlanner(test_config)
@@ -339,6 +526,17 @@ def test_get_parallel_groups(test_config):
     assert "service2" in service_names
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_get_execution_summary(test_config):
     """Test execution summary generation."""
     planner = ExecutionPlanner(test_config)
@@ -372,6 +570,17 @@ def test_get_execution_summary(test_config):
     assert summary["services_by_priority"][2] == 1
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_create_execution_plan_with_dependencies(test_config):
     """Test creating execution plan with service dependencies."""
     # Add services with dependencies to cluster config
@@ -393,6 +602,17 @@ def test_create_execution_plan_with_dependencies(test_config):
         assert "backup" in item.dependencies
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_enhance_service_config(test_config):
     """Test service config enhancement."""
     planner = ExecutionPlanner(test_config)
@@ -404,6 +624,17 @@ def test_enhance_service_config(test_config):
     assert enhanced_config == original_config
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_build_dependency_graph(test_config):
     """Test dependency graph building."""
     planner = ExecutionPlanner(test_config)
@@ -433,6 +664,17 @@ def test_build_dependency_graph(test_config):
     assert "test-worker-1:service2" in planner.dependency_graph.get_dependencies("test-worker-1:service1")
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_resolve_execution_order_with_dependencies(test_config):
     """Test resolving execution order with dependencies."""
     planner = ExecutionPlanner(test_config)
@@ -464,6 +706,17 @@ def test_resolve_execution_order_with_dependencies(test_config):
     assert service2_index < service1_index
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_optimize_execution_order(test_config):
     """Test execution order optimization."""
     planner = ExecutionPlanner(test_config)

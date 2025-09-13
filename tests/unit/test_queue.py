@@ -16,6 +16,17 @@ from deployment_builder.queue import (
 from deployment_builder.config import ServiceConfig
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_service_item_creation():
     """Test basic service item creation."""
     service_config = ServiceConfig(cmd="kubectl get pods", kubeconfig_flag="--kubeconfig")
@@ -35,6 +46,17 @@ def test_service_item_creation():
     assert item.max_retries == 3
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_service_item_priority_comparison():
     """Test priority comparison for PriorityQueue."""
     service_config = ServiceConfig(cmd="kubectl get pods", kubeconfig_flag="--kubeconfig")
@@ -60,6 +82,17 @@ def test_service_item_priority_comparison():
     assert item1 < item2
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_service_item_creation_time_comparison():
     """Test creation time comparison for same priority items."""
     service_config = ServiceConfig(cmd="kubectl get pods", kubeconfig_flag="--kubeconfig")
@@ -87,6 +120,17 @@ def test_service_item_creation_time_comparison():
     assert item1 < item2
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_queue_creation():
     """Test basic queue creation."""
     queue = ServiceQueue(max_workers=4, timeout=300)
@@ -99,6 +143,17 @@ def test_queue_creation():
     assert len(queue.running_items) == 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_add_service_item():
     """Test adding service items to queue."""
     queue = ServiceQueue()
@@ -118,6 +173,17 @@ def test_add_service_item():
     assert queue._stats["pending_items"] == 1
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_next_item():
     """Test getting next item from queue."""
     queue = ServiceQueue()
@@ -144,6 +210,17 @@ def test_get_next_item():
     assert queue._stats["pending_items"] == 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_mark_completed():
     """Test marking service item as completed."""
     queue = ServiceQueue()
@@ -168,6 +245,17 @@ def test_mark_completed():
     assert queue._stats["running_items"] == 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_mark_failed_with_retry():
     """Test marking service item as failed with retry."""
     queue = ServiceQueue()
@@ -192,6 +280,17 @@ def test_mark_failed_with_retry():
     assert queue._stats["pending_items"] == 1  # Item re-queued for retry
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_mark_failed_permanent():
     """Test marking service item as permanently failed."""
     queue = ServiceQueue()
@@ -222,6 +321,17 @@ def test_mark_failed_permanent():
     assert queue._stats["failed_items"] == 1
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_queue_status():
     """Test getting queue status."""
     queue = ServiceQueue(max_workers=2)
@@ -250,6 +360,17 @@ def test_get_queue_status():
     assert status["is_shutdown"] is False
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_is_empty():
     """Test queue empty check."""
     queue = ServiceQueue()
@@ -276,6 +397,17 @@ def test_is_empty():
     assert queue.is_empty() is True  # No pending or running items
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_shutdown():
     """Test queue shutdown."""
     queue = ServiceQueue()
@@ -287,6 +419,17 @@ def test_shutdown():
     assert queue.shutdown_event.is_set()
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_worker_creation():
     """Test worker creation."""
     queue = ServiceQueue()
@@ -299,6 +442,17 @@ def test_worker_creation():
     assert worker.thread is None
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_worker_start_stop():
     """Test worker start and stop."""
     queue = ServiceQueue()
@@ -321,6 +475,20 @@ def test_worker_start_stop():
         pass
 
 
+@patch("subprocess.run")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
+@pytest.mark.fast
+@pytest.mark.unit
 @patch("subprocess.run")
 def test_execute_service_success(mock_run):
     """Test successful service execution."""
@@ -349,6 +517,20 @@ def test_execute_service_success(mock_run):
 
 
 @patch("subprocess.run")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
 def test_execute_service_failure(mock_run):
     """Test failed service execution."""
     # Mock failed subprocess execution
@@ -376,6 +558,20 @@ def test_execute_service_failure(mock_run):
 
 
 @patch("subprocess.run")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
 def test_execute_service_timeout(mock_run):
     """Test service execution timeout."""
     # Mock timeout exception
@@ -401,6 +597,17 @@ def test_execute_service_timeout(mock_run):
     mock_run.assert_called_once()
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_worker_pool_creation():
     """Test worker pool creation."""
     queue = ServiceQueue()
@@ -411,6 +618,17 @@ def test_worker_pool_creation():
     assert len(pool.workers) == 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_start_stop_workers():
     """Test starting and stopping workers."""
     queue = ServiceQueue()
@@ -426,6 +644,17 @@ def test_start_stop_workers():
     assert len(pool.workers) == 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_worker_status():
     """Test getting worker status."""
     queue = ServiceQueue()
@@ -444,6 +673,20 @@ def test_get_worker_status():
     pool.stop_workers()
 
 
+@patch("subprocess.run")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("subprocess.run")
+@pytest.mark.slow
+@pytest.mark.unit
+@patch("subprocess.run")
+@pytest.mark.slow
+@pytest.mark.unit
 @patch("subprocess.run")
 def test_full_workflow(mock_run):
     """Test complete workflow from queue to completion."""

@@ -14,6 +14,17 @@ from deployment_builder.queue import ServiceWorker, ServiceItem, ServiceStatus
 from deployment_builder.config import ServiceConfig
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_round_robin_selection():
     """Test round-robin worker selection."""
     balancer = RoundRobinBalancer()
@@ -46,6 +57,17 @@ def test_round_robin_selection():
     assert selected_workers == expected
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_round_robin_with_non_running_workers():
     """Test round-robin selection with some non-running workers."""
     balancer = RoundRobinBalancer()
@@ -77,6 +99,17 @@ def test_round_robin_with_non_running_workers():
     assert selected_workers == expected
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_round_robin_no_workers():
     """Test round-robin selection with no workers."""
     balancer = RoundRobinBalancer()
@@ -93,6 +126,17 @@ def test_round_robin_no_workers():
         balancer.select_worker(item, [])
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_round_robin_no_running_workers():
     """Test round-robin selection with no running workers."""
     balancer = RoundRobinBalancer()
@@ -117,6 +161,17 @@ def test_round_robin_no_running_workers():
         balancer.select_worker(item, workers)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_least_loaded_idle_workers():
     """Test least loaded selection with idle workers."""
     balancer = LeastLoadedBalancer()
@@ -143,6 +198,17 @@ def test_least_loaded_idle_workers():
     assert selected_worker.worker_id == 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_least_loaded_all_busy():
     """Test least loaded selection when all workers are busy."""
     balancer = LeastLoadedBalancer()
@@ -169,6 +235,17 @@ def test_least_loaded_all_busy():
     assert selected_worker.worker_id == 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_least_loaded_no_workers():
     """Test least loaded selection with no workers."""
     balancer = LeastLoadedBalancer()
@@ -185,6 +262,17 @@ def test_least_loaded_no_workers():
         balancer.select_worker(item, [])
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_priority_based_high_priority_idle():
     """Test priority-based selection for high priority items with idle workers."""
     base_balancer = RoundRobinBalancer()
@@ -214,6 +302,17 @@ def test_priority_based_high_priority_idle():
     assert selected_worker.worker_id == 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_priority_based_normal_priority():
     """Test priority-based selection for normal priority items."""
     base_balancer = RoundRobinBalancer()
@@ -243,6 +342,17 @@ def test_priority_based_normal_priority():
     assert selected_worker.worker_id == 0  # First in round-robin
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_priority_based_default_balancer():
     """Test priority-based balancer with default base balancer."""
     balancer = PriorityBasedBalancer()  # No base balancer specified
@@ -270,36 +380,102 @@ def test_priority_based_default_balancer():
     assert selected_worker.worker_id == 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_create_round_robin_balancer():
     """Test creating round-robin balancer."""
     balancer = create_load_balancer("round_robin")
     assert isinstance(balancer, RoundRobinBalancer)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_create_least_loaded_balancer():
     """Test creating least loaded balancer."""
     balancer = create_load_balancer("least_loaded")
     assert isinstance(balancer, LeastLoadedBalancer)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_create_priority_based_balancer():
     """Test creating priority-based balancer."""
     balancer = create_load_balancer("priority_based")
     assert isinstance(balancer, PriorityBasedBalancer)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_create_unsupported_balancer():
     """Test creating unsupported balancer."""
     with pytest.raises(ValueError, match="Unsupported load balancing strategy"):
         create_load_balancer("unsupported_strategy")
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_create_balancer_case_sensitive():
     """Test that balancer creation is case sensitive."""
     with pytest.raises(ValueError, match="Unsupported load balancing strategy"):
         create_load_balancer("ROUND_ROBIN")  # Should be lowercase
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_round_robin_with_real_workers():
     """Test round-robin balancer with real worker objects."""
     balancer = RoundRobinBalancer()
@@ -333,6 +509,17 @@ def test_round_robin_with_real_workers():
     assert selected_workers == expected
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_least_loaded_with_real_workers():
     """Test least loaded balancer with real worker objects."""
     balancer = LeastLoadedBalancer()

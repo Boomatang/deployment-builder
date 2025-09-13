@@ -27,6 +27,17 @@ from deployment_builder.optimization import (
 )
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_connection_pool_creation():
     """Test creating connection pool."""
     pool = ConnectionPool()
@@ -34,6 +45,17 @@ def test_connection_pool_creation():
     assert isinstance(pool._lock, threading.Lock)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_set_and_get_context():
     """Test setting and getting contexts."""
     pool = ConnectionPool()
@@ -43,6 +65,17 @@ def test_set_and_get_context():
     assert pool.get_context("nonexistent") is None
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_clear_context():
     """Test clearing contexts."""
     pool = ConnectionPool()
@@ -55,6 +88,17 @@ def test_clear_context():
     assert pool.get_context("cluster2") == "context2"
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_clear_all():
     """Test clearing all contexts."""
     pool = ConnectionPool()
@@ -66,6 +110,17 @@ def test_clear_all():
     assert pool.contexts == {}
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_thread_safety():
     """Test thread safety of connection pool."""
     pool = ConnectionPool()
@@ -91,6 +146,17 @@ def test_thread_safety():
         assert result == expected_context
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_cache_entry_creation():
     """Test creating cache entry."""
     entry = CacheEntry("value", 1234567890.0, 300.0)
@@ -99,12 +165,34 @@ def test_cache_entry_creation():
     assert entry.ttl == 300.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_cache_entry_default_ttl():
     """Test cache entry with default TTL."""
     entry = CacheEntry("value", 1234567890.0)
     assert entry.ttl == 300.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_is_expired():
     """Test cache entry expiration."""
     current_time = time.time()
@@ -118,6 +206,17 @@ def test_is_expired():
     assert entry.is_expired()
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_service_cache_creation():
     """Test creating service cache."""
     cache = ServiceCache()
@@ -126,12 +225,34 @@ def test_service_cache_creation():
     assert isinstance(cache._lock, threading.Lock)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_service_cache_custom_ttl():
     """Test service cache with custom TTL."""
     cache = ServiceCache(600.0)
     assert cache.default_ttl == 600.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_set_and_get():
     """Test setting and getting cache values."""
     cache = ServiceCache()
@@ -141,6 +262,17 @@ def test_set_and_get():
     assert cache.get("nonexistent") is None
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_set_with_custom_ttl():
     """Test setting cache value with custom TTL."""
     cache = ServiceCache()
@@ -150,6 +282,17 @@ def test_set_with_custom_ttl():
     assert entry.ttl == 600.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_expired_entry_removal():
     """Test removal of expired entries."""
     cache = ServiceCache(0.1)  # Very short TTL
@@ -162,6 +305,17 @@ def test_expired_entry_removal():
     assert cache.get("key1") is None
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_clear():
     """Test clearing cache."""
     cache = ServiceCache()
@@ -173,6 +327,17 @@ def test_clear():
     assert cache.cache == {}
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_cleanup_expired():
     """Test cleanup of expired entries."""
     cache = ServiceCache(0.1)  # Very short TTL
@@ -188,6 +353,17 @@ def test_cleanup_expired():
     assert cache.cache == {}
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_thread_safety():
     """Test thread safety of service cache."""
     cache = ServiceCache()
@@ -213,6 +389,17 @@ def test_thread_safety():
         assert result == expected_value
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_batch_processor_creation():
     """Test creating batch processor."""
     processor = BatchProcessor()
@@ -223,6 +410,17 @@ def test_batch_processor_creation():
     assert isinstance(processor._lock, threading.Lock)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_batch_processor_custom_params():
     """Test batch processor with custom parameters."""
     processor = BatchProcessor(batch_size=10, batch_timeout=5.0)
@@ -230,6 +428,17 @@ def test_batch_processor_custom_params():
     assert processor.batch_timeout == 5.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_add_to_batch_immediate_processing():
     """Test adding items to batch that triggers immediate processing."""
     processor = BatchProcessor(batch_size=2)
@@ -254,6 +463,17 @@ def test_add_to_batch_immediate_processing():
     assert "item2" in processed_items
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_add_to_batch_timeout_processing():
     """Test adding items to batch that triggers timeout processing."""
     processor = BatchProcessor(batch_size=5, batch_timeout=0.1)
@@ -274,6 +494,17 @@ def test_add_to_batch_timeout_processing():
     assert "item1" in processed_items
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_multiple_batches():
     """Test processing multiple batches."""
     processor = BatchProcessor(batch_size=2)
@@ -306,6 +537,17 @@ def test_multiple_batches():
     assert "item4" in processed_items["batch2"]
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_resource_optimizer_creation():
     """Test creating resource optimizer."""
     optimizer = ResourceOptimizer()
@@ -317,12 +559,34 @@ def test_resource_optimizer_creation():
     assert isinstance(optimizer._lock, threading.Lock)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_resource_optimizer_custom_workers():
     """Test resource optimizer with custom worker count."""
     optimizer = ResourceOptimizer(max_workers=8)
     assert optimizer.max_workers == 8
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_optimize_worker_allocation():
     """Test worker allocation optimization."""
     optimizer = ResourceOptimizer()
@@ -345,6 +609,20 @@ def test_optimize_worker_allocation():
 
 
 @patch("subprocess.run")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
 def test_pre_warm_connections(mock_run):
     """Test pre-warming connections."""
     optimizer = ResourceOptimizer()
@@ -364,6 +642,20 @@ def test_pre_warm_connections(mock_run):
 
 
 @patch("subprocess.run")
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
+@pytest.mark.fast
+@pytest.mark.unit
+@patch("subprocess.run")
 def test_pre_warm_connections_failure(mock_run):
     """Test pre-warming connections with failures."""
     optimizer = ResourceOptimizer()
@@ -382,6 +674,17 @@ def test_pre_warm_connections_failure(mock_run):
     assert optimizer.connection_pool.get_context("cluster2") is None
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_optimize_service_execution():
     """Test service execution optimization."""
     optimizer = ResourceOptimizer()
@@ -402,6 +705,17 @@ def test_optimize_service_execution():
     assert service_item.kubectl_context == "test-context"
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_batch_similar_services():
     """Test batching similar services."""
     optimizer = ResourceOptimizer()
@@ -422,6 +736,17 @@ def test_batch_similar_services():
     assert sum(len(batch) for batch in batches) == len(services)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_get_performance_metrics():
     """Test getting performance metrics."""
     optimizer = ResourceOptimizer()
@@ -442,6 +767,17 @@ def test_get_performance_metrics():
     assert metrics["cache_size"] == 1
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_cleanup():
     """Test cleanup of resources."""
     optimizer = ResourceOptimizer()
@@ -457,6 +793,17 @@ def test_cleanup():
     assert optimizer.service_cache.cache == {}
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_performance_profiler_creation():
     """Test creating performance profiler."""
     profiler = PerformanceProfiler()
@@ -465,6 +812,17 @@ def test_performance_profiler_creation():
     assert isinstance(profiler._lock, threading.Lock)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_start_and_end_timer():
     """Test starting and ending timers."""
     profiler = PerformanceProfiler()
@@ -479,6 +837,17 @@ def test_start_and_end_timer():
     assert profiler.metrics["operation1"][0] == duration
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_end_timer_without_start():
     """Test ending timer without starting it."""
     profiler = PerformanceProfiler()
@@ -487,6 +856,17 @@ def test_end_timer_without_start():
     assert duration == 0.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_average_time():
     """Test getting average time for an operation."""
     profiler = PerformanceProfiler()
@@ -502,6 +882,17 @@ def test_get_average_time():
     assert average == 0.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_get_performance_summary():
     """Test getting performance summary."""
     profiler = PerformanceProfiler()
@@ -523,6 +914,17 @@ def test_get_performance_summary():
     assert op1_summary["max_time"] == 0.3
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_reset():
     """Test resetting profiler."""
     profiler = PerformanceProfiler()
@@ -538,6 +940,17 @@ def test_reset():
     assert profiler.start_times == {}
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_thread_safety():
     """Test thread safety of performance profiler."""
     profiler = PerformanceProfiler()
@@ -562,42 +975,119 @@ def test_thread_safety():
         assert duration > 0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_connection_pool():
     """Test getting global connection pool."""
     pool = get_connection_pool()
     assert isinstance(pool, ConnectionPool)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_service_cache():
     """Test getting global service cache."""
     cache = get_service_cache()
     assert isinstance(cache, ServiceCache)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_batch_processor():
     """Test getting global batch processor."""
     processor = get_batch_processor()
     assert isinstance(processor, BatchProcessor)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_resource_optimizer():
     """Test getting global resource optimizer."""
     optimizer = get_resource_optimizer()
     assert isinstance(optimizer, ResourceOptimizer)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_get_performance_profiler():
     """Test getting global performance profiler."""
     profiler = get_performance_profiler()
     assert isinstance(profiler, PerformanceProfiler)
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_cleanup_optimization_resources():
     """Test cleanup of all optimization resources."""
     # This should not raise any exceptions
     cleanup_optimization_resources()
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_full_optimization_workflow():
     """Test full optimization workflow."""
     optimizer = ResourceOptimizer()
@@ -640,6 +1130,17 @@ def test_full_optimization_workflow():
     profiler.reset()
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_optimization_with_caching():
     """Test optimization with caching enabled."""
     optimizer = ResourceOptimizer()

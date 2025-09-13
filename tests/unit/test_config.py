@@ -20,6 +20,16 @@ from deployment_builder.config import (
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_cluster_config_default_values():
     """Test that ClusterConfig has correct default values."""
     cluster = ClusterConfig()
@@ -29,6 +39,16 @@ def test_cluster_config_default_values():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_cluster_config_custom_values():
     """Test ClusterConfig with custom values."""
     cluster = ClusterConfig(enable=True, count=3)
@@ -38,6 +58,16 @@ def test_cluster_config_custom_values():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_cluster_config_services_field():
     """Test that ClusterConfig has services field."""
     cluster = ClusterConfig()
@@ -47,6 +77,16 @@ def test_cluster_config_services_field():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_cluster_config_services_with_custom_values():
     """Test that ClusterConfig can have services."""
     service = ServiceConfig(kubeconfig_flag="--kubeconfig", cmd="kubectl get pods")
@@ -59,6 +99,16 @@ def test_cluster_config_services_with_custom_values():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_general_config_default_values():
     """Test that GeneralConfig has correct default values."""
     general = GeneralConfig()
@@ -73,6 +123,16 @@ def test_general_config_default_values():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_general_config_custom_values():
     """Test GeneralConfig with custom values."""
     general = GeneralConfig(
@@ -95,6 +155,16 @@ def test_general_config_custom_values():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_service_config_default_values():
     """Test that ServiceConfig has correct default values."""
     config = ServiceConfig()
@@ -104,6 +174,16 @@ def test_service_config_default_values():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_service_config_custom_values():
     """Test that ServiceConfig accepts custom values."""
     config = ServiceConfig(kubeconfig_flag="--kubeconfig-file", cmd="kubectl get pods -n kube-system")
@@ -113,6 +193,16 @@ def test_service_config_custom_values():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_deployment_config_default_configuration():
     """Test that create_default_config returns correct default values."""
     config = create_default_config()
@@ -137,6 +227,16 @@ def test_deployment_config_default_configuration():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_deployment_config_update_from_dict_with_services():
     """Test updating configuration with services."""
     config = create_default_config()
@@ -170,6 +270,16 @@ def test_deployment_config_update_from_dict_with_services():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_deployment_config_update_from_dict_with_cluster_specific_services():
     """Test updating configuration with cluster-specific services."""
     config = create_default_config()
@@ -211,6 +321,16 @@ def test_deployment_config_update_from_dict_with_cluster_specific_services():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_deployment_config_update_from_dict_new_format():
     """Test updating configuration from new structured format."""
     config = create_default_config()
@@ -257,6 +377,16 @@ def test_deployment_config_update_from_dict_new_format():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_deployment_config_update_from_dict_legacy_format():
     """Test updating configuration from legacy format."""
     config = create_default_config()
@@ -301,6 +431,16 @@ def test_deployment_config_update_from_dict_legacy_format():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_deployment_config_update_from_dict_mixed_format():
     """Test updating configuration from mixed new/legacy format."""
     config = create_default_config()
@@ -341,6 +481,16 @@ def test_deployment_config_update_from_dict_mixed_format():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_deployment_config_update_from_dict_partial_override():
     """Test updating configuration with partial overrides."""
     config = create_default_config()
@@ -374,6 +524,16 @@ def test_deployment_config_update_from_dict_partial_override():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_deployment_config_update_from_dict_no_general_section():
     """Test updating configuration without general section (legacy format)."""
     config = create_default_config()
@@ -405,6 +565,16 @@ def test_deployment_config_update_from_dict_no_general_section():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_deployment_config_get_cluster_names():
     """Test cluster name generation."""
     config = create_default_config()
@@ -439,6 +609,16 @@ def test_deployment_config_get_cluster_names():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_deployment_config_get_cluster_names_with_special_characters():
     """Test cluster name generation with special characters in prefix."""
     config = create_default_config()
@@ -453,6 +633,16 @@ def test_deployment_config_get_cluster_names_with_special_characters():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_deployment_config_to_dict():
     """Test configuration to dictionary conversion."""
     config = create_default_config()
@@ -492,6 +682,16 @@ def test_deployment_config_to_dict():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_load_config_from_file_toml(tmp_path):
     """Test loading configuration from TOML file."""
     config_content = """[general]
@@ -521,6 +721,16 @@ count = 2
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_load_config_from_file_json(tmp_path):
     """Test loading configuration from JSON file."""
     config_content = {
@@ -550,6 +760,16 @@ def test_load_config_from_file_json(tmp_path):
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_load_config_from_file_yaml(tmp_path):
     """Test loading configuration from YAML file."""
     config_content = """general:
@@ -578,6 +798,16 @@ clusters:
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_load_config_from_file_with_services(tmp_path):
     """Test loading configuration from file with services."""
     config_content = """[general]
@@ -626,6 +856,16 @@ cmd = "kubectl get nodes"
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_load_config_from_file_legacy_format(tmp_path):
     """Test loading configuration from legacy format file."""
     config_content = """name = "legacy-deployment"
@@ -659,6 +899,16 @@ standalone = 1
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_load_config_from_file_mixed_format(tmp_path):
     """Test loading configuration from mixed format file."""
     config_content = """[general]
@@ -691,6 +941,16 @@ standalone = false
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_load_config_from_file_nonexistent():
     """Test loading configuration from nonexistent file."""
     with pytest.raises(FileNotFoundError):
@@ -699,6 +959,16 @@ def test_load_config_from_file_nonexistent():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_load_config_from_file_invalid_format(tmp_path):
     """Test loading configuration from file with invalid format."""
     config_content = "invalid toml content {"
@@ -712,6 +982,16 @@ def test_load_config_from_file_invalid_format(tmp_path):
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_load_config_from_file_unsupported_format(tmp_path):
     """Test loading configuration from unsupported file format."""
     config_content = "some content"
@@ -725,6 +1005,16 @@ def test_load_config_from_file_unsupported_format(tmp_path):
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_load_config_from_file_default_discovery():
     """Test loading configuration with default file discovery."""
     # This test would require creating actual config files in the current directory
@@ -735,6 +1025,16 @@ def test_load_config_from_file_default_discovery():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_empty_configuration_dict():
     """Test updating configuration with empty dictionary."""
     config = create_default_config()
@@ -751,6 +1051,16 @@ def test_empty_configuration_dict():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_configuration_with_extra_fields():
     """Test configuration with extra fields that should be ignored."""
     config = create_default_config()
@@ -775,6 +1085,16 @@ def test_configuration_with_extra_fields():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_configuration_with_none_values():
     """Test configuration with None values."""
     config = create_default_config()
@@ -802,6 +1122,16 @@ def test_configuration_with_none_values():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_configuration_with_invalid_types():
     """Test configuration with invalid data types."""
     config = create_default_config()
@@ -823,6 +1153,16 @@ def test_configuration_with_invalid_types():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_cluster_names_with_empty_prefix():
     """Test cluster name generation with empty prefix."""
     config = create_default_config()
@@ -836,6 +1176,16 @@ def test_cluster_names_with_empty_prefix():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_cluster_names_with_whitespace_prefix():
     """Test cluster name generation with whitespace-only prefix."""
     config = create_default_config()
@@ -849,6 +1199,16 @@ def test_cluster_names_with_whitespace_prefix():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_to_dict_with_all_defaults():
     """Test to_dict with all default values."""
     config = create_default_config()
@@ -876,6 +1236,16 @@ def test_to_dict_with_all_defaults():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_dynamic_cluster_types():
     """Test configuration with custom cluster types."""
     config = create_default_config()
@@ -898,6 +1268,16 @@ def test_dynamic_cluster_types():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_cluster_type_validation():
     """Test cluster type name validation."""
     config = create_default_config()
@@ -926,6 +1306,16 @@ def test_cluster_type_validation():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_dynamic_cluster_types_from_dict():
     """Test loading dynamic cluster types from configuration dictionary."""
     config = create_default_config()
@@ -973,6 +1363,16 @@ def test_dynamic_cluster_types_from_dict():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_dynamic_cluster_types_with_services():
     """Test dynamic cluster types with cluster-specific services."""
     config = create_default_config()
@@ -1014,6 +1414,16 @@ def test_dynamic_cluster_types_with_services():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_cluster_type_validation_in_update():
     """Test that cluster type validation is enforced during update_from_dict."""
     config = create_default_config()
@@ -1041,6 +1451,16 @@ def test_cluster_type_validation_in_update():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_service_name_validation():
     """Test service name validation."""
     config = create_default_config()
@@ -1069,6 +1489,16 @@ def test_service_name_validation():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_service_config_validation():
     """Test service configuration validation."""
     config = create_default_config()
@@ -1093,6 +1523,16 @@ def test_service_config_validation():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_service_validation_in_configuration():
     """Test that service validation is enforced during configuration loading."""
     config = create_default_config()
@@ -1150,6 +1590,16 @@ def test_service_validation_in_configuration():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_cluster_configuration_schema_validation():
     """Test cluster configuration schema validation."""
     config = create_default_config()
@@ -1231,6 +1681,16 @@ def test_cluster_configuration_schema_validation():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_cluster_count_validation():
     """Test cluster count validation with limits."""
     config = create_default_config()
@@ -1275,6 +1735,16 @@ def test_cluster_count_validation():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_total_cluster_count_validation():
     """Test total cluster count validation with limits."""
     config = create_default_config()
@@ -1314,6 +1784,16 @@ def test_total_cluster_count_validation():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_general_configuration_validation():
     """Test general configuration validation."""
     config = create_default_config()
@@ -1361,6 +1841,16 @@ def test_general_configuration_validation():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_configuration_completeness_validation():
     """Test configuration completeness validation."""
     config = create_default_config()
@@ -1396,6 +1886,16 @@ def test_configuration_completeness_validation():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_comprehensive_validation_integration():
     """Test comprehensive validation with multiple validation errors."""
     config = create_default_config()
@@ -1422,6 +1922,16 @@ def test_comprehensive_validation_integration():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_dynamic_cluster_types_edge_cases():
     """Test edge cases for dynamic cluster types."""
     config = create_default_config()
@@ -1473,6 +1983,16 @@ def test_dynamic_cluster_types_edge_cases():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_dynamic_cluster_types_performance():
     """Test performance with many cluster types."""
     config = create_default_config()
@@ -1500,6 +2020,16 @@ def test_dynamic_cluster_types_performance():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_dynamic_cluster_types_mixed_enable_count():
     """Test dynamic cluster types with mixed enable and count configurations."""
     config = create_default_config()
@@ -1540,6 +2070,16 @@ def test_dynamic_cluster_types_mixed_enable_count():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_dynamic_cluster_types_with_services_complex():
     """Test complex service configurations with dynamic cluster types."""
     config = create_default_config()
@@ -1602,6 +2142,16 @@ def test_dynamic_cluster_types_with_services_complex():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_dynamic_cluster_types_validation_edge_cases():
     """Test validation edge cases for dynamic cluster types."""
     config = create_default_config()
@@ -1658,6 +2208,16 @@ def test_dynamic_cluster_types_validation_edge_cases():
 
 @pytest.mark.unit
 @pytest.mark.config
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
+@pytest.mark.config
+@pytest.mark.unit
 def test_dynamic_cluster_types_count_limits():
     """Test cluster count limits and validation."""
     config = create_default_config()

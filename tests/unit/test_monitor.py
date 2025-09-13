@@ -10,6 +10,17 @@ from deployment_builder.queue import ServiceQueue, ServiceWorker, ServiceItem, S
 from deployment_builder.config import ServiceConfig
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_progress_stats_creation():
     """Test creating progress stats."""
     stats = ProgressStats()
@@ -21,6 +32,17 @@ def test_progress_stats_creation():
     assert stats.end_time is None
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_completion_percentage():
     """Test completion percentage calculation."""
     stats = ProgressStats(total_services=10, completed_services=3, failed_services=2)
@@ -30,6 +52,17 @@ def test_completion_percentage():
     assert stats.get_completion_percentage() == 0.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_elapsed_time():
     """Test elapsed time calculation."""
     stats = ProgressStats()
@@ -43,6 +76,17 @@ def test_elapsed_time():
     assert elapsed < 1.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_estimated_remaining_time():
     """Test estimated remaining time calculation."""
     stats = ProgressStats(total_services=10, completed_services=5, failed_services=0)
@@ -61,6 +105,17 @@ def test_estimated_remaining_time():
     assert stats.get_estimated_remaining_time() == 0.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_worker_stats_creation():
     """Test creating worker stats."""
     stats = WorkerStats(worker_id=1)
@@ -77,6 +132,17 @@ def test_worker_stats_creation():
 # Using fresh_queue and mock_workers fixtures from conftest.py
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_progress_monitor_creation(fresh_queue, mock_workers):
     """Test creating progress monitor."""
     # Convert mock workers to ServiceWorker instances
@@ -92,6 +158,17 @@ def test_progress_monitor_creation(fresh_queue, mock_workers):
     assert 2 in monitor.worker_stats
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_start_stop_monitoring(fresh_queue, mock_workers):
     """Test starting and stopping monitoring."""
     # Convert mock workers to ServiceWorker instances
@@ -110,6 +187,17 @@ def test_start_stop_monitoring(fresh_queue, mock_workers):
     assert monitor.stats.end_time is not None
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_progress_summary(fresh_queue, mock_workers):
     """Test getting progress summary."""
     # Convert mock workers to ServiceWorker instances
@@ -139,6 +227,17 @@ def test_get_progress_summary(fresh_queue, mock_workers):
         assert summary["is_complete"] is False
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_worker_utilization(fresh_queue, mock_workers):
     """Test getting worker utilization."""
     # Convert mock workers to ServiceWorker instances
@@ -159,6 +258,17 @@ def test_get_worker_utilization(fresh_queue, mock_workers):
     assert utilization["idle_workers"] == 1
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_estimated_completion(fresh_queue, mock_workers):
     """Test getting estimated completion time."""
     # Convert mock workers to ServiceWorker instances
@@ -175,6 +285,17 @@ def test_get_estimated_completion(fresh_queue, mock_workers):
     assert completion > datetime.now()
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_get_detailed_status(fresh_queue, mock_workers):
     """Test getting detailed status."""
     # Convert mock workers to ServiceWorker instances
@@ -210,6 +331,17 @@ def status_display_setup():
     return queue, workers
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_status_display_creation(status_display_setup):
     """Test creating status display."""
     queue, workers = status_display_setup
@@ -221,6 +353,17 @@ def test_status_display_creation(status_display_setup):
     assert display.display_interval == 5.0
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_display_progress(status_display_setup):
     """Test displaying progress."""
     queue, workers = status_display_setup
@@ -254,6 +397,17 @@ def test_display_progress(status_display_setup):
             mock_print.assert_called_once()
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_display_worker_status(status_display_setup):
     """Test displaying worker status."""
     queue, workers = status_display_setup
@@ -283,6 +437,17 @@ def test_display_worker_status(status_display_setup):
             assert mock_print.call_count >= 3  # Header + 2 workers
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_display_queue_status(status_display_setup):
     """Test displaying queue status."""
     queue, workers = status_display_setup
@@ -304,6 +469,17 @@ def test_display_queue_status(status_display_setup):
             assert mock_print.call_count >= 7  # Header + 6 status lines
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.unit
 def test_display_final_summary(status_display_setup):
     """Test displaying final summary."""
     queue, workers = status_display_setup
@@ -330,6 +506,17 @@ def test_display_final_summary(status_display_setup):
             assert mock_print.call_count >= 8  # Header + summary lines
 
 
+@pytest.mark.unit
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
+@pytest.mark.slow
+@pytest.mark.unit
 def test_full_monitoring_workflow():
     """Test full monitoring workflow."""
     queue = ServiceQueue(max_workers=2)
