@@ -68,6 +68,17 @@ filterwarnings = [
     "ignore::PendingDeprecationWarning"
 ]
 
+# Logging
+log_cli = false
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+log_cli_date_format ="%Y-%m-%d %H:%M:%S"
+
+# Performance settings
+junit_family = "xunit2"
+junit_logging = "all"
+junit_log_passing_tests = false
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
