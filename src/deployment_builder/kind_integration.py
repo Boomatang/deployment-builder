@@ -1,19 +1,18 @@
 """Integration with kind CLI for Kubernetes cluster management."""
 
 import subprocess
-import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Optional, Tuple, Dict, List
+from typing import Dict, List, Optional, Tuple
 
 import yaml
 
-from .logging_config import get_logger
-from .queue import ServiceQueue, ServiceItem, WorkerPool
+from .config import DeploymentConfig
 from .execution_planner import ExecutionPlanner
 from .load_balancer import create_load_balancer
-from .config import DeploymentConfig
+from .logging_config import get_logger
+from .queue import ServiceQueue, WorkerPool
 
 
 def run_kind_command(

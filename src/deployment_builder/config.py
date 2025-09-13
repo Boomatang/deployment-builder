@@ -1,9 +1,8 @@
 """Configuration management for deployment-builder tool."""
 
-from dataclasses import dataclass, field
-from typing import Dict, Any, Optional
-from pathlib import Path
 import re
+from dataclasses import dataclass, field
+from typing import Any, Dict, Optional
 
 
 @dataclass

@@ -1,14 +1,13 @@
 """Progress monitoring and status display for service queue system."""
 
-import time
 import threading
-from dataclasses import dataclass, field
+import time
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
-from collections import defaultdict
+from typing import Any, Dict, List, Optional
 
-from .queue import ServiceQueue, ServiceWorker, ServiceItem, ServiceStatus
 from .logging_config import get_logger
+from .queue import ServiceQueue, ServiceWorker
 
 logger = get_logger()
 

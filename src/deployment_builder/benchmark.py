@@ -5,33 +5,32 @@ This module provides comprehensive testing, performance benchmarking,
 and validation capabilities for the entire service queue system.
 """
 
-import time
-import threading
-import statistics
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Callable
-import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import json
 import csv
+import json
+import statistics
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock
 
-from .queue import ServiceQueue, ServiceItem, ServiceStatus, ServiceConfig, WorkerPool
-from .load_balancer import create_load_balancer
+from .config import DeploymentConfig
+from .error_handler import ErrorHandler
 from .execution_planner import ExecutionPlanner
-from .monitor import ProgressMonitor, StatusDisplay
-from .optimization import (
-    get_connection_pool,
-    get_service_cache,
-    get_batch_processor,
-    get_resource_optimizer,
-    get_performance_profiler,
-)
-from .error_handler import ErrorHandler, get_error_handler
-from .config import DeploymentConfig, ClusterConfig, ServiceConfig as ConfigServiceConfig
+from .load_balancer import create_load_balancer
 from .logging_config import get_logger
+from .monitor import ProgressMonitor
+from .optimization import (
+    get_batch_processor,
+    get_connection_pool,
+    get_performance_profiler,
+    get_resource_optimizer,
+    get_service_cache,
+)
+from .queue import ServiceConfig, ServiceItem, ServiceQueue, WorkerPool
 
 logger = get_logger()
 
@@ -393,8 +392,9 @@ class PerformanceBenchmark:
     def _benchmark_memory_usage(self, config: LoadTestConfig) -> BenchmarkResult:
         """Benchmark memory usage patterns."""
         try:
-            import psutil
             import os
+
+            import psutil
 
             process = psutil.Process(os.getpid())
             initial_memory = process.memory_info().rss / 1024 / 1024  # MB
@@ -705,8 +705,9 @@ class PerformanceBenchmark:
     def _get_memory_usage(self) -> float:
         """Get current memory usage in MB."""
         try:
-            import psutil
             import os
+
+            import psutil
 
             process = psutil.Process(os.getpid())
             return process.memory_info().rss / 1024 / 1024

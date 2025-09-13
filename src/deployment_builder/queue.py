@@ -1,13 +1,13 @@
 """Service queue system with parallel processing for deployment-builder tool."""
 
-from enum import Enum
+import logging
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional, Dict, Any, Set
-from queue import PriorityQueue, Empty
-import threading
-import time
-import logging
+from enum import Enum
+from queue import Empty, PriorityQueue
+from typing import Any, Dict, List, Optional
+
 from .config import ServiceConfig
 
 logger = logging.getLogger(__name__)

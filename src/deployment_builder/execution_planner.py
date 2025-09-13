@@ -1,13 +1,13 @@
 """Execution planning and dependency resolution for service queue system."""
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Set, Optional, Any
-from datetime import datetime, timedelta
 import logging
 from collections import defaultdict, deque
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Set
 
 from .config import DeploymentConfig, ServiceConfig
-from .queue import ServiceItem, ServiceStatus
+from .queue import ServiceItem
 
 logger = logging.getLogger(__name__)
 

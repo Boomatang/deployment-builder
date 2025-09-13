@@ -6,15 +6,13 @@ of the service queue system, including connection pooling, caching, and
 batch processing.
 """
 
+import subprocess
 import threading
 import time
 from collections import defaultdict
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Any, Tuple
-import logging
 from concurrent.futures import ThreadPoolExecutor
-import subprocess
-import os
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
 
 from .logging_config import get_logger
 
