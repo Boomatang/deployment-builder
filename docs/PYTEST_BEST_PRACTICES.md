@@ -119,13 +119,29 @@ class TestFeatureName:
 
 ### File Structure
 
+The project now uses a well-organized test structure:
+
 ```
 tests/
-├── conftest.py              # Shared fixtures and configuration
-├── test_config.py           # Unit tests for config module
-├── test_cli_integration.py  # Integration tests for CLI
-├── test_kind_integration.py # Integration tests for kind
-└── test_optimization.py     # Unit tests for optimization
+├── conftest.py                    # Shared fixtures and configuration
+├── unit/                          # Unit tests
+│   ├── __init__.py
+│   ├── test_config.py            # Configuration tests
+│   ├── test_queue.py             # Queue system tests
+│   ├── test_optimization.py      # Optimization tests
+│   ├── test_execution_planner.py # Execution planning tests
+│   ├── test_load_balancer.py     # Load balancer tests
+│   ├── test_monitor.py           # Monitoring tests
+│   ├── test_error_handler.py     # Error handling tests
+│   └── test_benchmark.py         # Benchmark tests
+├── integration/                   # Integration tests
+│   ├── __init__.py
+│   ├── test_cli_integration.py   # CLI integration tests
+│   ├── test_kind_config_integration.py # Kind config tests
+│   └── test_kubeconfig_integration.py  # Kubeconfig tests
+├── pytest.ini                    # Pytest configuration
+├── run_tests.py                  # Performance test runner
+└── Makefile                      # Convenient test targets
 ```
 
 ### Module Organization
@@ -134,26 +150,46 @@ tests/
 - **Group related tests** in the same file
 - **Use descriptive test names** that explain the scenario
 - **Keep test files focused** on a single module or feature
+- **Separate unit and integration tests** for better organization
 
 ### Test Categories
 
 ```python
 # Unit tests - test individual functions/methods
+@pytest.mark.unit
 def test_validate_cluster_name():
     """Test cluster name validation logic."""
     assert validate_cluster_name("valid-name") is True
     assert validate_cluster_name("invalid name") is False
 
 # Integration tests - test component interactions
+@pytest.mark.integration
+@pytest.mark.cli
 def test_cli_create_command_with_config_file():
     """Test CLI create command with real config file."""
     result = cli_runner.invoke(create_command, ["--config", "test.toml"])
     assert result.exit_code == 0
 
-# End-to-end tests - test complete workflows
+# Performance tests - test execution speed
+@pytest.mark.slow
 def test_full_deployment_workflow():
     """Test complete deployment workflow from config to running clusters."""
     # Test the entire flow
+```
+
+### Test Markers
+
+The project uses comprehensive pytest markers for test categorization:
+
+```python
+@pytest.mark.unit              # Unit tests
+@pytest.mark.integration       # Integration tests
+@pytest.mark.cli               # CLI command tests
+@pytest.mark.config            # Configuration tests
+@pytest.mark.kind              # Kind integration tests
+@pytest.mark.kubeconfig        # Kubeconfig tests
+@pytest.mark.slow              # Slow-running tests
+@pytest.mark.fast              # Fast-running tests
 ```
 
 ## Naming Conventions
@@ -351,17 +387,82 @@ def test_with_context_manager():
 
 ## Performance and Parallel Testing
 
+### Performance Optimization Features
+
+The project now includes comprehensive performance optimizations:
+
+1. **Parallel Execution**: Full support for pytest-xdist with automatic worker detection
+2. **Fixture Optimization**: Session-scoped and lazy-loading fixtures
+3. **Performance Monitoring**: Built-in performance metrics collection
+4. **Test Categorization**: Fast/slow test markers for optimized execution
+
 ### Parallel Test Execution
 
-```python
-# Run tests in parallel (if using pytest-xdist)
-# pytest -n auto
+The project supports multiple parallel execution strategies:
 
-# Run specific test file in parallel
-# pytest tests/test_config.py -n 4
+```bash
+# Run all tests in parallel (auto-detect CPU cores)
+poetry run pytest -n auto
+
+# Run tests with specific number of workers
+poetry run pytest -n 4
+
+# Run only unit tests in parallel (recommended)
+poetry run pytest -m unit -n auto
+
+# Run only integration tests in parallel
+poetry run pytest -m integration -n auto
+
+# Run only fast tests in parallel
+poetry run pytest -m fast -n auto
+
+# Run slow tests sequentially (recommended)
+poetry run pytest -m slow
 ```
 
-### Performance Testing
+### Performance Monitoring
+
+The test suite includes built-in performance monitoring:
+
+```bash
+# Run performance comparison
+poetry run python run_tests.py
+
+# Run with performance metrics
+poetry run pytest --durations=10
+
+# Run with profiling
+poetry run pytest --profile
+```
+
+### Makefile Targets
+
+Convenient make targets for different performance scenarios:
+
+```bash
+# All tests (sequential)
+make test
+
+# Unit tests (parallel)
+make test-unit
+
+# Integration tests (parallel)
+make test-integration
+
+# Fast tests (parallel)
+make test-fast
+
+# Slow tests (sequential)
+make test-slow
+
+# Performance comparison
+make test-performance
+
+# Coverage with performance
+make test-coverage
+```
+
+### Performance Testing Examples
 
 ```python
 def test_performance_requirement():
@@ -373,11 +474,7 @@ def test_performance_requirement():
     execution_time = time.time() - start_time
     assert execution_time < 1.0  # Must complete within 1 second
     assert result is not None
-```
 
-### Memory Testing
-
-```python
 def test_memory_usage():
     """Test memory usage doesn't exceed limits."""
     import psutil
@@ -394,6 +491,15 @@ def test_memory_usage():
     
     assert memory_increase < 100 * 1024 * 1024  # Less than 100MB
 ```
+
+### Performance Best Practices
+
+1. **Fixture Scope**: Use session-scoped fixtures for expensive resources
+2. **Lazy Loading**: Load resources only when needed using lazy fixtures
+3. **Resource Pooling**: Reuse expensive resources across tests
+4. **Parallel Execution**: Use pytest-xdist for CPU-intensive tests
+5. **Test Categorization**: Mark tests as fast/slow for optimal execution
+6. **Performance Monitoring**: Use built-in metrics to identify bottlenecks
 
 ## Integration vs Unit Tests
 

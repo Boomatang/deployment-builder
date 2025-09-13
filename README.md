@@ -1217,7 +1217,14 @@ For manual testing with real cluster creation, use the hack script:
 
 ### Test Coverage
 
-The project includes comprehensive test coverage with 334 total tests:
+The project includes a comprehensive, modern test suite with 332 total tests:
+
+#### Test Structure
+
+- **Unit Tests** (`tests/unit/`): 206 tests focused on individual component testing
+- **Integration Tests** (`tests/integration/`): 126 tests covering end-to-end functionality and component interactions
+
+#### Test Files
 
 - **Configuration Tests** (`test_config.py`): 67 unit tests covering configuration object behavior, file loading, and edge cases
 - **CLI Integration Tests** (`test_cli_integration.py`): 88 integration tests covering CLI commands with all example configuration files
@@ -1231,13 +1238,38 @@ The project includes comprehensive test coverage with 334 total tests:
 - **Error Handler Tests** (`test_error_handler.py`): 31 unit tests for error handling and recovery
 - **Benchmark Tests** (`test_benchmark.py`): 36 unit tests for performance benchmarking
 
-#### Test Organization
+#### Modern Test Features
 
-- **Unit Tests**: 208 tests focused on individual component testing
-- **Integration Tests**: 126 tests covering end-to-end functionality and component interactions
-- **Parametrized Tests**: Multiple test scenarios using `@pytest.mark.parametrize`
-- **Fixture-Based**: Shared test setup using pytest fixtures in `conftest.py`
-- **Marker-Based**: Tests categorized with markers for selective running
+- **Function-Based Tests**: All tests converted from class-based to function-based for better maintainability
+- **Parallel Execution**: Full support for pytest-xdist with automatic worker detection
+- **Performance Optimization**: Session-scoped fixtures and lazy loading for improved performance
+- **Comprehensive Markers**: Tests categorized with markers for selective running (`unit`, `integration`, `slow`, `fast`, `cli`, `config`, `kind`, `kubeconfig`)
+- **Performance Monitoring**: Built-in performance metrics and comparison tools
+- **Makefile Integration**: Convenient make targets for different test scenarios
+
+#### Running Tests
+
+```bash
+# Run all tests
+poetry run pytest
+
+# Run tests in parallel (recommended)
+poetry run pytest -n auto
+
+# Run specific test categories
+poetry run pytest -m unit -n auto      # Unit tests in parallel
+poetry run pytest -m integration -n auto  # Integration tests in parallel
+poetry run pytest -m fast -n auto      # Fast tests in parallel
+poetry run pytest -m slow              # Slow tests sequentially
+
+# Performance comparison
+poetry run python run_tests.py
+
+# Using Makefile
+make test-unit      # Unit tests in parallel
+make test-integration  # Integration tests in parallel
+make test-performance  # Performance comparison
+```
 
 All tests use real objects without mocks, ensuring robust testing of the actual functionality. The test suite follows pytest best practices with proper fixture usage, parametrization, and descriptive assertions.
 
