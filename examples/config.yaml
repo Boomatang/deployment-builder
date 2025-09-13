@@ -1,0 +1,32 @@
+
+---
+general:
+  name: my-deployment
+  version: 1.0.0
+  environment: production
+  prefix: my-project
+  kubeconfig_path: kubeconfigs
+  max_workers: 4
+clusters:
+  metrics:
+    enable: true
+    services: {}
+  primary:
+    count: 2
+    services:
+      namespaces:
+        kubeconfig.flag: "--kubeconfig"
+        cmd: kubectl get namespaces
+  secondary:
+    count: 1
+    services: {}
+  standalone:
+    count: 3
+    services: {}
+services:
+  pods:
+    kubeconfig.flag: "--kubeconfig"
+    cmd: kubectl get pods -n kube-system
+  nodes:
+    kubeconfig.flag: "--kubeconfig"
+    cmd: kubectl get nodes

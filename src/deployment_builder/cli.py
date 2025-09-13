@@ -1,14 +1,17 @@
 """CLI module for deployment-builder tool."""
 
 import json
+import logging
 import os
+import time
+import tomllib
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 import click
-import tomli
 import yaml
 
+from .config import create_default_config, load_config_from_file
 from .kind_integration import (
     check_kind_available,
     create_clusters_with_services,
@@ -73,20 +76,16 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
 
     try:
         # Load based on file extension
-        if config_path.suffix.lower() in [".toml"]:
-            with open(config_path, "rb") as f:
-                config_data = tomli.load(f)
-        elif config_path.suffix.lower() in [".json"]:
-            with open(config_path, "r") as f:
+        with open(config_path, "rb") as f:
+            if config_path.suffix.lower() in [".toml"]:
+                config_data = tomllib.load(f)
+            elif config_path.suffix.lower() in [".json"]:
                 config_data = json.load(f)
-        elif config_path.suffix.lower() in [".yaml", ".yml"]:
-            with open(config_path, "r") as f:
+            elif config_path.suffix.lower() in [".yaml", ".yml"]:
                 config_data = yaml.safe_load(f)
-        else:
-            logger.error(f"Unsupported configuration file format: {config_path.suffix}")
-            raise ValueError(f"Unsupported configuration file format: {config_path.suffix}")
-
-        # Note: [general] section handling is now done in the DeploymentConfig object
+            else:
+                logger.error(f"Unsupported configuration file format: {config_path.suffix}")
+                raise ValueError(f"Unsupported configuration file format: {config_path.suffix}")
 
         log_config_loaded(config_data, str(config_path))
         return config_data
@@ -172,20 +171,18 @@ def create(config: Optional[Path], dry_run: bool, workers: Optional[int], load_b
         # Use environment variable for config
         DEPLOYMENT_CONFIG=my-config.yaml deploy create
     """
-    import time
 
     # Start timing
     start_time = time.time()
 
     # Get logger instance
     logger = get_logger()
+    success = True
 
     # Log command start
     log_command_start("create", str(config) if config else None, dry_run=dry_run)
 
     try:
-        from .config import load_config_from_file
-
         # Load configuration using the new configuration object
         config_obj = load_config_from_file(str(config) if config else None)
 
@@ -220,71 +217,57 @@ def create(config: Optional[Path], dry_run: bool, workers: Optional[int], load_b
                     click.echo(f"Error generating execution plan: {plan_result['error']}")
 
             log_command_end("create", success=True, message="Dry run completed")
-            # Log timing report for dry run
-            duration_str = log_timing_report(start_time, "create", success=True, cluster_count=len(cluster_names))
-            click.echo(f"⏱️  Total execution time: {duration_str}")
-        else:
-            # Check if kind is available
-            if not check_kind_available():
-                click.echo("Error: kind CLI is not available. Please install kind first.", err=True)
-                click.echo("Visit: https://kind.sigs.k8s.io/", err=True)
-                log_command_end("create", success=False, message="kind CLI not available")
-                raise click.Abort()
+            return
 
-            logger.info("Starting kind cluster creation with queue-based service execution")
-            click.echo(f"Creating {len(cluster_names)} kind clusters with parallel service execution...")
+        # Check if kind is available
+        if not check_kind_available():
+            click.echo("Error: kind CLI is not available. Please install kind first.", err=True)
+            click.echo("Visit: https://kind.sigs.k8s.io/", err=True)
+            log_command_end("create", success=False, message="kind CLI not available")
+            raise click.Abort()
 
-            # Use queue-based cluster creation
-            success, created_clusters = create_clusters_with_services(
-                config_obj,
-                dry_run=False,
-                use_queue=True,
-                max_workers=workers,
-                load_balancer_strategy=load_balancer or "round_robin",
+        logger.info("Starting kind cluster creation with queue-based service execution")
+        click.echo(f"Creating {len(cluster_names)} kind clusters with parallel service execution...")
+
+        # Use queue-based cluster creation
+        success, created_clusters = create_clusters_with_services(
+            config_obj,
+            dry_run=False,
+            use_queue=True,
+            max_workers=workers,
+            load_balancer_strategy=load_balancer or "round_robin",
+        )
+
+        if success and created_clusters:
+            click.echo(f"✓ Successfully created {len(created_clusters)} clusters: {', '.join(created_clusters)}")
+            log_command_end(
+                "create", success=True, message=f"All {len(created_clusters)} clusters created successfully"
             )
-
-            if success and created_clusters:
-                click.echo(f"✓ Successfully created {len(created_clusters)} clusters: {', '.join(created_clusters)}")
-                log_command_end(
-                    "create", success=True, message=f"All {len(created_clusters)} clusters created successfully"
-                )
-                # Log timing report
-                duration_str = log_timing_report(
-                    start_time, "create", success=True, cluster_count=len(created_clusters)
-                )
-                click.echo(f"⏱️  Total execution time: {duration_str}")
-            else:
-                click.echo("✗ Failed to create clusters", err=True)
-                log_command_end("create", success=False, message="Failed to create clusters")
-                # Log timing report
-                duration_str = log_timing_report(start_time, "create", success=False, cluster_count=len(cluster_names))
-                click.echo(f"⏱️  Total execution time: {duration_str}")
-                raise click.Abort()
+        else:
+            click.echo("✗ Failed to create clusters", err=True)
+            log_command_end("create", success=False, message="Failed to create clusters")
+            success = False
 
     except FileNotFoundError as e:
         log_error(e, "create command - file not found")
         click.echo(f"Error: {e}", err=True)
         log_command_end("create", success=False, message=f"File not found: {e}")
-        # Log timing report for error
-        duration_str = log_timing_report(start_time, "create", success=False)
-        click.echo(f"⏱️  Total execution time: {duration_str}")
-        raise click.Abort()
+        success = False
     except ValueError as e:
         log_error(e, "create command - invalid value")
         click.echo(f"Error: {e}", err=True)
         log_command_end("create", success=False, message=f"Invalid value: {e}")
-        # Log timing report for error
-        duration_str = log_timing_report(start_time, "create", success=False)
-        click.echo(f"⏱️  Total execution time: {duration_str}")
-        raise click.Abort()
+        success = False
     except Exception as e:
         log_error(e, "create command - unexpected error")
         click.echo(f"Unexpected error: {e}", err=True)
         log_command_end("create", success=False, message=f"Unexpected error: {e}")
-        # Log timing report for error
-        duration_str = log_timing_report(start_time, "create", success=False)
+        success = False
+    finally:
+        duration_str = log_timing_report(start_time, "create", success=success)
         click.echo(f"⏱️  Total execution time: {duration_str}")
-        raise click.Abort()
+        if not success:
+            raise click.Abort()
 
 
 @cli.command()
@@ -318,8 +301,6 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
         # Force removal without confirmation
         deploy remove --force
     """
-    import time
-
     # Start timing
     start_time = time.time()
 
@@ -328,10 +309,9 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
 
     # Log command start
     log_command_start("remove", str(config) if config else None, dry_run=dry_run, force=force)
+    success = True
 
     try:
-        from .config import load_config_from_file
-
         # Load configuration using the new configuration object
         config_obj = load_config_from_file(str(config) if config else None)
 
@@ -345,84 +325,72 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
             click.echo(json.dumps(config_obj.to_dict(), indent=2))
             click.echo(f"Clusters to remove: {', '.join(cluster_names)}")
             log_command_end("remove", success=True, message="Dry run completed")
-            # Log timing report for dry run
-            duration_str = log_timing_report(start_time, "remove", success=True, cluster_count=len(cluster_names))
+            return
+
+        if not force:
+            logger.info("Prompting user for confirmation")
+            if not click.confirm(
+                f"Are you sure you want to remove {len(cluster_names)} kind clusters: {', '.join(cluster_names)}?"
+            ):
+                logger.info("User cancelled the operation")
+                click.echo("Operation cancelled.")
+                log_command_end("remove", success=False, message="User cancelled")
+                return
+
+        # Check if kind is available
+        if not check_kind_available():
+            click.echo("Error: kind CLI is not available. Please install kind first.", err=True)
+            click.echo("Visit: https://kind.sigs.k8s.io/", err=True)
+            log_command_end("remove", success=False, message="kind CLI not available")
+            success = False
+            return
+
+        logger.info("Starting kind cluster removal")
+        click.echo(f"Removing {len(cluster_names)} kind clusters...")
+
+        # Determine if we should log kind output (debug level)
+        log_kind_output = logger.level <= logging.DEBUG  # DEBUG level
+
+        # Delete the clusters
+        results = delete_multiple_clusters(config_obj.to_dict(), log_output=log_kind_output)
+
+        # Report results
+        successful = [name for name, success in results.items() if success]
+        failed = [name for name, success in results.items() if not success]
+
+        if successful:
+            click.echo(f"✓ Successfully removed {len(successful)} clusters: {', '.join(successful)}")
+
+        if failed:
+            click.echo(f"✗ Failed to remove {len(failed)} clusters: {', '.join(failed)}", err=True)
+            log_command_end("remove", success=False, message=f"Failed to remove {len(failed)} clusters")
+            # Log timing report
+            duration_str = log_timing_report(start_time, "remove", success=False, cluster_count=len(cluster_names))
             click.echo(f"⏱️  Total execution time: {duration_str}")
-        else:
-            if not force:
-                logger.info("Prompting user for confirmation")
-                if not click.confirm(
-                    f"Are you sure you want to remove {len(cluster_names)} kind clusters: {', '.join(cluster_names)}?"
-                ):
-                    logger.info("User cancelled the operation")
-                    click.echo("Operation cancelled.")
-                    log_command_end("remove", success=False, message="User cancelled")
-                    return
+            raise click.Abort()
 
-            # Check if kind is available
-            if not check_kind_available():
-                click.echo("Error: kind CLI is not available. Please install kind first.", err=True)
-                click.echo("Visit: https://kind.sigs.k8s.io/", err=True)
-                log_command_end("remove", success=False, message="kind CLI not available")
-                raise click.Abort()
-
-            logger.info("Starting kind cluster removal")
-            click.echo(f"Removing {len(cluster_names)} kind clusters in parallel...")
-
-            # Determine if we should log kind output (debug level)
-            log_kind_output = logger.level <= 10  # DEBUG level
-
-            # Delete the clusters
-            results = delete_multiple_clusters(
-                config_obj.to_dict(), log_output=log_kind_output, max_workers=config_obj.general.max_workers
-            )
-
-            # Report results
-            successful = [name for name, success in results.items() if success]
-            failed = [name for name, success in results.items() if not success]
-
-            if successful:
-                click.echo(f"✓ Successfully removed {len(successful)} clusters: {', '.join(successful)}")
-
-            if failed:
-                click.echo(f"✗ Failed to remove {len(failed)} clusters: {', '.join(failed)}", err=True)
-
-            if failed:
-                log_command_end("remove", success=False, message=f"Failed to remove {len(failed)} clusters")
-                # Log timing report
-                duration_str = log_timing_report(start_time, "remove", success=False, cluster_count=len(cluster_names))
-                click.echo(f"⏱️  Total execution time: {duration_str}")
-                raise click.Abort()
-            else:
-                log_command_end("remove", success=True, message=f"All {len(successful)} clusters removed successfully")
-                # Log timing report
-                duration_str = log_timing_report(start_time, "remove", success=True, cluster_count=len(successful))
-                click.echo(f"⏱️  Total execution time: {duration_str}")
+        log_command_end("remove", success=True, message=f"All {len(successful)} clusters removed successfully")
 
     except FileNotFoundError as e:
         log_error(e, "remove command - file not found")
         click.echo(f"Error: {e}", err=True)
         log_command_end("remove", success=False, message=f"File not found: {e}")
-        # Log timing report for error
-        duration_str = log_timing_report(start_time, "remove", success=False)
-        click.echo(f"⏱️  Total execution time: {duration_str}")
-        raise click.Abort()
+        success = False
     except ValueError as e:
         log_error(e, "remove command - invalid value")
         click.echo(f"Error: {e}", err=True)
         log_command_end("remove", success=False, message=f"Invalid value: {e}")
-        # Log timing report for error
-        duration_str = log_timing_report(start_time, "remove", success=False)
-        click.echo(f"⏱️  Total execution time: {duration_str}")
-        raise click.Abort()
+        success = False
     except Exception as e:
         log_error(e, "remove command - unexpected error")
         click.echo(f"Unexpected error: {e}", err=True)
         log_command_end("remove", success=False, message=f"Unexpected error: {e}")
-        # Log timing report for error
+        success = False
+    finally:
         duration_str = log_timing_report(start_time, "remove", success=False)
         click.echo(f"⏱️  Total execution time: {duration_str}")
-        raise click.Abort()
+        if not success:
+            raise click.Abort()
 
 
 @cli.command()
@@ -468,20 +436,17 @@ def plan(config: Optional[Path], timeline: bool, dependencies: bool, cluster_typ
         # Filter by cluster types
         deploy plan --config my-config.toml --cluster-types worker,database
     """
-    import time
-
     # Start timing
     start_time = time.time()
 
     # Get logger instance
     logger = get_logger()
+    success = True
 
     # Log command start
     log_command_start("plan", str(config) if config else None, timeline=timeline, dependencies=dependencies)
 
     try:
-        from .config import load_config_from_file
-
         # Load configuration using the new configuration object
         config_obj = load_config_from_file(str(config) if config else None)
 
@@ -558,33 +523,27 @@ def plan(config: Optional[Path], timeline: bool, dependencies: bool, cluster_typ
 
         logger.info("Successfully displayed execution plan")
         log_command_end("plan", success=True)
-        duration_str = log_timing_report(start_time, "plan", success=True)
-        click.echo(f"\n⏱️  Total execution time: {duration_str}")
 
     except FileNotFoundError as e:
         log_error(e, "plan command - file not found")
         click.echo(f"Error: {e}", err=True)
         log_command_end("plan", success=False, message=f"File not found: {e}")
-        # Log timing report for error
-        duration_str = log_timing_report(start_time, "plan", success=False)
-        click.echo(f"⏱️  Total execution time: {duration_str}")
-        raise click.Abort()
+        success = False
     except ValueError as e:
         log_error(e, "plan command - invalid value")
         click.echo(f"Error: {e}", err=True)
         log_command_end("plan", success=False, message=f"Invalid value: {e}")
-        # Log timing report for error
-        duration_str = log_timing_report(start_time, "plan", success=False)
-        click.echo(f"⏱️  Total execution time: {duration_str}")
-        raise click.Abort()
+        success = False
     except Exception as e:
         log_error(e, "plan command - unexpected error")
         click.echo(f"Unexpected error: {e}", err=True)
         log_command_end("plan", success=False, message=f"Unexpected error: {e}")
-        # Log timing report for error
+        success = False
+    finally:
         duration_str = log_timing_report(start_time, "plan", success=False)
         click.echo(f"⏱️  Total execution time: {duration_str}")
-        raise click.Abort()
+        if not success:
+            raise click.Abort()
 
 
 @cli.command()
@@ -602,20 +561,17 @@ def defaults():
         # Show defaults with debug logging
         deploy --log-level=debug defaults
     """
-    import time
-
     # Start timing
     start_time = time.time()
 
     # Get logger instance
     logger = get_logger()
+    success = True
 
     # Log command start
     log_command_start("defaults", None)
 
     try:
-        from .config import create_default_config
-
         # Create default configuration
         logger.info("Creating default configuration object")
         default_config = create_default_config()
@@ -647,14 +603,16 @@ def defaults():
 
         logger.info("Successfully displayed default configuration values")
         log_command_end("defaults", success=True)
-        duration_str = log_timing_report(start_time, "defaults", success=True)
 
     except Exception as e:
         log_error(e, "displaying default configuration values")
         log_command_end("defaults", success=False)
+        success = False
+    finally:
         duration_str = log_timing_report(start_time, "defaults", success=False)
         click.echo(f"⏱️  Total execution time: {duration_str}")
-        raise click.Abort()
+        if not success:
+            raise click.Abort()
 
 
 if __name__ == "__main__":

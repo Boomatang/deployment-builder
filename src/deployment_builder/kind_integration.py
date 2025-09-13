@@ -497,14 +497,12 @@ def _delete_single_cluster_parallel(
     return cluster_name, success
 
 
-def delete_multiple_clusters(config_data: dict, log_output: bool = False, max_workers: int = 4) -> dict[str, bool]:
-    """Delete multiple clusters based on configuration using parallel execution.
+def delete_multiple_clusters(config_data: dict, log_output: bool = False) -> dict[str, bool]:
+    """Delete multiple clusters based on configuration.
 
     Args:
         config_data: The loaded configuration data
         log_output: Whether to log the command output to the log file
-        max_workers: Maximum number of parallel workers
-
     Returns:
         Dictionary mapping cluster names to success status
     """
@@ -518,39 +516,13 @@ def delete_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
     logger.info(f"Kubeconfig directory: {kubeconfig_dir}")
     logger.info(f"Kind config directory: {kind_config_dir}")
 
-    # Calculate optimal number of workers
-    optimal_workers = _calculate_optimal_workers(len(cluster_names), max_workers)
-
-    if optimal_workers == 1:
-        logger.info(f"Deleting {len(cluster_names)} clusters sequentially")
-        # Use sequential execution for small numbers
-        for cluster_name in cluster_names:
-            cluster_name, success = _delete_single_cluster_parallel(
-                cluster_name, log_output, kubeconfig_dir, kind_config_dir
-            )
-            results[cluster_name] = success
-    else:
-        logger.info(f"Deleting {len(cluster_names)} clusters in parallel ({optimal_workers} workers)")
-        logger.info(f"Starting parallel execution for clusters: {', '.join(cluster_names)}")
-
-        # Use ThreadPoolExecutor for parallel execution
-        with ThreadPoolExecutor(max_workers=optimal_workers) as executor:
-            # Submit all cluster deletion tasks
-            future_to_cluster = {
-                executor.submit(
-                    _delete_single_cluster_parallel, cluster_name, log_output, kubeconfig_dir, kind_config_dir
-                ): cluster_name
-                for cluster_name in cluster_names
-            }
-
-            # Process completed tasks as they finish
-            completed = 0
-            total = len(cluster_names)
-            for future in as_completed(future_to_cluster):
-                cluster_name, success = future.result()
-                results[cluster_name] = success
-                completed += 1
-                logger.info(f"Progress: {completed}/{total} clusters completed")
+    logger.info(f"Deleting {len(cluster_names)} clusters sequentially")
+    # Use sequential execution for small numbers
+    for cluster_name in cluster_names:
+        cluster_name, success = _delete_single_cluster_parallel(
+            cluster_name, log_output, kubeconfig_dir, kind_config_dir
+        )
+        results[cluster_name] = success
 
     successful = sum(1 for success in results.values() if success)
     logger.info(f"Cluster deletion completed: {successful}/{len(cluster_names)} successful")
