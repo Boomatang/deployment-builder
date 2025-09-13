@@ -8,8 +8,6 @@ from enum import Enum
 from queue import Empty, PriorityQueue
 from typing import Any, Dict, List, Optional
 
-from .config import ServiceConfig
-
 logger = logging.getLogger(__name__)
 
 
@@ -31,7 +29,7 @@ class ServiceItem:
     cluster_name: str
     cluster_type: str
     service_name: str
-    service_config: ServiceConfig
+    service_config: Any
     priority: int = 0
     dependencies: List[str] = field(default_factory=list)
     estimated_duration: float = 0.0

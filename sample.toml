@@ -18,7 +18,7 @@ enable = true
 count = 1
 
 [clusters.secondary]
-count = 1
+count = 2
 
 # Disabled cluster (count: 0)
 [clusters.standalone]

@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Set
 
-from .config import DeploymentConfig, ServiceConfig
 from .queue import ServiceItem
 
 logger = logging.getLogger(__name__)
@@ -174,7 +173,7 @@ class ExecutionTimeline:
 class ExecutionPlanner:
     """Creates and manages execution plans for service deployment."""
 
-    def __init__(self, config: DeploymentConfig):
+    def __init__(self, config):
         """Initialize execution planner.
 
         Args:
@@ -311,7 +310,7 @@ class ExecutionPlanner:
             return cluster_type
         return cluster_name
 
-    def _enhance_service_config(self, service_config: ServiceConfig, service_name: str) -> ServiceConfig:
+    def _enhance_service_config(self, service_config, service_name: str):
         """Enhance service config with queue-specific properties.
 
         Args:

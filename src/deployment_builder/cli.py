@@ -2,97 +2,20 @@
 
 import json
 import logging
-import os
 import time
-import tomllib
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Optional
 
 import click
-import yaml
 
-from .config import create_default_config, load_config_from_file
+from .config import default_config, get_cluster_names, load_config_from_file
 from .kind_integration import (
     check_kind_available,
     create_clusters_with_services,
     delete_multiple_clusters,
     get_execution_plan,
 )
-from .logging_config import (
-    get_logger,
-    log_command_end,
-    log_command_start,
-    log_config_loaded,
-    log_error,
-    log_timing_report,
-    setup_logging,
-)
-
-
-def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
-    """Load configuration from file.
-
-    Args:
-        config_path: Path to config file. If None, looks for config in current directory.
-
-    Returns:
-        Configuration dictionary.
-
-    Raises:
-        FileNotFoundError: If config file doesn't exist.
-        ValueError: If config file format is not supported.
-    """
-    logger = get_logger()
-
-    if config_path is None:
-        # Look for common config file names in current directory, TOML first
-        config_files = [
-            "config.toml",
-            "deployment.toml",
-            "config.json",
-            "config.yaml",
-            "config.yml",
-            "deployment.json",
-            "deployment.yaml",
-            "deployment.yml",
-        ]
-        logger.debug(f"Searching for config files in current directory: {config_files}")
-
-        for config_file in config_files:
-            if os.path.exists(config_file):
-                config_path = config_file
-                logger.info(f"Found configuration file: {config_file}")
-                break
-        else:
-            logger.error("No configuration file found in current directory")
-            raise FileNotFoundError("No configuration file found in current directory")
-
-    config_path = Path(config_path)
-    if not config_path.exists():
-        logger.error(f"Configuration file not found: {config_path}")
-        raise FileNotFoundError(f"Configuration file not found: {config_path}")
-
-    logger.info(f"Loading configuration from: {config_path}")
-
-    try:
-        # Load based on file extension
-        with open(config_path, "rb") as f:
-            if config_path.suffix.lower() in [".toml"]:
-                config_data = tomllib.load(f)
-            elif config_path.suffix.lower() in [".json"]:
-                config_data = json.load(f)
-            elif config_path.suffix.lower() in [".yaml", ".yml"]:
-                config_data = yaml.safe_load(f)
-            else:
-                logger.error(f"Unsupported configuration file format: {config_path.suffix}")
-                raise ValueError(f"Unsupported configuration file format: {config_path.suffix}")
-
-        log_config_loaded(config_data, str(config_path))
-        return config_data
-
-    except Exception as e:
-        log_error(e, f"loading configuration from {config_path}")
-        raise
+from .logging_config import get_logger, log_command_end, log_command_start, log_error, log_timing_report, setup_logging
 
 
 @click.group()
@@ -187,7 +110,7 @@ def create(config: Optional[Path], dry_run: bool, workers: Optional[int], load_b
         config_obj = load_config_from_file(str(config) if config else None)
 
         # Extract cluster names from configuration object
-        cluster_names = config_obj.get_cluster_names()
+        cluster_names = get_cluster_names(config_obj)
         logger.info(f"Will create {len(cluster_names)} clusters: {cluster_names}")
 
         if dry_run:
@@ -316,7 +239,7 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
         config_obj = load_config_from_file(str(config) if config else None)
 
         # Extract cluster names from configuration object
-        cluster_names = config_obj.get_cluster_names()
+        cluster_names = get_cluster_names(config_obj)
         logger.info(f"Will remove {len(cluster_names)} clusters: {cluster_names}")
 
         if dry_run:
@@ -352,7 +275,7 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
         log_kind_output = logger.level <= logging.DEBUG  # DEBUG level
 
         # Delete the clusters
-        results = delete_multiple_clusters(config_obj.to_dict(), log_output=log_kind_output)
+        results = delete_multiple_clusters(config_obj, log_output=log_kind_output)
 
         # Report results
         successful = [name for name, success in results.items() if success]
@@ -574,7 +497,6 @@ def defaults():
     try:
         # Create default configuration
         logger.info("Creating default configuration object")
-        default_config = create_default_config()
 
         # Display default values in dot-separated format
         logger.info("Displaying default configuration values")
@@ -594,8 +516,7 @@ def defaults():
             return lines
 
         # Format and display the configuration
-        config_dict = default_config.to_dict()
-        formatted_lines = format_config_dict(config_dict)
+        formatted_lines = format_config_dict(default_config)
         logger.debug(f"Formatted {len(formatted_lines)} configuration lines")
 
         for line in sorted(formatted_lines):

@@ -7,8 +7,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import yaml
+from rich import print
 
-from .config import DeploymentConfig
+from .config import Config, get_cluster_names
 from .execution_planner import ExecutionPlanner
 from .load_balancer import create_load_balancer
 from .logging_config import get_logger
@@ -46,7 +47,6 @@ def run_kind_command(
         cmd = ["kind", "delete", "cluster", "--name", cluster_name]
 
     # Add kubeconfig flag if provided
-    env = None
     if kubeconfig_file:
         cmd.extend(["--kubeconfig", str(kubeconfig_file)])
         logger.debug(f"Using kubeconfig: {kubeconfig_file}")
@@ -174,102 +174,6 @@ def check_kind_available() -> bool:
         return False
 
 
-def _calculate_optimal_workers(cluster_count: int, max_workers: int = 4) -> int:
-    """Calculate the optimal number of workers for parallel execution.
-
-    Args:
-        cluster_count: Number of clusters to process
-        max_workers: Maximum number of workers to use
-
-    Returns:
-        Optimal number of workers
-    """
-    # Don't use more workers than clusters
-    optimal_workers = min(cluster_count, max_workers)
-
-    # For very small numbers, use sequential execution
-    # No special case for small cluster counts; always use optimal_workers
-
-    return optimal_workers
-
-
-def get_cluster_names_from_config(config_data: dict) -> list[str]:
-    """Extract cluster names from configuration data based on cluster types.
-
-    Args:
-        config_data: The loaded configuration data
-
-    Returns:
-        List of cluster names to create
-    """
-    logger = get_logger()
-
-    # Get prefix from config
-    prefix = config_data.get("prefix", "default")
-
-    # Sanitize prefix
-    import re
-
-    prefix = re.sub(r"[^a-z0-9-]", "-", prefix.lower())
-    prefix = re.sub(r"-+", "-", prefix)
-    prefix = prefix.strip("-")
-
-    if not prefix:
-        prefix = "default"
-
-    cluster_names = []
-    clusters_config = config_data.get("clusters", {})
-
-    # Handle new structured format: [clusters.metrics], [clusters.primary], etc.
-    if isinstance(clusters_config, dict) and any(isinstance(v, dict) for v in clusters_config.values()):
-        # New structured format - process any cluster types dynamically
-        logger.debug("Using new structured cluster configuration format")
-
-        for cluster_type, cluster_config in clusters_config.items():
-            if isinstance(cluster_config, dict):
-                enable = cluster_config.get("enable", False)
-                count = cluster_config.get("count", 0)
-
-                # Create clusters if enabled and count > 0
-                if enable and count > 0:
-                    if count == 1:
-                        # Single cluster (count: 1)
-                        cluster_names.append(f"{prefix}-{cluster_type}")
-                        logger.info(f"Including {cluster_type} cluster")
-                    else:
-                        # Multiple clusters (count > 1)
-                        for i in range(1, count + 1):
-                            cluster_names.append(f"{prefix}-{cluster_type}-{i}")
-                            logger.info(f"Including {cluster_type} cluster {i}")
-
-    else:
-        # Legacy format: metrics = true, primary = 2, etc.
-        logger.debug("Using legacy cluster configuration format")
-
-        # Support any cluster type in legacy format for backward compatibility
-        for cluster_type, value in clusters_config.items():
-            if isinstance(value, bool):
-                if value:
-                    cluster_names.append(f"{prefix}-{cluster_type}")
-                    logger.info(f"Including {cluster_type} cluster")
-            elif isinstance(value, int) and value > 0:
-                for i in range(1, value + 1):
-                    cluster_names.append(f"{prefix}-{cluster_type}-{i}")
-                    logger.info(f"Including {cluster_type} cluster {i}")
-
-    # If no clusters defined at all, create a default one
-    # If clusters are defined but all have count=0, return empty list
-    if not cluster_names:
-        if not clusters_config:
-            cluster_names.append(f"{prefix}-default")
-            logger.info("No cluster configuration found, creating default cluster")
-        else:
-            logger.info("No clusters to create")
-
-    logger.info(f"Generated {len(cluster_names)} cluster names: {cluster_names}")
-    return cluster_names
-
-
 def _create_single_cluster_parallel(
     cluster_name: str,
     log_output: bool = False,
@@ -375,7 +279,7 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
         Dictionary mapping cluster names to success status
     """
     logger = get_logger()
-    cluster_names = get_cluster_names_from_config(config_data)
+    cluster_names = get_cluster_names(config_data)
     results = {}
 
     # Get kubeconfig and kind config directories
@@ -407,8 +311,9 @@ def create_multiple_clusters(config_data: dict, log_output: bool = False, max_wo
         logger.info("No services configured")
 
     # Calculate optimal number of workers
-    optimal_workers = _calculate_optimal_workers(len(cluster_names), max_workers)
-
+    optimal_workers = min(len(cluster_names), max_workers)
+    print(cluster_names)
+    print("the number of works is: ", optimal_workers)
     if optimal_workers == 1:
         logger.info(f"Creating {len(cluster_names)} clusters sequentially")
         # Use sequential execution for small numbers
@@ -507,7 +412,7 @@ def delete_multiple_clusters(config_data: dict, log_output: bool = False) -> dic
         Dictionary mapping cluster names to success status
     """
     logger = get_logger()
-    cluster_names = get_cluster_names_from_config(config_data)
+    cluster_names = get_cluster_names(config_data)
     results = {}
 
     # Get kubeconfig and kind config directories
@@ -754,7 +659,7 @@ def get_cluster_name_from_config(config_data: dict) -> str:
     Returns:
         Cluster name to use for kind operations
     """
-    cluster_names = get_cluster_names_from_config(config_data)
+    cluster_names = get_cluster_names(config_data)
     return cluster_names[0] if cluster_names else "default"
 
 
@@ -903,7 +808,7 @@ def execute_services_for_all_clusters(
 
 
 def create_clusters_with_services(
-    config: DeploymentConfig,
+    config,
     dry_run: bool = False,
     use_queue: bool = True,
     max_workers: Optional[int] = None,
@@ -930,7 +835,7 @@ def create_clusters_with_services(
         return True, cluster_names
 
     # Get cluster names from config
-    cluster_names = config.get_cluster_names()
+    cluster_names = get_cluster_names(config)
     if not cluster_names:
         logger.warning("No clusters to create")
         return True, []
@@ -939,14 +844,9 @@ def create_clusters_with_services(
 
     # Create clusters first (using existing parallel logic)
     cluster_results = {}
-    kubeconfig_dir = Path(config.general.kubeconfig_path).resolve()
-    kind_config_dir = Path(config.general.kind_config_path).resolve()
-
-    # Convert config to dict for existing functions
-    config_data = config.to_dict()
-
-    # Create clusters using existing parallel logic
-    cluster_results = create_multiple_clusters(config_data, log_output=True, max_workers=config.general.max_workers)
+    cluster_results = create_multiple_clusters(
+        config, log_output=True, max_workers=config[Config.GENERAL.value][Config.MAX_WORKERS.value]
+    )
 
     # Check if any clusters were created successfully
     successful_clusters = [name for name, success in cluster_results.items() if success]
@@ -961,7 +861,7 @@ def create_clusters_with_services(
         service_success = execute_services_from_queue(
             config,
             successful_clusters,
-            max_workers=max_workers or config.general.max_workers,
+            max_workers=max_workers or config[Config.GENERAL.value][Config.MAX_WORKERS.value],
             load_balancer_strategy=load_balancer_strategy,
         )
 
@@ -972,7 +872,7 @@ def create_clusters_with_services(
 
 
 def execute_services_from_queue(
-    config: DeploymentConfig,
+    config,
     cluster_names: List[str],
     max_workers: int = 4,
     load_balancer_strategy: str = "round_robin",
@@ -1066,7 +966,7 @@ def execute_services_from_queue(
 
 
 def get_execution_plan(
-    config: DeploymentConfig,
+    config,
     cluster_names: Optional[List[str]] = None,
     show_timeline: bool = False,
     show_dependencies: bool = False,
