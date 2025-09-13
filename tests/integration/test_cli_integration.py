@@ -50,16 +50,6 @@ def write_toml_config(config_data, file_path):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_defaults_command(cli_runner):
     """Test the defaults command."""
     result = cli_runner(["defaults"])
@@ -76,8 +66,6 @@ def test_defaults_command(cli_runner):
 @pytest.mark.integration
 @pytest.mark.cli
 @pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
 def test_create_command_dry_run(example_file, examples_dir, cli_runner):
     """Test create command with --dry-run for all example files."""
     file_path = examples_dir / example_file
@@ -101,16 +89,6 @@ def test_create_command_dry_run(example_file, examples_dir, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_create_command_dry_run_with_short_options(examples_dir, cli_runner):
     """Test create command with --dry-run using short options."""
     config_file = examples_dir / "config.toml"
@@ -140,16 +118,6 @@ def test_remove_command_dry_run(example_file, examples_dir, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_remove_command_dry_run_with_force(examples_dir, cli_runner):
     """Test remove command with --dry-run and --force."""
     config_file = examples_dir / "config.toml"
@@ -163,16 +131,6 @@ def test_remove_command_dry_run_with_force(examples_dir, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_create_command_with_nonexistent_config(cli_runner):
     """Test create command with non-existent config file."""
     result = cli_runner(["create", "--config", "nonexistent.toml", "--dry-run"], expect_success=False)
@@ -183,16 +141,6 @@ def test_create_command_with_nonexistent_config(cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_create_command_with_invalid_config(tmp_path, cli_runner):
     """Test create command with invalid config file."""
     config_file = tmp_path / "invalid.toml"
@@ -206,16 +154,6 @@ def test_create_command_with_invalid_config(tmp_path, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_help_commands(cli_runner):
     """Test that help commands work correctly."""
     # Test main help
@@ -246,16 +184,6 @@ def test_help_commands(cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_config_discovery(examples_dir):
     """Test automatic config file discovery."""
     # Change to examples directory and test config discovery
@@ -277,16 +205,6 @@ def test_config_discovery(examples_dir):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_environment_variable_config(examples_dir):
     """Test configuration via environment variable."""
     config_file = examples_dir / "config.toml"
@@ -330,20 +248,6 @@ def test_services_configuration_parsing(example_file, examples_dir, cli_runner):
 @pytest.mark.integration
 @pytest.mark.cli
 @pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cluster_name_generation(example_file, examples_dir, cli_runner):
     """Test that cluster names are generated correctly from example files."""
     file_path = examples_dir / example_file
@@ -366,16 +270,6 @@ def test_cluster_name_generation(example_file, examples_dir, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types(examples_dir, cli_runner):
     """Test CLI commands with dynamic cluster types."""
     # Test with the dynamic-clusters.toml example
@@ -392,16 +286,6 @@ def test_cli_with_dynamic_cluster_types(examples_dir, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_services(examples_dir, cli_runner):
     """Test CLI commands with dynamic cluster types and services."""
     # Test with the dynamic-clusters.toml example
@@ -417,16 +301,6 @@ def test_cli_with_dynamic_cluster_types_services(examples_dir, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_validation(examples_dir, cli_runner):
     """Test CLI validation with invalid dynamic cluster types."""
     # Create a temporary config file with invalid cluster types
@@ -457,16 +331,6 @@ def test_cli_with_dynamic_cluster_types_validation(examples_dir, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_performance(examples_dir, cli_runner):
     """Test CLI performance with many dynamic cluster types."""
     import tempfile
@@ -499,16 +363,6 @@ def test_cli_with_dynamic_cluster_types_performance(examples_dir, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_mixed_format(examples_dir, cli_runner):
     """Test CLI with mixed dynamic cluster types (single and multiple)."""
     import tempfile
@@ -545,16 +399,6 @@ def test_cli_with_dynamic_cluster_types_mixed_format(examples_dir, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_service_execution(examples_dir, cli_runner):
     """Test CLI service execution with dynamic cluster types."""
     # Test with the dynamic-clusters.toml example
@@ -570,16 +414,6 @@ def test_cli_with_dynamic_cluster_types_service_execution(examples_dir, cli_runn
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_global_services(examples_dir, cli_runner):
     """Test CLI with global services and dynamic cluster types."""
     import tempfile
@@ -617,16 +451,6 @@ def test_cli_with_dynamic_cluster_types_global_services(examples_dir, cli_runner
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_cluster_specific_services(examples_dir, cli_runner):
     """Test CLI with cluster-specific services and dynamic cluster types."""
     import tempfile
@@ -663,16 +487,6 @@ def test_cli_with_dynamic_cluster_types_cluster_specific_services(examples_dir, 
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_validation_errors(examples_dir, cli_runner):
     """Test CLI validation error handling with dynamic cluster types."""
     import tempfile
@@ -703,16 +517,6 @@ def test_cli_with_dynamic_cluster_types_validation_errors(examples_dir, cli_runn
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_count_validation(examples_dir, cli_runner):
     """Test CLI count validation with dynamic cluster types."""
     import tempfile
@@ -742,16 +546,6 @@ def test_cli_with_dynamic_cluster_types_count_validation(examples_dir, cli_runne
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_service_validation(examples_dir, cli_runner):
     """Test CLI service validation with dynamic cluster types."""
     import tempfile
@@ -787,16 +581,6 @@ def test_cli_with_dynamic_cluster_types_service_validation(examples_dir, cli_run
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_missing_required_fields(examples_dir, cli_runner):
     """Test CLI with missing required fields in dynamic cluster types."""
     import tempfile
@@ -826,16 +610,6 @@ def test_cli_with_dynamic_cluster_types_missing_required_fields(examples_dir, cl
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_invalid_types(examples_dir, cli_runner):
     """Test CLI with invalid types in dynamic cluster types."""
     import tempfile
@@ -865,16 +639,6 @@ def test_cli_with_dynamic_cluster_types_invalid_types(examples_dir, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_backward_compatibility(examples_dir, cli_runner):
     """Test CLI backward compatibility with legacy cluster formats."""
     import tempfile
@@ -908,16 +672,6 @@ def test_cli_with_dynamic_cluster_types_backward_compatibility(examples_dir, cli
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_mixed_legacy_new(examples_dir, cli_runner):
     """Test CLI with mixed legacy and new cluster formats."""
     import tempfile
@@ -954,16 +708,6 @@ def test_cli_with_dynamic_cluster_types_mixed_legacy_new(examples_dir, cli_runne
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_no_general_section(examples_dir, cli_runner):
     """Test CLI with dynamic cluster types and no general section (legacy)."""
     import tempfile
@@ -996,16 +740,6 @@ def test_cli_with_dynamic_cluster_types_no_general_section(examples_dir, cli_run
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_edge_cases(examples_dir, cli_runner):
     """Test CLI edge cases with dynamic cluster types."""
     import tempfile
@@ -1043,16 +777,6 @@ def test_cli_with_dynamic_cluster_types_edge_cases(examples_dir, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_zero_count(examples_dir, cli_runner):
     """Test CLI with zero count clusters."""
     import tempfile
@@ -1086,16 +810,6 @@ def test_cli_with_dynamic_cluster_types_zero_count(examples_dir, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_disabled_clusters(examples_dir, cli_runner):
     """Test CLI with disabled clusters."""
     import tempfile
@@ -1129,16 +843,6 @@ def test_cli_with_dynamic_cluster_types_disabled_clusters(examples_dir, cli_runn
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_negative_count(examples_dir, cli_runner):
     """Test CLI with negative count clusters."""
     import tempfile
@@ -1168,16 +872,6 @@ def test_cli_with_dynamic_cluster_types_negative_count(examples_dir, cli_runner)
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_performance_many_types(examples_dir, cli_runner):
     """Test CLI performance with many different cluster types."""
     import tempfile
@@ -1210,16 +904,6 @@ def test_cli_with_dynamic_cluster_types_performance_many_types(examples_dir, cli
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_performance_many_clusters(examples_dir, cli_runner):
     """Test CLI performance with many clusters of same type."""
     import tempfile
@@ -1252,16 +936,6 @@ def test_cli_with_dynamic_cluster_types_performance_many_clusters(examples_dir, 
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_performance_mixed(examples_dir, cli_runner):
     """Test CLI performance with mixed cluster types and counts."""
     import tempfile
@@ -1300,16 +974,6 @@ def test_cli_with_dynamic_cluster_types_performance_mixed(examples_dir, cli_runn
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_service_execution_complex(examples_dir, cli_runner):
     """Test CLI service execution with complex dynamic cluster types."""
     import tempfile
@@ -1364,16 +1028,6 @@ def test_cli_with_dynamic_cluster_types_service_execution_complex(examples_dir, 
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_service_execution_mixed(examples_dir, cli_runner):
     """Test CLI service execution with mixed cluster types and services."""
     import tempfile
@@ -1421,20 +1075,6 @@ def test_cli_with_dynamic_cluster_types_service_execution_mixed(examples_dir, cl
 @pytest.mark.integration
 @pytest.mark.cli
 @pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
 def test_max_workers_configuration(example_file, examples_dir, cli_runner):
     """Test that max_workers configuration is respected."""
     file_path = examples_dir / example_file
@@ -1451,16 +1091,6 @@ def test_max_workers_configuration(example_file, examples_dir, cli_runner):
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_validation_comprehensive(examples_dir, cli_runner):
     """Test CLI comprehensive validation with dynamic cluster types."""
     import tempfile
@@ -1500,16 +1130,6 @@ def test_cli_with_dynamic_cluster_types_validation_comprehensive(examples_dir, c
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_validation_limits(examples_dir, cli_runner):
     """Test CLI validation limits with dynamic cluster types."""
     import tempfile
@@ -1539,16 +1159,6 @@ def test_cli_with_dynamic_cluster_types_validation_limits(examples_dir, cli_runn
 
 @pytest.mark.integration
 @pytest.mark.cli
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.integration
 def test_cli_with_dynamic_cluster_types_validation_names(examples_dir, cli_runner):
     """Test CLI validation of cluster type names."""
     import tempfile
