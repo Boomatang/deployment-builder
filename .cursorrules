@@ -198,7 +198,21 @@ Based on existing plans and project structure:
 - **Import errors**: Handle missing optional dependencies gracefully with try-except blocks
 - **Constructor errors**: Verify parameter order and types for class constructors
 
-## Security Rules - CRITICAL
+## Problem-Solving Best Practices - CRITICAL
+- **Follow instructions precisely** - Read plans and requirements carefully, work phase-by-phase as specified
+- **Listen to user feedback** - When user says something isn't working, believe them and focus on the actual problem
+- **Start simple** - Use the simplest solution first, don't overcomplicate problems
+- **Debug systematically** - Use `--lf` (last failing) to focus on specific issues, test each fix immediately
+- **One issue at a time** - Fix one problem completely before moving to the next
+- **Verify before claiming success** - Don't claim success until ALL tests actually pass
+- **Clean up immediately** - Remove temporary files and scripts as soon as they're no longer needed
+- **Ask clarifying questions** - When uncertain, ask for clarification rather than making assumptions
+- **Test frequently** - Run tests after each change to catch issues early
+- **Be methodical** - Don't create multiple scripts or approaches simultaneously
+
+## File Management Rules - CRITICAL
+- **NEVER commit the .cursorrules file** - The user manages this file, not the AI assistant
+- **Only modify .cursorrules when explicitly requested** - Changes should be made for user review, not committed
 - **NEVER run any scripts in the `hack/` directory**
 - **NEVER execute any scripts in the `hack/` directory, even if you created them**
 - **NEVER use `run_terminal_cmd` to execute any files in the `hack/` directory**
