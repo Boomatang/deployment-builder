@@ -19,6 +19,54 @@ from deployment_builder.optimization import (
 )
 
 
+# Performance-optimized fixtures
+@pytest.fixture(scope="session")
+def shared_config():
+    """Shared configuration for all tests - session scoped for performance."""
+    config = DeploymentConfig()
+    config.general.name = "test-deployment"
+    config.general.version = "1.0.0"
+    config.general.environment = "test"
+    config.general.prefix = "test-project"
+    return config
+
+
+@pytest.fixture(scope="session")
+def shared_temp_dir():
+    """Shared temporary directory for session - created once and reused."""
+    temp_dir = tempfile.mkdtemp(prefix="deployment_builder_tests_")
+    yield Path(temp_dir)
+    # Cleanup handled by autouse fixture
+
+
+@pytest.fixture
+def lazy_expensive_resource():
+    """Lazy-loaded expensive resource - only created when needed."""
+    def _get_resource():
+        # Simulate expensive resource creation
+        return {"expensive_data": "value", "created_at": "now"}
+    return _get_resource
+
+
+@pytest.fixture(scope="session")
+def performance_metrics():
+    """Session-scoped performance metrics collection."""
+    metrics = {
+        "test_count": 0,
+        "total_duration": 0.0,
+        "slow_tests": []
+    }
+    yield metrics
+    # Print performance summary at the end
+    if metrics["test_count"] > 0:
+        avg_duration = metrics["total_duration"] / metrics["test_count"]
+        print(f"\nPerformance Summary:")
+        print(f"Total tests: {metrics['test_count']}")
+        print(f"Average duration: {avg_duration:.3f}s")
+        if metrics["slow_tests"]:
+            print(f"Slowest tests: {metrics['slow_tests'][:5]}")
+
+
 @pytest.fixture
 def examples_dir():
     """Path to the examples directory containing test configuration files."""

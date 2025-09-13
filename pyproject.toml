@@ -16,6 +16,7 @@ dependencies = [
 [tool.poetry.group.dev.dependencies]
 black = "^24.0.0"
 pytest = "^8.0.0"
+pytest-xdist = "^3.8.0"
 
 [tool.poetry]
 packages = [{include = "deployment_builder", from = "src"}]
@@ -50,6 +51,21 @@ markers = [
     "config: Configuration tests",
     "kind: Kind integration tests",
     "kubeconfig: Kubeconfig tests"
+]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--tb=short",
+    "--disable-warnings",
+    "--maxfail=5"
+]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning"
 ]
 
 

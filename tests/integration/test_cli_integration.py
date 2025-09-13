@@ -303,23 +303,9 @@ def test_environment_variable_config(examples_dir):
     assert "my-deployment" in result.stdout
 
 
-@pytest.mark.integration
-@pytest.mark.cli
-@pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
 @pytest.mark.cli
 @pytest.mark.integration
 @pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
-@pytest.mark.parametrize("example_file", ["config.toml", "deployment.toml", "config.json", "deployment.yaml"])
-@pytest.mark.cli
-@pytest.mark.integration
 def test_services_configuration_parsing(example_file, examples_dir, cli_runner):
     """Test that services configuration is parsed correctly from example files."""
     file_path = examples_dir / example_file
