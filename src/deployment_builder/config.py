@@ -9,7 +9,19 @@ from typing import Any, Dict, Optional
 
 import yaml
 
-from .logging_config import get_logger, log_config_loaded, log_error
+from deployment_builder.keywords import (
+    CLUSTERS,
+    ENVIRONMENT,
+    GENERAL,
+    KIND_CONFIG_PATH,
+    KUBECONFIG_PATH,
+    MAX_WORKERS,
+    NAME,
+    PREFIX,
+    SERVICES,
+    VERSION,
+)
+from deployment_builder.logging_config import get_logger, log_config_loaded, log_error
 
 
 class Config(Enum):
@@ -28,17 +40,17 @@ class Config(Enum):
 
 
 default_config = {
-    Config.GENERAL.value: {
-        Config.NAME.value: "defualt-deployment",
-        Config.VERSION.value: "1.0.0",
-        Config.ENVIRONMENT.value: "development",
-        Config.PREFIX.value: "default",
-        Config.KUBECONFIG_PATH.value: "kubeconfigs",
-        Config.KIND_CONFIG_PATH.value: "kind-configs",
-        Config.MAX_WORKERS.value: 4,
+    GENERAL: {
+        NAME: "defualt-deployment",
+        VERSION: "1.0.0",
+        ENVIRONMENT: "development",
+        PREFIX: "default",
+        KUBECONFIG_PATH: "kubeconfigs",
+        KIND_CONFIG_PATH: "kind-configs",
+        MAX_WORKERS: 4,
     },
-    Config.SERVICES.value: {},
-    Config.CLUSTERS.value: {},
+    SERVICES: {},
+    CLUSTERS: {},
 }
 
 
