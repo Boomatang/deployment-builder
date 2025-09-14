@@ -1,10 +1,8 @@
 import subprocess
 from time import perf_counter
 
+from deployment_builder.keywords import CREATE, DELETE
 from deployment_builder.logging_config import get_logger
-
-DELETE = "delete"
-CREATE = "create"
 
 
 class Kind:
