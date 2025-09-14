@@ -8,26 +8,8 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import yaml
-from rich import print
 
 from .logging_config import get_logger, log_config_loaded, log_error
-
-reserved_words = {
-    "general",
-    "clusters",
-    "services",
-    "name",
-    "version",
-    "environment",
-    "prefix",
-    "kubeconfig_path",
-    "kind_config_path",
-    "max_workers",
-    "enable",
-    "count",
-    "kubeconfig.flag",
-    "cmd",
-}
 
 
 class Config(Enum):
@@ -147,17 +129,3 @@ def load_config_from_file(config_path: Optional[str] = None) -> Dict:
     config = merge(default_config, config_data)
 
     return config
-
-
-def get_cluster_names(config: dict) -> list[str]:
-    prefix = config[Config.GENERAL.value][Config.PREFIX.value]
-    clusters = []
-    for cluster in config[Config.CLUSTERS.value]:
-        c = config[Config.CLUSTERS.value][cluster]
-        if Config.ENABLE.value in c and c[Config.ENABLE.value]:
-            clusters.append("-".join([prefix, cluster]))
-            continue
-        for num in range(c.get(Config.COUNT.value, 0)):
-            clusters.append("-".join([prefix, cluster, str(num + 1)]))
-
-    return clusters

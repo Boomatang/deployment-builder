@@ -2,7 +2,6 @@
 
 import logging
 import logging.handlers
-import os
 import time
 from pathlib import Path
 from typing import Optional
@@ -54,9 +53,6 @@ def setup_logging(
 
         # Add handler to logger
         logger.addHandler(file_handler)
-
-        # Prevent propagation to root logger to avoid duplicate messages
-        logger.propagate = False
     else:
         # Update log level for existing logger and handlers
         logger.setLevel(getattr(logging, log_level.upper()))
