@@ -767,46 +767,6 @@ def execute_services_for_cluster(
     return results
 
 
-def execute_services_for_all_clusters(
-    cluster_names: List[str],
-    services: dict,
-    kubeconfig_path: str,
-    log_output: bool = False,
-) -> Dict[str, List[Tuple[str, bool, str, str]]]:
-    """Execute services for all clusters.
-
-    Args:
-        cluster_names: List of cluster names
-        services: Dictionary of service configurations
-        kubeconfig_path: Path to the kubeconfig directory
-        log_output: Whether to log the command output to the log file
-
-    Returns:
-        Dictionary mapping cluster names to their service execution results
-    """
-    logger = get_logger()
-    all_results = {}
-
-    if not services:
-        logger.info("No services configured, skipping service execution")
-        return all_results
-
-    logger.info(f"Executing services for {len(cluster_names)} clusters")
-
-    for cluster_name in cluster_names:
-        kubeconfig_file = Path(kubeconfig_path) / f"{cluster_name}.kubeconfig"
-
-        if not kubeconfig_file.exists():
-            logger.warning(f"Kubeconfig file not found for cluster '{cluster_name}', skipping services")
-            all_results[cluster_name] = []
-            continue
-
-        cluster_results = execute_services_for_cluster(cluster_name, services, kubeconfig_file, log_output)
-        all_results[cluster_name] = cluster_results
-
-    return all_results
-
-
 def create_clusters_with_services(
     config,
     dry_run: bool = False,

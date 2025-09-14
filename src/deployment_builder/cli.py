@@ -1,21 +1,26 @@
 """CLI module for deployment-builder tool."""
 
-import json
-import logging
+import multiprocessing as mp
 import time
 from pathlib import Path
 from typing import Optional
 
 import click
+from rich.console import Console
+from rich.prompt import Confirm
 
-from .config import default_config, get_cluster_names, load_config_from_file
-from .kind_integration import (
-    check_kind_available,
-    create_clusters_with_services,
-    delete_multiple_clusters,
-    get_execution_plan,
+from deployment_builder import tui
+from deployment_builder.config import default_config, load_config_from_file
+from deployment_builder.kind import Kind
+from deployment_builder.logging_config import (
+    get_logger,
+    log_command_end,
+    log_command_start,
+    log_error,
+    log_timing_report,
+    setup_logging,
 )
-from .logging_config import get_logger, log_command_end, log_command_start, log_error, log_timing_report, setup_logging
+from deployment_builder.plan import Plan, cluster_create_worker, cluster_delete_worker, service_worker
 
 
 @click.group()
@@ -61,18 +66,7 @@ def cli(log_level: str):
     is_flag=True,
     help="Show what would be created without actually creating it.",
 )
-@click.option(
-    "--workers",
-    "-w",
-    type=int,
-    help="Number of workers for parallel service execution. Overrides config value.",
-)
-@click.option(
-    "--load-balancer",
-    type=click.Choice(["round_robin", "least_loaded", "priority_based"], case_sensitive=False),
-    help="Load balancing strategy for service execution. Overrides config value.",
-)
-def create(config: Optional[Path], dry_run: bool, workers: Optional[int], load_balancer: Optional[str]):
+def create(config: Optional[Path], dry_run: bool):
     """Create kind clusters based on configuration file.
 
     This command creates multiple kind clusters according to your configuration file.
@@ -100,76 +94,59 @@ def create(config: Optional[Path], dry_run: bool, workers: Optional[int], load_b
 
     # Get logger instance
     logger = get_logger()
-    success = True
 
     # Log command start
     log_command_start("create", str(config) if config else None, dry_run=dry_run)
 
+    success = True
     try:
-        # Load configuration using the new configuration object
+        console = Console()
+        console.print("Loading configuration")
         config_obj = load_config_from_file(str(config) if config else None)
 
-        # Extract cluster names from configuration object
-        cluster_names = get_cluster_names(config_obj)
-        logger.info(f"Will create {len(cluster_names)} clusters: {cluster_names}")
+        console.print("Building execution plan")
+        engine = Kind()
+        plan = Plan(config_obj, logger, engine)
+
+        ## Creation of the clusters
+        cluster_queue = plan.cluster_queue()
+        result_queue = mp.Queue()
+        size = cluster_queue.qsize()
 
         if dry_run:
-            logger.info("Executing dry run for create command")
-            click.echo("DRY RUN: Would create kind clusters with the following configuration:")
-            click.echo(json.dumps(config_obj.to_dict(), indent=2))
-            click.echo(f"Clusters to create: {', '.join(cluster_names)}")
-
-            # Show execution plan if services are configured
-            if (
-                any(len(cluster_config.services) > 0 for cluster_config in config_obj.clusters.values())
-                or len(config_obj.services) > 0
-            ):
-                click.echo("\nExecution Plan:")
-                click.echo("=" * 50)
-                plan_result = get_execution_plan(config_obj, show_timeline=True, show_dependencies=True)
-                if "error" not in plan_result:
-                    click.echo(f"Total services: {plan_result['total_services']}")
-                    click.echo(f"Clusters: {', '.join(plan_result['clusters'])}")
-                    click.echo(f"Cluster types: {', '.join(plan_result['cluster_types'])}")
-                    if plan_result["summary"]:
-                        summary = plan_result["summary"]
-                        click.echo(f"Estimated duration: {summary['estimated_duration']:.1f} seconds")
-                        click.echo(f"Parallel groups: {summary['parallel_groups']}")
-                        click.echo(f"Max workers: {summary['max_workers']}")
-                else:
-                    click.echo(f"Error generating execution plan: {plan_result['error']}")
-
-            log_command_end("create", success=True, message="Dry run completed")
+            console.print("Running dry run mode...")
+            console.print("Following plan would be created")
+            display = plan.as_text()
+            for item in display:
+                console.print(item)
             return
 
-        # Check if kind is available
-        if not check_kind_available():
-            click.echo("Error: kind CLI is not available. Please install kind first.", err=True)
-            click.echo("Visit: https://kind.sigs.k8s.io/", err=True)
-            log_command_end("create", success=False, message="kind CLI not available")
-            raise click.Abort()
+        processes = []
+        for i in range(plan.workers):
+            p = mp.Process(target=cluster_create_worker, args=(cluster_queue, result_queue, i))
+            p.start()
+            processes.append(p)
 
-        logger.info("Starting kind cluster creation with queue-based service execution")
-        click.echo(f"Creating {len(cluster_names)} kind clusters with parallel service execution...")
+        tui.cluster_create(size, result_queue)
 
-        # Use queue-based cluster creation
-        success, created_clusters = create_clusters_with_services(
-            config_obj,
-            dry_run=False,
-            use_queue=True,
-            max_workers=workers,
-            load_balancer_strategy=load_balancer or "round_robin",
-        )
+        for p in processes:
+            p.join()
 
-        if success and created_clusters:
-            click.echo(f"✓ Successfully created {len(created_clusters)} clusters: {', '.join(created_clusters)}")
-            log_command_end(
-                "create", success=True, message=f"All {len(created_clusters)} clusters created successfully"
-            )
-        else:
-            click.echo("✗ Failed to create clusters", err=True)
-            log_command_end("create", success=False, message="Failed to create clusters")
-            success = False
+        ## Running of the cluster services
+        services = plan.services_queue()
+        result_queue = mp.Queue()
+        size = services.qsize()
+
+        processes = []
+        for i in range(plan.workers):
+            p = mp.Process(target=service_worker, args=(services, result_queue, i))
+            p.start()
+            processes.append(p)
+
+        tui.service_run(size, result_queue)
+
+        for p in processes:
+            p.join()
 
     except FileNotFoundError as e:
         log_error(e, "create command - file not found")
@@ -235,64 +212,50 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
     success = True
 
     try:
-        # Load configuration using the new configuration object
+        console = Console()
+        console.print("Loading configuration")
         config_obj = load_config_from_file(str(config) if config else None)
 
-        # Extract cluster names from configuration object
-        cluster_names = get_cluster_names(config_obj)
-        logger.info(f"Will remove {len(cluster_names)} clusters: {cluster_names}")
+        console.print("Building execution plan")
+        engine = Kind()
+        plan = Plan(config_obj, logger, engine)
+
+        ## Creation of the clusters
+        cluster_queue = plan.cluster_queue()
+        result_queue = mp.Queue()
+        size = cluster_queue.qsize()
 
         if dry_run:
-            logger.info("Executing dry run for remove command")
-            click.echo("DRY RUN: Would remove kind clusters with the following configuration:")
-            click.echo(json.dumps(config_obj.to_dict(), indent=2))
-            click.echo(f"Clusters to remove: {', '.join(cluster_names)}")
-            log_command_end("remove", success=True, message="Dry run completed")
+            console.print("Running dry run mode...")
+            console.print("Deleting clusters")
+            for cluster in plan.cluster_names():
+                console.print(f"\t{cluster}")
             return
 
         if not force:
             logger.info("Prompting user for confirmation")
-            if not click.confirm(
-                f"Are you sure you want to remove {len(cluster_names)} kind clusters: {', '.join(cluster_names)}?"
+            if not Confirm.ask(
+                f"Are you sure you want to remove {plan.cluster_count()} kind clusters: {", ".join(plan.cluster_names())}?"
             ):
                 logger.info("User cancelled the operation")
-                click.echo("Operation cancelled.")
+                console.print("[red]Operation cancelled.")
                 log_command_end("remove", success=False, message="User cancelled")
                 return
 
-        # Check if kind is available
-        if not check_kind_available():
-            click.echo("Error: kind CLI is not available. Please install kind first.", err=True)
-            click.echo("Visit: https://kind.sigs.k8s.io/", err=True)
-            log_command_end("remove", success=False, message="kind CLI not available")
-            success = False
-            return
+        # BUG: when the number of works is more that one.
+        # The updating of kubeconfig can hit deadlocks.
+        if plan.workers > 1:
+            logger.warn("Updates to kubeconfig can cause lock errors, due to multi updates from kind")
+        processes = []
+        for i in range(plan.workers):
+            p = mp.Process(target=cluster_delete_worker, args=(cluster_queue, result_queue, i))
+            p.start()
+            processes.append(p)
 
-        logger.info("Starting kind cluster removal")
-        click.echo(f"Removing {len(cluster_names)} kind clusters...")
+        tui.cluster_delete(size, result_queue)
 
-        # Determine if we should log kind output (debug level)
-        log_kind_output = logger.level <= logging.DEBUG  # DEBUG level
-
-        # Delete the clusters
-        results = delete_multiple_clusters(config_obj, log_output=log_kind_output)
-
-        # Report results
-        successful = [name for name, success in results.items() if success]
-        failed = [name for name, success in results.items() if not success]
-
-        if successful:
-            click.echo(f"✓ Successfully removed {len(successful)} clusters: {', '.join(successful)}")
-
-        if failed:
-            click.echo(f"✗ Failed to remove {len(failed)} clusters: {', '.join(failed)}", err=True)
-            log_command_end("remove", success=False, message=f"Failed to remove {len(failed)} clusters")
-            # Log timing report
-            duration_str = log_timing_report(start_time, "remove", success=False, cluster_count=len(cluster_names))
-            click.echo(f"⏱️  Total execution time: {duration_str}")
-            raise click.Abort()
-
-        log_command_end("remove", success=True, message=f"All {len(successful)} clusters removed successfully")
+        for p in processes:
+            p.join()
 
     except FileNotFoundError as e:
         log_error(e, "remove command - file not found")
@@ -324,23 +287,7 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
     envvar="DEPLOYMENT_CONFIG",
     help="Path to configuration file. If not provided, looks for config files in current directory. Can also be set via DEPLOYMENT_CONFIG environment variable.",
 )
-@click.option(
-    "--timeline",
-    "-t",
-    is_flag=True,
-    help="Show detailed execution timeline with start/end times.",
-)
-@click.option(
-    "--dependencies",
-    "-d",
-    is_flag=True,
-    help="Show service dependencies and relationships.",
-)
-@click.option(
-    "--cluster-types",
-    help="Filter by specific cluster types (comma-separated).",
-)
-def plan(config: Optional[Path], timeline: bool, dependencies: bool, cluster_types: Optional[str]):
+def plan(config: Optional[Path]):
     """Show execution plan for services without creating clusters.
 
     This command analyzes your configuration and shows how services would be executed
@@ -367,83 +314,18 @@ def plan(config: Optional[Path], timeline: bool, dependencies: bool, cluster_typ
     success = True
 
     # Log command start
-    log_command_start("plan", str(config) if config else None, timeline=timeline, dependencies=dependencies)
+    log_command_start("plan", str(config) if config else None)
 
     try:
-        # Load configuration using the new configuration object
+        console = Console()
+        logger.info("Loading configuration")
         config_obj = load_config_from_file(str(config) if config else None)
 
-        # Parse cluster types filter
-        cluster_type_filter = None
-        if cluster_types:
-            cluster_type_filter = [ct.strip() for ct in cluster_types.split(",")]
-            logger.info(f"Filtering by cluster types: {cluster_type_filter}")
-
-        # Get execution plan
-        logger.info("Generating execution plan")
-        plan_result = get_execution_plan(
-            config_obj, cluster_names=None, show_timeline=timeline, show_dependencies=dependencies  # Show all clusters
-        )
-
-        if "error" in plan_result:
-            click.echo(f"Error generating execution plan: {plan_result['error']}", err=True)
-            log_command_end("plan", success=False, message=f"Error: {plan_result['error']}")
-            raise click.Abort()
-
-        # Filter by cluster types if specified
-        if cluster_type_filter:
-            filtered_services = [
-                service for service in plan_result["services"] if service["cluster_type"] in cluster_type_filter
-            ]
-            plan_result["services"] = filtered_services
-            plan_result["total_services"] = len(filtered_services)
-            plan_result["clusters"] = list(set(service["cluster_name"] for service in filtered_services))
-            plan_result["cluster_types"] = list(set(service["cluster_type"] for service in filtered_services))
-
-        # Display execution plan
-        click.echo("Execution Plan")
-        click.echo("=" * 50)
-        click.echo(f"Total services: {plan_result['total_services']}")
-        click.echo(f"Clusters: {', '.join(plan_result['clusters'])}")
-        click.echo(f"Cluster types: {', '.join(plan_result['cluster_types'])}")
-
-        if plan_result["summary"]:
-            summary = plan_result["summary"]
-            click.echo(f"Estimated duration: {summary['estimated_duration']:.1f} seconds")
-            click.echo(f"Parallel groups: {summary['parallel_groups']}")
-            click.echo(f"Max workers: {summary['max_workers']}")
-
-        # Show services
-        if plan_result["services"]:
-            click.echo("\nServices:")
-            click.echo("-" * 30)
-            for service in plan_result["services"]:
-                deps_str = f" (depends on: {', '.join(service['dependencies'])})" if service["dependencies"] else ""
-                click.echo(
-                    f"  {service['cluster_name']}: {service['service_name']} (priority: {service['priority']}, duration: {service['estimated_duration']:.1f}s){deps_str}"
-                )
-
-        # Show timeline if requested
-        if timeline and "timeline" in plan_result:
-            click.echo("\nExecution Timeline:")
-            click.echo("-" * 30)
-            for item in plan_result["timeline"]:
-                click.echo(f"  {item['service_name']} on {item['cluster_name']}:")
-                click.echo(f"    Start: {item['estimated_start']}")
-                click.echo(f"    End: {item['estimated_end']}")
-                click.echo(f"    Duration: {item['estimated_duration']:.1f}s")
-                click.echo()
-
-        # Show dependencies if requested
-        if dependencies and "dependencies" in plan_result:
-            click.echo("\nService Dependencies:")
-            click.echo("-" * 30)
-            for service_key, deps in plan_result["dependencies"].items():
-                if deps:
-                    click.echo(f"  {service_key} depends on: {', '.join(deps)}")
-                else:
-                    click.echo(f"  {service_key} has no dependencies")
-
+        logger.info("Building execution plan")
+        plan = Plan(config_obj, logger, None)
+        display = plan.as_text()
+        for item in display:
+            console.print(item)
         logger.info("Successfully displayed execution plan")
         log_command_end("plan", success=True)
 
@@ -495,13 +377,15 @@ def defaults():
     log_command_start("defaults", None)
 
     try:
+        console = Console()
+
         # Create default configuration
         logger.info("Creating default configuration object")
 
         # Display default values in dot-separated format
         logger.info("Displaying default configuration values")
-        click.echo("Default Configuration Values:")
-        click.echo("=" * 50)
+        console.print("Default Configuration Values:")
+        console.print("=" * 50)
 
         def format_config_dict(data, prefix=""):
             """Recursively format configuration dictionary with dot notation."""
@@ -520,7 +404,7 @@ def defaults():
         logger.debug(f"Formatted {len(formatted_lines)} configuration lines")
 
         for line in sorted(formatted_lines):
-            click.echo(line)
+            console.print(line)
 
         logger.info("Successfully displayed default configuration values")
         log_command_end("defaults", success=True)

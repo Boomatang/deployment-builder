@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock
 
-from .config import DeploymentConfig
+from .config import default_config
 from .error_handler import ErrorHandler
 from .execution_planner import ExecutionPlanner
 from .load_balancer import create_load_balancer
@@ -972,7 +972,7 @@ class SystemValidator:
 
     def _validate_execution_planning(self) -> Dict[str, Any]:
         """Validate execution planning."""
-        config = DeploymentConfig()
+        config = default_config
         planner = ExecutionPlanner(config)
 
         # Test basic planning

@@ -2,32 +2,40 @@
 
 import subprocess
 import tempfile
-import threading
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-from deployment_builder.config import DeploymentConfig
-from deployment_builder.queue import ServiceQueue
-from deployment_builder.load_balancer import RoundRobinBalancer, LeastLoadedBalancer, PriorityBasedBalancer
-from deployment_builder.monitor import ProgressMonitor, StatusDisplay
-from deployment_builder.error_handler import ErrorHandler, RecoveryManager
 from deployment_builder.benchmark import PerformanceBenchmark
+from deployment_builder.config import Config
+from deployment_builder.error_handler import ErrorHandler, RecoveryManager
+from deployment_builder.load_balancer import LeastLoadedBalancer, PriorityBasedBalancer, RoundRobinBalancer
+from deployment_builder.monitor import ProgressMonitor, StatusDisplay
 from deployment_builder.optimization import (
-    ConnectionPool, ServiceCache, BatchProcessor, ResourceOptimizer, PerformanceProfiler
+    BatchProcessor,
+    ConnectionPool,
+    PerformanceProfiler,
+    ResourceOptimizer,
+    ServiceCache,
 )
+from deployment_builder.queue import ServiceQueue
 
 
 # Performance-optimized fixtures
 @pytest.fixture(scope="session")
 def shared_config():
     """Shared configuration for all tests - session scoped for performance."""
-    config = DeploymentConfig()
-    config.general.name = "test-deployment"
-    config.general.version = "1.0.0"
-    config.general.environment = "test"
-    config.general.prefix = "test-project"
+
+    config = {
+        Config.GENERAL.value: {
+            Config.NAME.value: "test-deployment",
+            Config.VERSION.value: "1.0.0",
+            Config.ENVIRONMENT.value: "test",
+            Config.PREFIX.value: "test-project",
+        },
+    }
+
     return config
 
 
@@ -42,25 +50,23 @@ def shared_temp_dir():
 @pytest.fixture
 def lazy_expensive_resource():
     """Lazy-loaded expensive resource - only created when needed."""
+
     def _get_resource():
         # Simulate expensive resource creation
         return {"expensive_data": "value", "created_at": "now"}
+
     return _get_resource
 
 
 @pytest.fixture(scope="session")
 def performance_metrics():
     """Session-scoped performance metrics collection."""
-    metrics = {
-        "test_count": 0,
-        "total_duration": 0.0,
-        "slow_tests": []
-    }
+    metrics = {"test_count": 0, "total_duration": 0.0, "slow_tests": []}
     yield metrics
     # Print performance summary at the end
     if metrics["test_count"] > 0:
         avg_duration = metrics["total_duration"] / metrics["test_count"]
-        print(f"\nPerformance Summary:")
+        print("\nPerformance Summary:")
         print(f"Total tests: {metrics['test_count']}")
         print(f"Average duration: {avg_duration:.3f}s")
         if metrics["slow_tests"]:
@@ -110,20 +116,25 @@ def sample_config_data():
 # Session-scoped fixtures for expensive, immutable resources
 # ============================================================================
 
+
 @pytest.fixture(scope="session")
 def shared_config():
     """Shared configuration for all tests."""
-    config = DeploymentConfig()
-    config.general.name = "test-deployment"
-    config.general.version = "1.0.0"
-    config.general.environment = "test"
-    config.general.prefix = "test-project"
+    config = {
+        Config.GENERAL.value: {
+            Config.NAME.value: "test-deployment",
+            Config.VERSION.value: "1.0.0",
+            Config.ENVIRONMENT.value: "test",
+            Config.PREFIX.value: "test-project",
+        },
+    }
     return config
 
 
 # ============================================================================
 # Function-scoped fixtures for test isolation
 # ============================================================================
+
 
 @pytest.fixture
 def fresh_queue():
@@ -141,12 +152,12 @@ def fresh_queue_large():
 def service_item():
     """Create a service item for testing."""
     from deployment_builder.queue import ServiceItem
-    
+
     service_config = {
         "kubeconfig": {"flag": "--kubeconfig=/path/to/kubeconfig"},
-        "cmd": "kubectl apply -f manifest.yaml"
+        "cmd": "kubectl apply -f manifest.yaml",
     }
-    
+
     return ServiceItem(
         cluster_name="test-cluster",
         cluster_type="worker",
@@ -187,6 +198,7 @@ def mock_services():
 # Load Balancer Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def round_robin_balancer():
     """Create a round-robin load balancer."""
@@ -209,6 +221,7 @@ def priority_balancer():
 # Monitor Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def progress_monitor(fresh_queue):
     """Create a progress monitor with a fresh queue."""
@@ -224,6 +237,7 @@ def status_display(fresh_queue):
 # ============================================================================
 # Error Handler Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def error_handler(fresh_queue):
@@ -242,12 +256,14 @@ def recovery_manager(fresh_queue):
 # Benchmark Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def temp_benchmark_dir():
     """Create a temporary directory for benchmark tests."""
     temp_dir = tempfile.mkdtemp()
     yield temp_dir
     import shutil
+
     shutil.rmtree(temp_dir)
 
 
@@ -260,6 +276,7 @@ def performance_benchmark(temp_benchmark_dir):
 # ============================================================================
 # Optimization Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def connection_pool():
@@ -295,6 +312,7 @@ def performance_profiler():
 # Autouse fixtures for automatic cleanup
 # ============================================================================
 
+
 @pytest.fixture(autouse=True)
 def cleanup_global_resources():
     """Automatically cleanup global resources after each test."""
@@ -302,6 +320,7 @@ def cleanup_global_resources():
     # Cleanup global optimization resources
     try:
         from deployment_builder.optimization import cleanup_optimization_resources
+
         cleanup_optimization_resources()
     except ImportError:
         pass
@@ -313,6 +332,7 @@ def reset_threading():
     yield
     # Ensure all threads are cleaned up
     import threading
+
     for thread in threading.enumerate():
         if thread != threading.current_thread() and thread.is_alive():
             thread.join(timeout=1.0)
@@ -321,6 +341,7 @@ def reset_threading():
 # ============================================================================
 # Parametrized fixtures for testing multiple scenarios
 # ============================================================================
+
 
 @pytest.fixture(params=[1, 2, 5, 10])
 def queue_worker_count(request):
@@ -343,6 +364,7 @@ def timeout_value(request):
 # ============================================================================
 # Composite fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def complete_test_setup(fresh_queue, error_handler, progress_monitor, connection_pool):

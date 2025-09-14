@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Set
 
+from .config import get_cluster_names
 from .queue import ServiceItem
 
 logger = logging.getLogger(__name__)
@@ -219,7 +220,7 @@ class ExecutionPlanner:
 
     def _create_service_items(self) -> None:
         """Create service items from configuration."""
-        cluster_names = self.config.get_cluster_names()
+        cluster_names = get_cluster_names(self.config)
 
         for cluster_name in cluster_names:
             # Determine cluster type from name
