@@ -7,19 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from deployment_builder.benchmark import PerformanceBenchmark
 from deployment_builder.config import Config
-from deployment_builder.error_handler import ErrorHandler, RecoveryManager
-from deployment_builder.load_balancer import LeastLoadedBalancer, PriorityBasedBalancer, RoundRobinBalancer
-from deployment_builder.monitor import ProgressMonitor, StatusDisplay
-from deployment_builder.optimization import (
-    BatchProcessor,
-    ConnectionPool,
-    PerformanceProfiler,
-    ResourceOptimizer,
-    ServiceCache,
-)
-from deployment_builder.queue import ServiceQueue
 
 
 # Performance-optimized fixtures
@@ -137,18 +125,6 @@ def shared_config():
 
 
 @pytest.fixture
-def fresh_queue():
-    """Fresh queue instance for each test."""
-    return ServiceQueue(max_workers=2)
-
-
-@pytest.fixture
-def fresh_queue_large():
-    """Fresh queue instance with more workers for load testing."""
-    return ServiceQueue(max_workers=10)
-
-
-@pytest.fixture
 def service_item():
     """Create a service item for testing."""
     from deployment_builder.queue import ServiceItem
@@ -195,64 +171,6 @@ def mock_services():
 
 
 # ============================================================================
-# Load Balancer Fixtures
-# ============================================================================
-
-
-@pytest.fixture
-def round_robin_balancer():
-    """Create a round-robin load balancer."""
-    return RoundRobinBalancer()
-
-
-@pytest.fixture
-def least_loaded_balancer():
-    """Create a least-loaded load balancer."""
-    return LeastLoadedBalancer()
-
-
-@pytest.fixture
-def priority_balancer():
-    """Create a priority-based load balancer."""
-    return PriorityBasedBalancer()
-
-
-# ============================================================================
-# Monitor Fixtures
-# ============================================================================
-
-
-@pytest.fixture
-def progress_monitor(fresh_queue):
-    """Create a progress monitor with a fresh queue."""
-    return ProgressMonitor(fresh_queue)
-
-
-@pytest.fixture
-def status_display(fresh_queue):
-    """Create a status display with a fresh queue."""
-    return StatusDisplay(fresh_queue)
-
-
-# ============================================================================
-# Error Handler Fixtures
-# ============================================================================
-
-
-@pytest.fixture
-def error_handler(fresh_queue):
-    """Create an error handler with a fresh queue."""
-    return ErrorHandler(fresh_queue)
-
-
-@pytest.fixture
-def recovery_manager(fresh_queue):
-    """Create a recovery manager with a fresh queue."""
-    error_handler = ErrorHandler(fresh_queue)
-    return RecoveryManager(error_handler)
-
-
-# ============================================================================
 # Benchmark Fixtures
 # ============================================================================
 
@@ -265,47 +183,6 @@ def temp_benchmark_dir():
     import shutil
 
     shutil.rmtree(temp_dir)
-
-
-@pytest.fixture
-def performance_benchmark(temp_benchmark_dir):
-    """Create a performance benchmark with temporary directory."""
-    return PerformanceBenchmark(temp_benchmark_dir)
-
-
-# ============================================================================
-# Optimization Fixtures
-# ============================================================================
-
-
-@pytest.fixture
-def connection_pool():
-    """Create a fresh connection pool."""
-    return ConnectionPool()
-
-
-@pytest.fixture
-def service_cache():
-    """Create a fresh service cache."""
-    return ServiceCache()
-
-
-@pytest.fixture
-def batch_processor():
-    """Create a fresh batch processor."""
-    return BatchProcessor()
-
-
-@pytest.fixture
-def resource_optimizer():
-    """Create a fresh resource optimizer."""
-    return ResourceOptimizer()
-
-
-@pytest.fixture
-def performance_profiler():
-    """Create a fresh performance profiler."""
-    return PerformanceProfiler()
 
 
 # ============================================================================
