@@ -92,9 +92,6 @@ def create(config: Optional[Path], dry_run: bool):
     # Start timing
     start_time = time.time()
 
-    # Get logger instance
-    logger = get_logger()
-
     # Log command start
     log_command_start("create", str(config) if config else None, dry_run=dry_run)
 
@@ -106,7 +103,7 @@ def create(config: Optional[Path], dry_run: bool):
 
         console.print("Building execution plan")
         engine = Kind()
-        plan = Plan(config_obj, logger, engine)
+        plan = Plan(config_obj, engine)
 
         ## Creation of the clusters
         cluster_queue = plan.cluster_queue()
@@ -218,7 +215,7 @@ def remove(config: Optional[Path], dry_run: bool, force: bool):
 
         console.print("Building execution plan")
         engine = Kind()
-        plan = Plan(config_obj, logger, engine)
+        plan = Plan(config_obj, engine)
 
         ## Creation of the clusters
         cluster_queue = plan.cluster_queue()
@@ -322,7 +319,7 @@ def plan(config: Optional[Path]):
         config_obj = load_config_from_file(str(config) if config else None)
 
         logger.info("Building execution plan")
-        plan = Plan(config_obj, logger, None)
+        plan = Plan(config_obj, None)
         display = plan.as_text()
         for item in display:
             console.print(item)

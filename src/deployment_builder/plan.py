@@ -1,4 +1,3 @@
-import logging
 import multiprocessing as mp
 import queue
 import subprocess
@@ -7,15 +6,15 @@ from time import perf_counter
 
 from rich.table import Table
 
-from .config import Config
-from .kind import Kind
-from .logging_config import get_logger
+from deployment_builder.config import Config
+from deployment_builder.kind import Kind
+from deployment_builder.logging_config import get_logger
 
 
 class Plan:
-    def __init__(self, config, logger: logging.Logger, engine: Kind):
+    def __init__(self, config, engine: Kind):
         self.config = config
-        self.log = logger
+        self.log = get_logger()
         self.engine = engine
         self.workers = self._get_workers()
 
