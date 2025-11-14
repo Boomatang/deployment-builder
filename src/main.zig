@@ -123,12 +123,17 @@ fn createMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args:
     var wg: std.Thread.WaitGroup = .{};
 
     if (config.preScripts) |preScripts| {
+        std.debug.print("Starting running preScripts\n", .{});
         for (preScripts) |action| {
             pool.spawnWg(&wg, deploy.runAction, .{ gpa, action });
         }
     }
-
     wg.wait();
+    std.debug.print("Finished running preScripts\n", .{});
+
+    try deploy.createCluster(gpa, config);
+    std.debug.print("Finished creating clusters\n", .{});
+
     std.debug.print("all done\n", .{});
 }
 fn removeMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args: MainArgs) !void {
@@ -162,4 +167,3 @@ fn removeMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args:
     if (res.args.sub != 0)
         std.debug.print("subtracted: {}\n", .{a - b});
 }
-
