@@ -57,3 +57,7 @@ validation_reports/
 # Zig
 .zig-cache/
 zig-out/
+
+# mock data
+scripts/
+sample.json

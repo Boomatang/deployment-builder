@@ -1,5 +1,6 @@
 const clap = @import("clap");
 const std = @import("std");
+const deploy = @import("deploy");
 
 // These are our subcommands.
 const SubCommands = enum {
@@ -79,13 +80,16 @@ fn createMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args:
         \\-h, --help  Display this help and exit.
         \\-a, --add   Add the two numbers
         \\-s, --sub   Subtract the two numbers
-        \\<isize>
-        \\<isize>
+        \\<CONFIG> Json configuration file.
         \\
     );
 
+    const parsers = comptime .{
+        .CONFIG = clap.parsers.string,
+    };
+
     var diag = clap.Diagnostic{};
-    var res = clap.parseEx(clap.Help, &params, clap.parsers.default, iter, .{
+    var res = clap.parseEx(clap.Help, &params, parsers, iter, .{
         .diagnostic = &diag,
         .allocator = gpa,
     }) catch |err| {
@@ -96,12 +100,36 @@ fn createMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args:
 
     if (res.args.help != 0)
         return clap.helpToFile(.stderr(), clap.Help, &params, .{});
-    const a = res.positionals[0] orelse return error.MissingArg1;
-    const b = res.positionals[1] orelse return error.MissingArg1;
-    if (res.args.add != 0)
-        std.debug.print("added: {}\n", .{a + b});
-    if (res.args.sub != 0)
-        std.debug.print("subtracted: {}\n", .{a - b});
+
+    const config_path = res.positionals[0] orelse return error.MissingArg1;
+    const config = try deploy.loadConfiguration(gpa, config_path);
+    defer config.deinit(gpa);
+
+    if (config.preScripts) |preScripts| {
+        for (preScripts) |action| {
+            std.debug.print("script: {s}\n", .{action.script});
+        }
+    }
+
+    std.debug.print("config: {any}\n", .{config});
+    std.debug.print("setting up thead pool\n", .{});
+    var pool: std.Thread.Pool = undefined;
+    try pool.init(.{
+        .allocator = gpa,
+        .n_jobs = config.workers,
+    });
+    defer pool.deinit();
+
+    var wg: std.Thread.WaitGroup = .{};
+
+    if (config.preScripts) |preScripts| {
+        for (preScripts) |action| {
+            pool.spawnWg(&wg, deploy.runAction, .{ gpa, action });
+        }
+    }
+
+    wg.wait();
+    std.debug.print("all done\n", .{});
 }
 fn removeMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args: MainArgs) !void {
     _ = main_args;
@@ -134,3 +162,4 @@ fn removeMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args:
     if (res.args.sub != 0)
         std.debug.print("subtracted: {}\n", .{a - b});
 }
+
