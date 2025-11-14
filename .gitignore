@@ -53,3 +53,7 @@ kind-configs/
 # AI Chats (for now)
 chats/
 validation_reports/
+
+# Zig
+.zig-cache/
+zig-out/
