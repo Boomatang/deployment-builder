@@ -16,16 +16,20 @@ max_workers = 4
 # Cluster configuration
 [clusters]
 [clusters.metrics]
-enable = true
+enable = false
 
 [clusters.primary]
-count = 2
+count = 0
 
 [clusters.secondary]
-count = 1
+count = 0
 
 [clusters.standalone]
-count = 3
+count = 0
+
+[precommands]
+[precommands.build]
+cmd = "echo 'hello world'"
 
 # Global services (run on all clusters)
 [services]

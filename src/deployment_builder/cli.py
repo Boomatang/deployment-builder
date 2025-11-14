@@ -104,6 +104,7 @@ def create(config: Optional[Path], dry_run: bool):
         console.print("Building execution plan")
         engine = Kind()
         plan = Plan(config_obj, engine)
+        print(config_obj)
 
         ## Creation of the clusters
         cluster_queue = plan.cluster_queue()
