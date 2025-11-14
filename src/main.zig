@@ -132,7 +132,6 @@ fn createMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args:
     std.debug.print("Finished running preScripts\n", .{});
 
     try deploy.createCluster(gpa, config);
-    std.debug.print("Finished creating clusters\n", .{});
 
     std.debug.print("all done\n", .{});
 }

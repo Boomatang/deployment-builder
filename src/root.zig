@@ -56,7 +56,7 @@ pub fn createCluster(allocator: std.mem.Allocator, c: config.Configuration) !voi
                 pos += 1;
             }
         } else {
-            cluster_names[pos] = cluster.kind;
+            cluster_names[pos] = try allocator.dupe(u8, cluster.kind);
             pos += 1;
         }
     }
