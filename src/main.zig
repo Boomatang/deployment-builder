@@ -73,7 +73,7 @@ pub fn main() !void {
     }
 }
 
-fn createMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args: MainArgs) !void {
+fn createMain(allocator: std.mem.Allocator, iter: *std.process.ArgIterator, main_args: MainArgs) !void {
     _ = main_args;
 
     const params = comptime clap.parseParamsComptime(
@@ -91,7 +91,7 @@ fn createMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args:
     var diag = clap.Diagnostic{};
     var res = clap.parseEx(clap.Help, &params, parsers, iter, .{
         .diagnostic = &diag,
-        .allocator = gpa,
+        .allocator = allocator,
     }) catch |err| {
         try diag.reportToFile(.stderr(), err);
         return err; // propagate error
@@ -102,8 +102,8 @@ fn createMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args:
         return clap.helpToFile(.stderr(), clap.Help, &params, .{});
 
     const config_path = res.positionals[0] orelse return error.MissingArg1;
-    const config = try deploy.loadConfiguration(gpa, config_path);
-    defer config.deinit(gpa);
+    const config = try deploy.loadConfiguration(allocator, config_path);
+    defer config.deinit(allocator);
 
     if (config.preScripts) |preScripts| {
         for (preScripts) |action| {
@@ -113,7 +113,7 @@ fn createMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args:
 
     var pool: std.Thread.Pool = undefined;
     try pool.init(.{
-        .allocator = gpa,
+        .allocator = allocator,
         .n_jobs = config.workers,
     });
     defer pool.deinit();
@@ -123,13 +123,14 @@ fn createMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args:
     if (config.preScripts) |preScripts| {
         std.debug.print("Starting running preScripts\n", .{});
         for (preScripts) |action| {
-            pool.spawnWg(&wg, deploy.runAction, .{ gpa, action });
+            pool.spawnWg(&wg, deploy.runAction, .{ allocator, action });
         }
     }
     wg.wait();
     std.debug.print("Finished running preScripts\n", .{});
 
-    try deploy.createCluster(gpa, config);
+    try deploy.createCluster(allocator, config);
+    try deploy.applyClusterScripts(allocator, config);
 
     std.debug.print("all done\n", .{});
 }
