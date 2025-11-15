@@ -10,8 +10,10 @@ pub const Queue = struct {
     }
 
     pub fn deinit(self: *const Queue, allocator: std.mem.Allocator) void {
-        _ = self;
-        _ = allocator;
+        if (self.items) |items| {
+            for (items) |item| item.deinit(allocator);
+            allocator.free(items);
+        }
     }
 
     pub fn init(allocator: std.mem.Allocator, config: con.Configuration) !Queue {
@@ -23,7 +25,7 @@ pub const Queue = struct {
         }
         var cluster_content = try allocator.alloc(Cluster, total);
         var pos: u8 = 0;
-        defer {
+        errdefer {
             for (cluster_content[0..pos]) |content| content.deinit(allocator);
             allocator.free(cluster_content);
         }
@@ -32,17 +34,19 @@ pub const Queue = struct {
             if (cluster.count > 1) {
                 var mark: u8 = 1;
                 while (mark <= cluster.count) {
-                    var cluster_actions: []con.Action = undefined;
+                    var cluster_actions: ?[]con.Action = null;
                     if (cluster.scripts) |scripts| {
                         cluster_actions = try allocator.alloc(con.Action, scripts.len);
 
                         var actions_pos: u8 = 0;
-                        defer {
-                            for (cluster_actions[0..actions_pos]) |action| action.deinit(allocator);
-                            allocator.free(cluster_actions);
+                        errdefer {
+                            if (cluster_actions) |actions| {
+                                for (actions[0..actions_pos]) |action| action.deinit(allocator);
+                                allocator.free(actions);
+                            }
                         }
                         for (scripts) |script| {
-                            cluster_actions[actions_pos] = try script.clone(allocator);
+                            cluster_actions.?[actions_pos] = try script.clone(allocator);
                             actions_pos += 1;
                         }
                     }
@@ -55,17 +59,19 @@ pub const Queue = struct {
                     pos += 1;
                 }
             } else {
-                var cluster_actions: []con.Action = undefined;
+                var cluster_actions: ?[]con.Action = null;
                 if (cluster.scripts) |scripts| {
                     cluster_actions = try allocator.alloc(con.Action, scripts.len);
 
                     var actions_pos: u8 = 0;
-                    defer {
-                        for (cluster_actions[0..actions_pos]) |action| action.deinit(allocator);
-                        allocator.free(cluster_actions);
+                    errdefer {
+                        if (cluster_actions) |actions| {
+                            for (actions[0..actions_pos]) |action| action.deinit(allocator);
+                            allocator.free(actions);
+                        }
                     }
                     for (scripts) |script| {
-                        cluster_actions[actions_pos] = try script.clone(allocator);
+                        cluster_actions.?[actions_pos] = try script.clone(allocator);
                         actions_pos += 1;
                     }
                 }
