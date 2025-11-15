@@ -111,8 +111,6 @@ fn createMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args:
         }
     }
 
-    std.debug.print("config: {any}\n", .{config});
-    std.debug.print("setting up thead pool\n", .{});
     var pool: std.Thread.Pool = undefined;
     try pool.init(.{
         .allocator = gpa,

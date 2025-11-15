@@ -1,0 +1,61 @@
+{
+    workers: 16
+    "preScripts": [
+        {
+            "name": "script 1",
+            "script": "./scripts/sample1.sh"
+        },
+        {
+            "name": "script 2",
+            "script": "./scripts/sample2.sh"
+        },
+        {
+            "name": "script 3",
+            "script": "./scripts/sample3.sh"
+        },
+        {
+            "name": "script 4",
+            "script": "./scripts/sample4.sh"
+        },
+        {
+            "name": "script 5",
+            "script": "./scripts/sample5.sh"
+        },
+        {
+            "name": "script 6",
+            "script": "./scripts/sample6.sh"
+        },
+        {
+            "name": "script 7",
+            "root": "scripts",
+            "script": "./sample7.sh"
+        },
+        {
+            "name": "script 8",
+            "root": "scripts",
+            "script": "./sample8.sh"
+        }
+    ],
+    "clusters": [
+        {
+            "kind": "metrics",
+            "count": 1
+        },
+        {
+            "kind": "redis",
+            "count": 1
+        },
+        {
+            "kind": "postgres",
+            "count": 1
+        },
+        {
+            "kind": "primary",
+            "count": 2
+        },
+        {
+            "kind": "secondary",
+            "count": 3
+        }
+    ]
+}
