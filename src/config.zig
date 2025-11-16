@@ -78,12 +78,14 @@ pub const Configuration = struct {
     workers: u8 = 4,
     preScripts: ?[]Action = null,
     clusters: []Cluster,
+    postScripts: ?[]Action = null,
 
     pub fn clone(self: *const Configuration, allocator: std.mem.Allocator) !Configuration {
         return .{
             .workers = self.workers,
             .clusters = try self.clone_clusters(allocator),
             .preScripts = try self.clone_preScripts(allocator),
+            .postScripts = try self.clone_postScripts(allocator),
         };
     }
 
@@ -94,12 +96,39 @@ pub const Configuration = struct {
             }
             allocator.free(preScripts);
         }
+        if (self.postScripts) |postScripts| {
+            for (postScripts) |p| {
+                p.deinit(allocator);
+            }
+            allocator.free(postScripts);
+        }
         for (self.clusters) |cluster| {
             cluster.deinit(allocator);
         }
         allocator.free(self.clusters);
     }
 
+    fn clone_postScripts(self: *const Configuration, allocator: std.mem.Allocator) !?[]Action {
+        if (self.postScripts) |postScripts| {
+            var new_items = try allocator.alloc(Action, postScripts.len);
+
+            // On error, deinit any items that were already initialized and free the array.
+            var initialized: usize = 0;
+            errdefer {
+                // deinitialize only the items that were constructed so far
+                for (new_items[0..initialized]) |it| it.deinit(allocator);
+                allocator.free(new_items);
+            }
+
+            // Clone each item; increment `initialized` after a successful clone.
+            for (postScripts, 0..) |item, i| {
+                new_items[i] = try item.clone(allocator);
+                initialized += 1;
+            }
+            return new_items;
+        }
+        return null;
+    }
     fn clone_preScripts(self: *const Configuration, allocator: std.mem.Allocator) !?[]Action {
         if (self.preScripts) |preScripts| {
             var new_items = try allocator.alloc(Action, preScripts.len);

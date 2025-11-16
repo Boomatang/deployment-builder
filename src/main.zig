@@ -123,14 +123,24 @@ fn createMain(allocator: std.mem.Allocator, iter: *std.process.ArgIterator, main
     if (config.preScripts) |preScripts| {
         std.debug.print("Starting running preScripts\n", .{});
         for (preScripts) |action| {
-            pool.spawnWg(&wg, deploy.runAction, .{ allocator, action });
+            pool.spawnWg(&wg, deploy.runAction, .{ allocator, action, deploy.actionOpts{} });
         }
     }
     wg.wait();
-    std.debug.print("Finished running preScripts\n", .{});
+    if (config.preScripts) |_| std.debug.print("Finished running preScripts\n", .{});
 
     try deploy.createCluster(allocator, config);
     try deploy.applyClusterScripts(allocator, config);
+
+    var wg1: std.Thread.WaitGroup = .{};
+    if (config.postScripts) |postScripts| {
+        std.debug.print("Starting running postScripts\n", .{});
+        for (postScripts) |action| {
+            pool.spawnWg(&wg1, deploy.runAction, .{ allocator, action, deploy.actionOpts{} });
+        }
+    }
+    wg1.wait();
+    if (config.postScripts) |_| std.debug.print("Finished running postScripts\n", .{});
 
     std.debug.print("all done\n", .{});
 }

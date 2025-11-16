@@ -87,10 +87,37 @@ pub const Queue = struct {
         return .{ .items = cluster_content };
     }
 
-    pub fn next(self: *const Queue, allocator: std.mem.Allocator) void {
-        _ = self;
+    pub fn next(self: *Queue, allocator: std.mem.Allocator) ?Action {
         _ = allocator;
+
+        var pos = struct { lowest: u8 = 255, idx: usize = 0, active: bool = false }{};
+
+        if (self.items) |items| {
+            for (items, 0..) |item, i| {
+                if (item.active() and item.counter < pos.lowest) {
+                    pos.lowest = item.counter;
+                    pos.idx = i;
+                    pos.active = true;
+                }
+            }
+        }
+
+        if (pos.active) {
+            return .{
+                .name = self.items.?[pos.idx].name,
+                .context = self.items.?[pos.idx].context,
+                .action = self.items.?[pos.idx].next(),
+            };
+        }
+
+        return null;
     }
+};
+
+const Action = struct {
+    name: []const u8,
+    context: []const u8,
+    action: ?con.Action = null,
 };
 
 const Cluster = struct {
@@ -119,5 +146,24 @@ const Cluster = struct {
         _ = allocator;
         _ = config;
         return .{};
+    }
+
+    pub fn active(self: *const Cluster) bool {
+        return !self.complete;
+    }
+
+    pub fn next(self: *Cluster) ?con.Action {
+        if (self.complete) return null;
+
+        if (self.actions) |actions| {
+            const action = actions[self.counter];
+            self.counter += 1;
+            if (self.counter >= actions.len) {
+                self.complete = true;
+            }
+            return action;
+        }
+
+        return null;
     }
 };

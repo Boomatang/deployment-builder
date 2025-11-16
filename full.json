@@ -1,0 +1,164 @@
+{
+    "workers": 10,
+    "preScripts": [
+        {
+            "name": "script 1",
+            "script": "./scripts/sample1.sh"
+        },
+        {
+            "name": "script 2",
+            "script": "./scripts/sample2.sh"
+        },
+        {
+            "name": "script 3",
+            "script": "./scripts/sample3.sh"
+        },
+        {
+            "name": "script 4",
+            "script": "./scripts/sample4.sh"
+        },
+        {
+            "name": "script 5",
+            "script": "./scripts/sample5.sh"
+        },
+        {
+            "name": "script 6",
+            "script": "./scripts/sample6.sh"
+        },
+        {
+            "name": "script 7",
+            "root": "scripts",
+            "script": "./sample7.sh"
+        },
+        {
+            "name": "script 8",
+            "root": "scripts",
+            "script": "./sample8.sh"
+        }
+    ],
+    "clusters": [
+        {
+            "kind": "metrics",
+            "count": 1,
+            "scripts": [
+                {
+                    "name": "script 1",
+                    "script": "./scripts/sample1.sh"
+                }
+            ]
+        },
+        {
+            "kind": "redis",
+            "count": 2,
+            "scripts": [
+                {
+                    "name": "script 1",
+                    "script": "./scripts/sample1.sh"
+                },
+                {
+                    "name": "script 2",
+                    "script": "./scripts/sample2.sh"
+                }
+            ]
+
+        },
+        {
+            "kind": "postgres",
+            "count": 1,
+            "scripts": [
+                {
+                    "name": "script 1",
+                    "script": "./scripts/sample1.sh"
+                },
+                {
+                    "name": "script 2",
+                    "script": "./scripts/sample2.sh"
+                },
+                {
+                    "name": "script 3",
+                    "script": "./scripts/sample3.sh"
+                }
+            ]
+
+        },
+        {
+            "kind": "primary",
+            "count": 2,
+            "scripts": [
+                {
+                    "name": "script 1",
+                    "script": "./scripts/sample1.sh"
+                },
+                {
+                    "name": "script 2",
+                    "script": "./scripts/sample2.sh"
+                },
+                {
+                    "name": "script 3",
+                    "script": "./scripts/sample3.sh"
+                },
+                {
+                    "name": "script 4",
+                    "script": "./scripts/sample4.sh"
+                }
+            ]
+
+        },
+        {
+            "kind": "secondary",
+            "count": 3,
+            "scripts": [
+                {
+                    "name": "script 1",
+                    "script": "./scripts/sample1.sh"
+                },
+                {
+                    "name": "script 2",
+                    "script": "./scripts/sample2.sh"
+                },
+                {
+                    "name": "script 3",
+                    "script": "./scripts/sample3.sh"
+                }
+
+            ]
+
+        }
+    ],
+    "postScripts": [
+        {
+            "name": "script 1",
+            "script": "./scripts/sample1.sh"
+        },
+        {
+            "name": "script 2",
+            "script": "./scripts/sample2.sh"
+        },
+        {
+            "name": "script 3",
+            "script": "./scripts/sample3.sh"
+        },
+        {
+            "name": "script 4",
+            "script": "./scripts/sample4.sh"
+        },
+        {
+            "name": "script 5",
+            "script": "./scripts/sample5.sh"
+        },
+        {
+            "name": "script 6",
+            "script": "./scripts/sample6.sh"
+        },
+        {
+            "name": "script 7",
+            "root": "scripts",
+            "script": "./sample7.sh"
+        },
+        {
+            "name": "script 8",
+            "root": "scripts",
+            "script": "./sample8.sh"
+        }
+    ]
+}

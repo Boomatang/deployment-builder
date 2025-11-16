@@ -21,8 +21,13 @@ pub fn loadConfiguration(allocator: std.mem.Allocator, path: []const u8) !con.Co
     return parsed.value.clone(allocator);
 }
 
-pub fn runAction(allocator: std.mem.Allocator, action: con.Action) void {
-    std.debug.print("starting action: {s}\n", .{action.name});
+pub const actionOpts = struct {
+    name: ?[]const u8 = null,
+    context: ?[]const u8 = null,
+};
+
+pub fn runAction(allocator: std.mem.Allocator, action: con.Action, opts: actionOpts) void {
+    std.debug.print("starting action: {s}, opts: name: {s}, context: {s}\n", .{ action.name, if (opts.name) |name| name else "", if (opts.context) |context| context else "" });
     const result = std.process.Child.run(.{ .allocator = allocator, .cwd = action.root, .argv = &[_][]const u8{action.script} }) catch |err| {
         std.debug.print("An error trying to run script: {s}\nerror: {}\n", .{ action.script, err });
         return;
@@ -33,7 +38,7 @@ pub fn runAction(allocator: std.mem.Allocator, action: con.Action) void {
         allocator.free(result.stderr);
     }
 
-    std.debug.print("finished running action: {s}\n", .{action.name});
+    std.debug.print("finished running action: {s}, opts: name: {s}, context: {s}\n", .{ action.name, if (opts.name) |name| name else "", if (opts.context) |context| context else "" });
 }
 
 pub fn createCluster(allocator: std.mem.Allocator, config: con.Configuration) !void {
@@ -81,16 +86,31 @@ pub fn createCluster(allocator: std.mem.Allocator, config: con.Configuration) !v
 
 pub fn applyClusterScripts(allocator: std.mem.Allocator, config: con.Configuration) !void {
     std.debug.print("Start running cluster scripts\n", .{});
-    std.debug.print("build srcipt queue\n", .{});
 
-    const q = try queue.Queue.init(allocator, config);
+    var q = try queue.Queue.init(allocator, config);
     defer q.deinit(allocator);
 
     std.debug.print("Set up a thead pool\n", .{});
+
+    // TODO: this works but needs to be reworked as the the thread.pool is a FILO queue.
+    // That means we do depends on later, and currently all actions happen in reverse.
     std.debug.print("Start loop to get items from the queue.\n", .{});
-    std.debug.print("> this would be an interater, using queue.next()\n", .{});
-    q.next(allocator);
-    std.debug.print("> run the script against from the queue.\n", .{});
+    var wg: std.Thread.WaitGroup = .{};
+    var pool: std.Thread.Pool = undefined;
+    try pool.init(.{
+        .allocator = allocator,
+        .n_jobs = config.workers,
+    });
+    defer pool.deinit();
+    while (q.next(allocator)) |action| {
+        pool.spawnWg(
+            &wg,
+            runAction,
+            .{ allocator, action.action.?, actionOpts{ .name = action.name, .context = action.context } },
+        );
+    }
+    wg.wait();
+
     std.debug.print("Wait for all theads to complete\n", .{});
     std.debug.print("Finished running cluster scripts\n", .{});
 }
