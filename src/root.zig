@@ -26,6 +26,25 @@ pub const actionOpts = struct {
     context: ?[]const u8 = null,
 };
 
+pub fn poolActions(allocator: std.mem.Allocator, running: []const u8, actions: []con.Action, workers: usize, opts: actionOpts) !void {
+    var pool: std.Thread.Pool = undefined;
+    try pool.init(.{
+        .allocator = allocator,
+        .n_jobs = workers,
+    });
+    defer pool.deinit();
+
+    var wg: std.Thread.WaitGroup = .{};
+
+    std.debug.print("Starting running {s}\n", .{running});
+    std.mem.reverse(con.Action, actions);
+    for (actions) |action| {
+        pool.spawnWg(&wg, runAction, .{ allocator, action, opts });
+    }
+    wg.wait();
+    std.debug.print("Finished running {s}\n", .{running});
+}
+
 pub fn runAction(allocator: std.mem.Allocator, action: con.Action, opts: actionOpts) void {
     std.debug.print("starting action: {s}, opts: name: {s}, context: {s}\n", .{ action.name, if (opts.name) |name| name else "", if (opts.context) |context| context else "" });
     const result = std.process.Child.run(.{ .allocator = allocator, .cwd = action.root, .argv = &[_][]const u8{action.script} }) catch |err| {

@@ -105,42 +105,12 @@ fn createMain(allocator: std.mem.Allocator, iter: *std.process.ArgIterator, main
     const config = try deploy.loadConfiguration(allocator, config_path);
     defer config.deinit(allocator);
 
-    if (config.preScripts) |preScripts| {
-        for (preScripts) |action| {
-            std.debug.print("script: {s}\n", .{action.script});
-        }
-    }
-
-    var pool: std.Thread.Pool = undefined;
-    try pool.init(.{
-        .allocator = allocator,
-        .n_jobs = config.workers,
-    });
-    defer pool.deinit();
-
-    var wg: std.Thread.WaitGroup = .{};
-
-    if (config.preScripts) |preScripts| {
-        std.debug.print("Starting running preScripts\n", .{});
-        for (preScripts) |action| {
-            pool.spawnWg(&wg, deploy.runAction, .{ allocator, action, deploy.actionOpts{} });
-        }
-    }
-    wg.wait();
-    if (config.preScripts) |_| std.debug.print("Finished running preScripts\n", .{});
+    if (config.preScripts) |preScripts| try deploy.poolActions(allocator, "preScripts", preScripts, config.workers, .{});
 
     try deploy.createCluster(allocator, config);
     try deploy.applyClusterScripts(allocator, config);
 
-    var wg1: std.Thread.WaitGroup = .{};
-    if (config.postScripts) |postScripts| {
-        std.debug.print("Starting running postScripts\n", .{});
-        for (postScripts) |action| {
-            pool.spawnWg(&wg1, deploy.runAction, .{ allocator, action, deploy.actionOpts{} });
-        }
-    }
-    wg1.wait();
-    if (config.postScripts) |_| std.debug.print("Finished running postScripts\n", .{});
+    if (config.postScripts) |postScripts| try deploy.poolActions(allocator, "postScripts", postScripts, config.workers, .{});
 
     std.debug.print("all done\n", .{});
 }
