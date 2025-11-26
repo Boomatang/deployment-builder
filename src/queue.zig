@@ -4,19 +4,19 @@ const con = @import("./config.zig");
 pub const Queue = struct {
     items: ?[]Cluster = null,
 
-    pub fn clone(self: *const Queue, allocator: std.mem.Allocator) !void {
+    pub fn clone(self: @This(), allocator: std.mem.Allocator) !void {
         _ = self;
         _ = allocator;
     }
 
-    pub fn deinit(self: *const Queue, allocator: std.mem.Allocator) void {
+    pub fn deinit(self: @This(), allocator: std.mem.Allocator) void {
         if (self.items) |items| {
             for (items) |item| item.deinit(allocator);
             allocator.free(items);
         }
     }
 
-    pub fn init(allocator: std.mem.Allocator, config: con.Configuration) !Queue {
+    pub fn init(allocator: std.mem.Allocator, config: con.Configuration) !@This() {
 
         // TODO: This name building is copied around should be refactor as it is a common task
         var total: u8 = 0;
@@ -87,7 +87,7 @@ pub const Queue = struct {
         return .{ .items = cluster_content };
     }
 
-    pub fn next(self: *Queue, allocator: std.mem.Allocator) ?Action {
+    pub fn next(self: *@This(), allocator: std.mem.Allocator) ?Action {
         _ = allocator;
 
         var pos = struct { lowest: u8 = 255, idx: usize = 0, active: bool = false }{};
@@ -127,12 +127,12 @@ const Cluster = struct {
     complete: bool = false,
     actions: ?[]con.Action = null,
 
-    pub fn clone(self: *const Cluster, allocator: std.mem.Allocator) !void {
+    pub fn clone(self: @This(), allocator: std.mem.Allocator) !void {
         _ = self;
         _ = allocator;
     }
 
-    pub fn deinit(self: *const Cluster, allocator: std.mem.Allocator) void {
+    pub fn deinit(self: @This(), allocator: std.mem.Allocator) void {
         allocator.free(self.name);
         allocator.free(self.context);
 
@@ -142,13 +142,13 @@ const Cluster = struct {
         }
     }
 
-    pub fn init(allocator: std.mem.Allocator, config: con.Configuration) Cluster {
+    pub fn init(allocator: std.mem.Allocator, config: con.Configuration) @This() {
         _ = allocator;
         _ = config;
         return .{};
     }
 
-    pub fn active(self: *const Cluster) bool {
+    pub fn active(self: @This()) bool {
         return !self.complete;
     }
 

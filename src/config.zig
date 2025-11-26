@@ -5,7 +5,7 @@ pub const Cluster = struct {
     count: u8,
     scripts: ?[]Action = null,
 
-    pub fn clone(self: *const Cluster, allocator: std.mem.Allocator) !Cluster {
+    pub fn clone(self: @This(), allocator: std.mem.Allocator) !@This() {
         return .{
             .kind = try allocator.dupe(u8, self.kind),
             .count = self.count,
@@ -13,7 +13,7 @@ pub const Cluster = struct {
         };
     }
 
-    pub fn deinit(self: *const Cluster, allocator: std.mem.Allocator) void {
+    pub fn deinit(self: @This(), allocator: std.mem.Allocator) void {
         allocator.free(self.kind);
         if (self.scripts) |scripts| {
             for (scripts) |script| {
@@ -23,7 +23,7 @@ pub const Cluster = struct {
         }
     }
 
-    fn clone_scripts(self: *const Cluster, allocator: std.mem.Allocator) !?[]Action {
+    fn clone_scripts(self: @This(), allocator: std.mem.Allocator) !?[]Action {
         if (self.scripts) |scripts| {
             var new_items = try allocator.alloc(Action, scripts.len);
 
@@ -51,7 +51,7 @@ pub const Action = struct {
     script: []const u8,
     name: []const u8,
 
-    pub fn clone(self: *const Action, allocator: std.mem.Allocator) !Action {
+    pub fn clone(self: @This(), allocator: std.mem.Allocator) !@This() {
         if (self.root) |r| {
             return .{
                 .root = try allocator.dupe(u8, r),
@@ -65,7 +65,7 @@ pub const Action = struct {
         };
     }
 
-    pub fn deinit(self: *const Action, allocator: std.mem.Allocator) void {
+    pub fn deinit(self: @This(), allocator: std.mem.Allocator) void {
         if (self.root) |root| {
             allocator.free(root);
         }
@@ -80,7 +80,7 @@ pub const Configuration = struct {
     clusters: []Cluster,
     postScripts: ?[]Action = null,
 
-    pub fn clone(self: *const Configuration, allocator: std.mem.Allocator) !Configuration {
+    pub fn clone(self: @This(), allocator: std.mem.Allocator) !@This() {
         return .{
             .workers = self.workers,
             .clusters = try self.clone_clusters(allocator),
@@ -89,7 +89,7 @@ pub const Configuration = struct {
         };
     }
 
-    pub fn deinit(self: *const Configuration, allocator: std.mem.Allocator) void {
+    pub fn deinit(self: @This(), allocator: std.mem.Allocator) void {
         if (self.preScripts) |preScripts| {
             for (preScripts) |p| {
                 p.deinit(allocator);
@@ -108,7 +108,7 @@ pub const Configuration = struct {
         allocator.free(self.clusters);
     }
 
-    fn clone_postScripts(self: *const Configuration, allocator: std.mem.Allocator) !?[]Action {
+    fn clone_postScripts(self: @This(), allocator: std.mem.Allocator) !?[]Action {
         if (self.postScripts) |postScripts| {
             var new_items = try allocator.alloc(Action, postScripts.len);
 
@@ -129,7 +129,7 @@ pub const Configuration = struct {
         }
         return null;
     }
-    fn clone_preScripts(self: *const Configuration, allocator: std.mem.Allocator) !?[]Action {
+    fn clone_preScripts(self: @This(), allocator: std.mem.Allocator) !?[]Action {
         if (self.preScripts) |preScripts| {
             var new_items = try allocator.alloc(Action, preScripts.len);
 
@@ -151,7 +151,7 @@ pub const Configuration = struct {
         return null;
     }
 
-    fn clone_clusters(self: *const Configuration, allocator: std.mem.Allocator) ![]Cluster {
+    fn clone_clusters(self: @This(), allocator: std.mem.Allocator) ![]Cluster {
         var new_items = try allocator.alloc(Cluster, self.clusters.len);
 
         // On error, deinit any items that were already initialized and free the array.
