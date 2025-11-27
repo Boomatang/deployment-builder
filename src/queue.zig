@@ -3,6 +3,7 @@ const con = @import("./config.zig");
 
 pub const Queue = struct {
     items: ?[]Cluster = null,
+    mutex: std.Thread.Mutex,
 
     pub fn clone(self: @This(), allocator: std.mem.Allocator) !void {
         _ = self;
@@ -84,11 +85,13 @@ pub const Queue = struct {
             }
         }
 
-        return .{ .items = cluster_content };
+        return .{ .items = cluster_content, .mutex = std.Thread.Mutex{} };
     }
 
     pub fn next(self: *@This(), allocator: std.mem.Allocator) ?Action {
         _ = allocator;
+        self.mutex.lock();
+        defer self.mutex.unlock();
 
         var pos = struct { lowest: u8 = 255, idx: usize = 0, active: bool = false }{};
 
